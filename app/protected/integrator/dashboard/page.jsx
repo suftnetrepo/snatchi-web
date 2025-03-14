@@ -3,7 +3,6 @@
 import React, { useEffect } from 'react';
 import { Card } from 'react-bootstrap';
 import { getAggregate } from '../../../../utils/helpers';
-
 import { useProjectDashboard } from '../../../../hooks/useProjectDashboard';
 import {
   ProjectAnalysis,

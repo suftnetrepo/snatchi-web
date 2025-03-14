@@ -39,9 +39,11 @@ const LoginForm = () => {
       password: fields.password
     });
 
+
+    console.error('..........................result:', result);
+
     if (!result?.ok) {
       handleError(result.error);
-
       return;
     }
 
@@ -55,6 +57,8 @@ const LoginForm = () => {
     const returnUrl = urlParams.get('returnUrl');
 
     const updatedSession = await getSession();
+
+    console.error('..........................updatedSession:', updatedSession);
   
     let redirectPath;
     if (returnUrl) {

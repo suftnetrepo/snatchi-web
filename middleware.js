@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import { AuthService } from './lib/AuthService';
-import { getToken } from "next-auth/jwt";
+import { getToken } from 'next-auth/jwt';
 
 export async function middleware(request) {
   try {
     const isMobileApp = request.headers.get('X-App-Route') === 'mobile';
-  
+
     let token, userData;
     const authHeader = request.headers.get('authorization');
+
+    console.error('..........................authHeader:', authHeader);
+
+    console.error('..........................process.env.NEXTAUTH_SECRET:', process.env.NEXTAUTH_SECRET);
 
     if (isMobileApp) {
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -15,6 +19,8 @@ export async function middleware(request) {
       }
 
       token = authHeader.split('Bearer ')[1];
+
+      console.error('..........................token:', token);
 
       if (!token) {
         return createAuthError(request, isMobileApp, 'No token provided');
@@ -28,10 +34,15 @@ export async function middleware(request) {
       }
     } else {
       try {
-        const session = await getToken({ 
+
+        console.error('..........................session:', process.env.NEXTAUTH_SECRET);
+
+        const session = await getToken({
           req: request,
           secret: process.env.NEXTAUTH_SECRET
         });
+
+        console.error('..........................session:', session);
 
         if (!session) {
           console.error('Session verification error:', session);
@@ -46,7 +57,7 @@ export async function middleware(request) {
     }
 
     const response = NextResponse.next();
-    
+
     if (userData) {
       response.headers.set('x-user-id', userData.id);
       response.headers.set('x-user-data', JSON.stringify(userData));
