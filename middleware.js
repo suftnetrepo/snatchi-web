@@ -1,16 +1,20 @@
 import { NextResponse } from 'next/server';
 import { AuthService } from './lib/AuthService';
 import { getToken } from 'next-auth/jwt';
+import jwt from "jsonwebtoken";
 
 export async function middleware(request) {
   try {
     const isMobileApp = request.headers.get('X-App-Route') === 'mobile';
 
+    console.log("Headers:", request);
+
+    console.log("Headers:", request.headers);
+
     let token, userData;
     const authHeader = request.headers.get('authorization');
 
     console.error('..........................authHeader:', authHeader);
-
     console.error('..........................process.env.NEXTAUTH_SECRET:', process.env.NEXTAUTH_SECRET);
 
     if (isMobileApp) {
@@ -34,15 +38,19 @@ export async function middleware(request) {
       }
     } else {
       try {
+        const session = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
-        console.error('..........................session:', process.env.NEXTAUTH_SECRET);
+        if (!session) {
+          console.log('Raw Token:', request.cookies.get('next-auth.session-token'));
+          console.log('Decoded Token:', jwt.decode(request.cookies.get('next-auth.session-token')));
+        }
 
-        const session = await getToken({
+        const sessions = await getToken({
           req: request,
-          secret: process.env.NEXTAUTH_SECRET
+          secret:'ft8c95VaAkJiIl7x2zyI5vdVvqblSmF5THeod78WA34='
         });
 
-        console.error('..........................session:', session);
+        console.error('..........................session:', sessions);
 
         if (!session) {
           console.error('Session verification error:', session);
