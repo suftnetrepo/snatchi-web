@@ -1,0 +1,23 @@
+<mjml>
+  <mj-body background-color="#f1f1f1">
+    <mj-section>
+      <mj-column>
+       
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#fff">
+      <mj-column>
+        <mj-text font-size="30px" align="center">
+          Trial will End
+        </mj-text>
+        <mj-divider border-color="#06adef" width="100px"></mj-divider>
+        <mj-text font-size="18px" align="left" color="#555" line-height="30px">
+          Hi {{contact}}!
+          <P>Your trial will expire on {{periodEnd}}. We will automatically charge your payment card when the trial ends.</P>
+          <P> Please go to your plan detail if you want to change or cancel your subscription. </P>
+             <p>Sincerely,<br />{{team}}</p>
+        </mj-text>      
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

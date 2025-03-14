@@ -1,0 +1,22 @@
+{
+  "/_app": "pages/_app.js",
+  "/_error": "pages/_error.js",
+  "/_document": "pages/_document.js",
+  "/404": "pages/404.html",
+  "/about": "pages/about.html",
+  "/api/auth/accessToken": "pages/api/auth/accessToken.js",
+  "/api/auth/login": "pages/api/auth/login.js",
+  "/api/auth/register": "pages/api/auth/register.js",
+  "/api/ping": "pages/api/ping.js",
+  "/api/user/[id]": "pages/api/user/[id].js",
+  "/api/user": "pages/api/user.js",
+  "/api/user/resetPassword": "pages/api/user/resetPassword.js",
+  "/backend/dashboard": "pages/backend/dashboard.html",
+  "/backend/user": "pages/backend/user.html",
+  "/contact": "pages/contact.html",
+  "/": "pages/index.html",
+  "/login": "pages/login.html",
+  "/projects": "pages/projects.html",
+  "/register": "pages/register.html",
+  "/stories": "pages/stories.html"
+}

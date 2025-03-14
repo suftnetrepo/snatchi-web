@@ -1,0 +1,171 @@
+$prefix: ''; // Define the prefix variable if it's not already defined in variables.scss
+
+.admin_sidebar {
+  flex: 0 0 var(--sidebar-width);
+  width: var(--sidebar-width);
+  background: var(--sidebar-background);
+  color: $sidebar-text-color;
+  transition: margin-left 0.15s, margin-right 0.15s, box-shadow 0.075s, transform 0.15s, width 0.15s, z-index 0s ease 0.15s;
+  z-index: $sidebar-z-index;
+
+  & + .wrapper {
+    transition: padding 0.15s;
+  }
+
+  .sidebar-brand {
+    flex: 0 0 $sidebar-brand-height;
+    background: var(--sidebar-brand-background);
+  }
+
+  .sidebar-nav {
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-top-color: var(--sidebar-border-color) !important;
+
+    .nav-title {
+      font-size: 80%;
+    }
+
+    .nav-link {
+      color: $sidebar-link-color;
+
+      &:hover {
+        color: $sidebar-link-color-hover;
+        text-decoration: none;
+        background: $sidebar-link-background-hover;
+      }
+
+      &.active {
+        color: $sidebar-link-color-hover;
+        background: $sidebar-link-background-hover;  
+        font-weight: bold;                            
+        border-left: 4px solid var(--sidebar-highlight-color); 
+        text-decoration: none;
+
+        .nav-icon {
+        }
+      }
+
+      .nav-icon {
+        flex: 0 0 4rem;
+      }
+    }
+
+    .nav-group {
+      &.show {
+        background: $sidebar-nav-group-background;
+      }
+
+      .nav-link {
+        &:focus {
+          box-shadow: none;
+        }
+
+        .nav-chevron {
+          transition: transform 0.15s;
+        }
+
+        &.collapsed {
+          .nav-chevron {
+            transform: rotate(180deg);
+          }
+        }
+      }
+    }
+  }
+
+  .sidebar-toggler {
+    flex: 0 0 $sidebar-toggler-height;
+    background: var(--sidebar-toggler-background);
+    color: $sidebar-toggler-color;
+    border-top-color: var(--sidebar-border-color) !important;
+
+    &:hover {
+      background: $sidebar-toggler-background-hover;
+      color: $sidebar-toggler-color-hover;
+    }
+
+    .sidebar-toggler-chevron {
+      transition: transform 0.15s;
+    }
+  }
+
+  & {
+    margin-left: calc(-1 * var(--sidebar-width));
+  }
+
+  &.show {
+    margin-left: 0;
+  }
+
+  & + .wrapper {
+    padding-left: calc(-1 * var(--sidebar-width));
+  }
+
+  // Push content to the right only for md and up
+  @include media-breakpoint-up(md) {
+    & {
+      margin-left: 0;
+    }
+
+    & + .wrapper {
+      padding-left: var(--sidebar-width);
+    }
+
+    // .show is the opposite meaning for md and up
+    // it means the sidebar is collapsed
+    &.show {
+      margin-left: calc(-1 * var(--sidebar-width));
+
+      & + .wrapper {
+        padding-left: calc(-1 * var(--sidebar-width));
+      }
+    }
+  }
+
+  // Sidebar narrow styling, only for md and up
+  @include media-breakpoint-up(md) {
+    &.sidebar-narrow {
+      .sidebar-toggler {
+        .sidebar-toggler-chevron {
+          transform: rotate(180deg);
+        }
+      }
+
+      &:not(:hover) {
+        --sidebar-width: 0;
+
+        .sidebar-brand {
+          .sidebar-brand-full {
+            display: none !important;
+          }
+
+          .sidebar-brand-narrow {
+            display: flex !important;
+          }
+        }
+
+        .nav-title,
+        .nav-group-items {
+          display: none;
+        }
+
+        & + .wrapper {
+          --sidebar-width: 4rem;
+        }
+
+        .nav-link {
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+}
+
+.sidebar-overlay {
+  z-index: $sidebar-overlay-z-index;
+
+  @include media-breakpoint-up(md) {
+    display: none;
+  }
+}

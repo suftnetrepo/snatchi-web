@@ -1,0 +1,57 @@
+.Select2__single-value img {
+    width: 30px!important;
+    height: 30px!important;
+    border-radius: 50%;
+}
+.basic-multi-select1 {
+  .Select2__option img {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50%;
+  }
+}
+// .default .Select2__multi-value__label {
+//     padding: 0.025rem 0.625rem!important;
+//     background-color: var(--primary-color)!important;
+//     color: #fff!important;
+//   }
+  .Select2__multi-value {
+    background-color: var(--primary-color)!important;
+    color: #fff!important;
+  }
+
+  .Select2__dropdown-indicator:after {
+    content: "";
+    height: 0;
+    width: 0;
+    border-style: solid;
+    border-color: var(--text-muted) transparent transparent!important;
+    border-width: 5px;
+    position: absolute;
+    right: 11.5px;
+    top: 50%;
+    margin-top: -2.5px;
+    pointer-events: none;
+  }
+  // .default .Select2__multi-value__label {
+  //   padding: 0.025rem 0.625rem!important;
+  //   background-color: var(--primary-color)!important;
+  //   color: #fff!important;
+  // }
+  
+.Select2__control, .Select2__menu {
+  background-color: var(--form-control-bg) !important;
+  border-color: var(--default-border)!important;
+}
+.react-select__control {
+  background-color: var(--form-control-bg) !important;
+  border-color: var(--default-border)!important;
+  box-shadow: none !important;
+}
+.Select-badge{
+  .react-select__multi-value__label {
+    font-size: 13px;
+    border-radius: .375rem!important;
+    padding: 0.188rem 0.625rem!important;
+  }
+}

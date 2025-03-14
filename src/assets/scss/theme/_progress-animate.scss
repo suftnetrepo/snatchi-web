@@ -1,0 +1,45 @@
+.progress {
+    background-color: $light;
+    height: 0.75rem;
+    border-radius: 0.25rem;
+}
+.progress-stacked {
+    background-color: $light;
+}
+.progress-bar {
+    color: $white;
+    background-color: $primary;
+}
+
+@keyframes progress-animate {
+    0% {
+        width: 0;
+    }
+}
+.progress-animate {
+    position: relative;
+    border-radius: 0.625rem;
+    .progress-bar {
+        position: relative;
+        border-radius: 0.625rem;
+        animation:  2s progress-animate;
+    }
+}
+/* Start:: progressbar-height */
+.progress,.progress-stacked {
+    &.progress-xs {
+        height: .3125rem;
+    }
+    &.progress-sm {
+        height: 0.5rem;
+    }
+    &.progress-lg {
+        height: 1rem;
+    }
+    &.progress-xl {
+        height: 1.25rem;
+    }
+}
+/* End:: progressbar-height */
+
+

@@ -1,0 +1,73 @@
+
+
+.admin__header {
+  background: $header-background;
+
+  &.dark-mode { // Add a class to handle dark mode styles
+    background: $header-background-dark;
+
+    .header-brand {
+      color: $header-brand-color-dark;
+    }
+
+    .header-toggler {
+      color: $header-link-color-dark;
+    }
+  }
+
+  .header-brand {
+    color: $header-brand-color;
+  }
+
+  .header-navbar {
+    min-height: 3rem;
+
+    .header-toggler {
+      color: $header-link-color;
+
+      &.dark-mode {
+        color: $header-link-color-dark;
+      }
+    }
+
+    .header-nav {
+      .nav-link {
+        color: $header-link-color;
+
+        &:hover {
+          color: $header-link-color-hover;
+        }
+
+        &.dark-mode {
+          color: $header-link-color-dark;
+
+          &:hover {
+            color: $header-link-color-hover-dark;
+          }
+        }
+      }
+    }
+  }
+
+  .breadcrumb {
+    min-height: 2rem;
+
+    .breadcrumb-item {
+      a {
+        color: $header-link-color;
+
+        &:hover {
+          color: $header-link-color-hover;
+        }
+
+        &.dark-mode {
+          color: $header-link-color-dark;
+
+          &:hover {
+            color: $header-link-color-hover-dark;
+          }
+        }
+      }
+    }
+  }
+}

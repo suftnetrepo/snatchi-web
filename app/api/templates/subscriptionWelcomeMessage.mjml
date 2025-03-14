@@ -1,0 +1,31 @@
+<mjml>
+  <mj-body background-color="#ffffff">
+    <mj-section background-color="#ffffff" padding-bottom="0px">
+      <mj-column vertical-align="top" width="100%">
+
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#009FE3" padding-bottom="0px" padding-top="0">
+      <mj-column vertical-align="top" width="100%">
+        <mj-text align="left" color="#ffffff" font-size="30px" font-weight="bold" font-family="open Sans Helvetica, Arial, sans-serif" padding-left="25px" padding-right="25px" padding-bottom="20px" padding-top="50px">Welcome to Snatchi</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#009fe3" padding-bottom="20px" padding-top="20px">
+      <mj-column vertical-align="middle" width="100%">
+        <mj-text align="left" color="#ffffff" font-size="22px" font-family="open Sans Helvetica, Arial, sans-serif" padding-left="25px" padding-right="25px"><span style="color:#FEEB35">Dear {{contact}}</span><br /></mj-text>
+        <mj-text align="left" color="#ffffff" font-size="15px" font-family="open Sans Helvetica, Arial, sans-serif" padding-left="25px" padding-right="25px">We&apos;re really excited you&apos;ve decided to give us a try.Your account is setup and you can start using it right away.
+
+          <p><strong>Your Subscription plan :</strong></p>
+          <p>Plan : {{plan}}<br />Amount : {{price}}<br />Billing Cycle : {{billingCycle}}</p>
+          <p>
+            <strong>Getting Started</strong><br>
+            Your subscription plan gives you access <strong>Snatchi</strong> for the next {{duration}}
+          </p>
+          In case you have any questions, feel free to reach out to us at {{contactEmail}}. You can login to your account with your username {{userName}}
+        </mj-text>
+        <mj-button align="left" font-size="22px" font-weight="bold" background-color="#ffffff" border-radius="10px" color="#1AA0E1" font-family="open Sans Helvetica, Arial, sans-serif"  href="{{url}}" >Login</mj-button>
+        <mj-text align="left" color="#ffffff" font-size="15px" font-family="open Sans Helvetica, Arial, sans-serif" padding-left="25px" padding-right="25px">Thanks, <br /> {{team}} </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

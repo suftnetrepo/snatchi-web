@@ -1,0 +1,463 @@
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'middleware', 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ The "experimental.esmExternals" option has been modified. experimental.esmExternals is not recommended to be modified as it may disrupt module resolution. It should be removed from your next.config.js.
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'middleware', 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ The "experimental.esmExternals" option has been modified. experimental.esmExternals is not recommended to be modified as it may disrupt module resolution. It should be removed from your next.config.js.
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'middleware', 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ The "experimental.esmExternals" option has been modified. experimental.esmExternals is not recommended to be modified as it may disrupt module resolution. It should be removed from your next.config.js.
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'middleware', 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ The "experimental.esmExternals" option has been modified. experimental.esmExternals is not recommended to be modified as it may disrupt module resolution. It should be removed from your next.config.js.
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+Session verification error: ReferenceError: error is not defined
+    at middleware (.next/server/middleware.js:13:123842) {
+  
+}
+Session verification error: ReferenceError: error is not defined
+    at middleware (.next/server/middleware.js:13:123842) {
+  
+}
+Session verification error: ReferenceError: error is not defined
+    at middleware (.next/server/middleware.js:13:123842) {
+  
+}
+Session verification error: ReferenceError: error is not defined
+    at middleware (.next/server/middleware.js:13:123842) {
+  
+}
+Session verification error: ReferenceError: error is not defined
+    at middleware (.next/server/middleware.js:13:123842) {
+  
+}
+Session verification error: ReferenceError: error is not defined
+    at middleware (.next/server/middleware.js:13:123842) {
+  
+}
+Session verification error: ReferenceError: error is not defined
+    at middleware (.next/server/middleware.js:13:123842) {
+  
+}
+Session verification error: ReferenceError: error is not defined
+    at middleware (.next/server/middleware.js:13:123842) {
+  
+}
+Session verification error: ReferenceError: error is not defined
+    at middleware (.next/server/middleware.js:13:123842) {
+  
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ Error: Cannot find module 'require-in-the-middle'
+Require stack:
+- /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/require.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next-server.js
+- /home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/server/next.js
+- /home/arnatyco/snatchiuat/server.js
+- /usr/local/lsws/fcgi-bin/lsnode.js
+    at 19063 (.next/server/app/api/auth/[...nextauth]/route.js:1:1352)
+    at t (.next/server/webpack-runtime.js:1:511)
+    at 90876 (.next/server/chunks/4315.js:3:7641)
+    at t (.next/server/webpack-runtime.js:1:511) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}

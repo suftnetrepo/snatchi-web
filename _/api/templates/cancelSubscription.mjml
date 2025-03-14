@@ -1,0 +1,24 @@
+<mjml>
+  <mj-body background-color="#f1f1f1">
+    <mj-section>
+      <mj-column>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#fff">
+      <mj-column>
+        <mj-text font-size="30px" align="center">
+          Subscription Cancellation
+        </mj-text>
+        <mj-divider border-color="#06adef" width="100px"></mj-divider>
+        <mj-text font-size="18px" align="left" color="#555" line-height="30px">
+         Dear {{contact}},
+
+    <p>Your subscription will be cancelled on {{periodEnd}}.</p>
+          <p>Please remember - if you do have any questions, please drop an email to {{contactEmail}}, or give us a call at {{contactMobile}}</p>
+          <p>We hope you enjoy our services.</p>
+           <p>Sincerely,<br />{{team}}</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
