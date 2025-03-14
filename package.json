@@ -28,7 +28,7 @@
     "@react-email/render": "^1.0.4",
     "@reduxjs/toolkit": "^1.9.5",
     "@sendgrid/mail": "^7.6.0",
-    "@sentry/nextjs": "^9",
+    "@sentry/nextjs": "^9.5.0",
     "@sentry/node": "^6.19.7",
     "@sentry/tracing": "^6.19.7",
     "@stripe/react-stripe-js": "^1.5.0",
