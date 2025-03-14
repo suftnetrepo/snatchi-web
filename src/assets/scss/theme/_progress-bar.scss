@@ -1,0 +1,44 @@
+// ProgressBar.scss
+
+$progress-background: #e0e0e0; // Light grey color for background
+$progress-height: 20px; // Height of the progress bar
+
+.progress-container {
+	position: relative;
+	.progress-bar {
+		width: 100%;
+		background-color: $progress-background;
+		border-radius: calc(#{$progress-height} / 2);
+		overflow: hidden;
+		margin-bottom: 8px;
+
+		&__inner {
+			height: $progress-height;
+			transition: width 0.4s ease, background-color 0.4s;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: calc(#{$progress-height} / 2);
+
+			&__text {
+				position: absolute;
+				width: 100%;
+				text-align: center;
+				color: white;
+				font-weight: bold;
+				z-index: 2;
+			}
+		}
+	}
+
+	.progress-labels {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+
+		.progress-label {
+			font-size: 14px;
+			color: #333;
+		}
+	}
+}

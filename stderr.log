@@ -1,0 +1,534 @@
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+tw: Failed to base64url decode the signature
+    at ri (.next/server/middleware.js:13:54307)
+    at ro (.next/server/middleware.js:13:54925)
+    at rc (.next/server/middleware.js:13:57154)
+    at rT.verifyAccessToken (.next/server/middleware.js:13:65577)
+    at rR (.next/server/middleware.js:13:66436)
+    at handler (.next/server/middleware.js:13:67636)
+    at <unknown> (.next/server/middleware.js:13:32412)
+    at <unknown> (.next/server/middleware.js:13:32399) {
+  code: 'ERR_JWS_INVALID'
+}
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+tg: "exp" claim timestamp check failed
+    at rl (.next/server/middleware.js:13:56777)
+    at rc (.next/server/middleware.js:13:57302)
+    at async rT.verifyAccessToken (.next/server/middleware.js:13:65571)
+    at async rR (.next/server/middleware.js:13:66427)
+    at async handler (.next/server/middleware.js:13:67630)
+    at async (.next/server/middleware.js:13:32390)
+    at async e9 (.next/server/middleware.js:13:29250) {
+  code: 'ERR_JWT_EXPIRED',
+  claim: 'exp',
+  reason: 'check_failed',
+  payload: {
+  id: '679735d6e0a110edbc266745',
+  email: 'kabelsus@gmail.com',
+  role: 'engineer',
+  integrator: '679733468f42d980183f89bd',
+  iat: 1738660178,
+  exp: 1738661078
+}
+}
+tg: "exp" claim timestamp check failed
+    at rl (.next/server/middleware.js:13:56777)
+    at rc (.next/server/middleware.js:13:57302)
+    at async rT.verifyAccessToken (.next/server/middleware.js:13:65571)
+    at async rR (.next/server/middleware.js:13:66427)
+    at async handler (.next/server/middleware.js:13:67630)
+    at async (.next/server/middleware.js:13:32390)
+    at async e9 (.next/server/middleware.js:13:29250) {
+  code: 'ERR_JWT_EXPIRED',
+  claim: 'exp',
+  reason: 'check_failed',
+  payload: {
+  id: '679735d6e0a110edbc266745',
+  email: 'kabelsus@gmail.com',
+  role: 'engineer',
+  integrator: '679733468f42d980183f89bd',
+  iat: 1738660178,
+  exp: 1738661078
+}
+}
+tg: "exp" claim timestamp check failed
+    at rl (.next/server/middleware.js:13:56777)
+    at rc (.next/server/middleware.js:13:57302)
+    at async rT.verifyAccessToken (.next/server/middleware.js:13:65571)
+    at async rR (.next/server/middleware.js:13:66427)
+    at async handler (.next/server/middleware.js:13:67630)
+    at async (.next/server/middleware.js:13:32390)
+    at async e9 (.next/server/middleware.js:13:29250) {
+  code: 'ERR_JWT_EXPIRED',
+  claim: 'exp',
+  reason: 'check_failed',
+  payload: {
+  id: '679735d6e0a110edbc266745',
+  email: 'kabelsus@gmail.com',
+  role: 'engineer',
+  integrator: '679733468f42d980183f89bd',
+  iat: 1738660178,
+  exp: 1738661078
+}
+}
+tg: "exp" claim timestamp check failed
+    at rl (.next/server/middleware.js:13:56777)
+    at rc (.next/server/middleware.js:13:57302)
+    at async rT.verifyAccessToken (.next/server/middleware.js:13:65571)
+    at async rR (.next/server/middleware.js:13:66427)
+    at async handler (.next/server/middleware.js:13:67630)
+    at async (.next/server/middleware.js:13:32390)
+    at async e9 (.next/server/middleware.js:13:29250) {
+  code: 'ERR_JWT_EXPIRED',
+  claim: 'exp',
+  reason: 'check_failed',
+  payload: {
+  id: '679735d6e0a110edbc266745',
+  email: 'kabelsus@gmail.com',
+  role: 'engineer',
+  integrator: '679733468f42d980183f89bd',
+  iat: 1738660178,
+  exp: 1738661078
+}
+}
+tg: "exp" claim timestamp check failed
+    at rl (.next/server/middleware.js:13:56777)
+    at rc (.next/server/middleware.js:13:57302)
+    at async rT.verifyAccessToken (.next/server/middleware.js:13:65571)
+    at async rR (.next/server/middleware.js:13:66427)
+    at async handler (.next/server/middleware.js:13:67630)
+    at async (.next/server/middleware.js:13:32390)
+    at async e9 (.next/server/middleware.js:13:29250) {
+  code: 'ERR_JWT_EXPIRED',
+  claim: 'exp',
+  reason: 'check_failed',
+  payload: {
+  id: '679735d6e0a110edbc266745',
+  email: 'kabelsus@gmail.com',
+  role: 'engineer',
+  integrator: '679733468f42d980183f89bd',
+  iat: 1738660178,
+  exp: 1738661078
+}
+}
+tg: "exp" claim timestamp check failed
+    at rl (.next/server/middleware.js:13:56777)
+    at rc (.next/server/middleware.js:13:57302)
+    at async rT.verifyAccessToken (.next/server/middleware.js:13:65571)
+    at async rR (.next/server/middleware.js:13:66427)
+    at async handler (.next/server/middleware.js:13:67630)
+    at async (.next/server/middleware.js:13:32390)
+    at async e9 (.next/server/middleware.js:13:29250) {
+  code: 'ERR_JWT_EXPIRED',
+  claim: 'exp',
+  reason: 'check_failed',
+  payload: {
+  id: '679735d6e0a110edbc266745',
+  email: 'kabelsus@gmail.com',
+  role: 'engineer',
+  integrator: '679733468f42d980183f89bd',
+  iat: 1738661769,
+  exp: 1738662669
+}
+}
+tg: "exp" claim timestamp check failed
+    at rl (.next/server/middleware.js:13:56777)
+    at rc (.next/server/middleware.js:13:57302)
+    at async rT.verifyAccessToken (.next/server/middleware.js:13:65571)
+    at async rR (.next/server/middleware.js:13:66427)
+    at async handler (.next/server/middleware.js:13:67630)
+    at async (.next/server/middleware.js:13:32390)
+    at async e9 (.next/server/middleware.js:13:29250) {
+  code: 'ERR_JWT_EXPIRED',
+  claim: 'exp',
+  reason: 'check_failed',
+  payload: {
+  id: '679735d6e0a110edbc266745',
+  email: 'kabelsus@gmail.com',
+  role: 'engineer',
+  integrator: '679733468f42d980183f89bd',
+  iat: 1738671073,
+  exp: 1738671973
+}
+}
+tg: "exp" claim timestamp check failed
+    at rl (.next/server/middleware.js:13:56777)
+    at rc (.next/server/middleware.js:13:57302)
+    at async rT.verifyAccessToken (.next/server/middleware.js:13:65571)
+    at async rR (.next/server/middleware.js:13:66427)
+    at async handler (.next/server/middleware.js:13:67630)
+    at async (.next/server/middleware.js:13:32390)
+    at async e9 (.next/server/middleware.js:13:29250) {
+  code: 'ERR_JWT_EXPIRED',
+  claim: 'exp',
+  reason: 'check_failed',
+  payload: {
+  id: '679735d6e0a110edbc266745',
+  email: 'kabelsus@gmail.com',
+  role: 'engineer',
+  integrator: '679733468f42d980183f89bd',
+  iat: 1738671073,
+  exp: 1738671973
+}
+}
+tg: "exp" claim timestamp check failed
+    at rl (.next/server/middleware.js:13:56777)
+    at rc (.next/server/middleware.js:13:57302)
+    at async rT.verifyAccessToken (.next/server/middleware.js:13:65571)
+    at async rR (.next/server/middleware.js:13:66427)
+    at async handler (.next/server/middleware.js:13:67630)
+    at async (.next/server/middleware.js:13:32390)
+    at async e9 (.next/server/middleware.js:13:29250) {
+  code: 'ERR_JWT_EXPIRED',
+  claim: 'exp',
+  reason: 'check_failed',
+  payload: {
+  id: '679735d6e0a110edbc266745',
+  email: 'kabelsus@gmail.com',
+  role: 'engineer',
+  integrator: '679733468f42d980183f89bd',
+  iat: 1738671073,
+  exp: 1738671973
+}
+}
+ ⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
+ ⨯ uncaughtException:  [Error: ENOENT: no such file or directory, rename '/home/arnatyco/snatchiuat/logs/info.log.1' -> '/home/arnatyco/snatchiuat/logs/info.log.2'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: '/home/arnatyco/snatchiuat/logs/info.log.1',
+  dest: '/home/arnatyco/snatchiuat/logs/info.log.2'
+}
+ ⨯ uncaughtException:  [Error: ENOENT: no such file or directory, rename '/home/arnatyco/snatchiuat/logs/trace.log.1' -> '/home/arnatyco/snatchiuat/logs/trace.log.2'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: '/home/arnatyco/snatchiuat/logs/trace.log.1',
+  dest: '/home/arnatyco/snatchiuat/logs/trace.log.2'
+}
+ ⨯ uncaughtException:  [Error: ENOENT: no such file or directory, rename '/home/arnatyco/snatchiuat/logs/error.log.5' -> '/home/arnatyco/snatchiuat/logs/error.log.6'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: '/home/arnatyco/snatchiuat/logs/error.log.5',
+  dest: '/home/arnatyco/snatchiuat/logs/error.log.6'
+}
+(node:774263) ExperimentalWarning: buffer.File is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+ ⨯ uncaughtException:  [Error: ENOENT: no such file or directory, rename '/home/arnatyco/snatchiuat/logs/info.log.1' -> '/home/arnatyco/snatchiuat/logs/info.log.2'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: '/home/arnatyco/snatchiuat/logs/info.log.1',
+  dest: '/home/arnatyco/snatchiuat/logs/info.log.2'
+}
+ ⨯ uncaughtException:  [Error: ENOENT: no such file or directory, rename '/home/arnatyco/snatchiuat/logs/trace.log.1' -> '/home/arnatyco/snatchiuat/logs/trace.log.2'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: '/home/arnatyco/snatchiuat/logs/trace.log.1',
+  dest: '/home/arnatyco/snatchiuat/logs/trace.log.2'
+}
+ ⨯ uncaughtException:  [Error: ENOENT: no such file or directory, rename '/home/arnatyco/snatchiuat/logs/error.log.5' -> '/home/arnatyco/snatchiuat/logs/error.log.6'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: '/home/arnatyco/snatchiuat/logs/error.log.5',
+  dest: '/home/arnatyco/snatchiuat/logs/error.log.6'
+}
+ ⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+ ⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+Error: Invalid date format
+    at c (.next/server/app/api/task/route.js:1:11893)
+    at f (.next/server/app/api/task/route.js:1:2977)
+    at b (.next/server/app/api/task/route.js:1:5930)
+Error: Invalid date format
+    at c (.next/server/app/api/task/route.js:1:11893)
+    at f (.next/server/app/api/task/route.js:1:2977)
+    at b (.next/server/app/api/task/route.js:1:5930)
+(node:4029874) ExperimentalWarning: buffer.File is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Error: Invalid date format
+    at c (.next/server/app/api/task/route.js:1:11893)
+    at f (.next/server/app/api/task/route.js:1:2977)
+    at b (.next/server/app/api/task/route.js:1:5930)
+ ⨯ uncaughtException:  [Error: ENOENT: no such file or directory, rename '/home/arnatyco/snatchiuat/logs/error.log.3' -> '/home/arnatyco/snatchiuat/logs/error.log.4'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: '/home/arnatyco/snatchiuat/logs/error.log.3',
+  dest: '/home/arnatyco/snatchiuat/logs/error.log.4'
+}
+ ⨯ uncaughtException:  [Error: ENOENT: no such file or directory, rename '/home/arnatyco/snatchiuat/logs/trace.log' -> '/home/arnatyco/snatchiuat/logs/trace.log.0'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: '/home/arnatyco/snatchiuat/logs/trace.log',
+  dest: '/home/arnatyco/snatchiuat/logs/trace.log.0'
+}
+ ⨯ uncaughtException:  [Error: ENOENT: no such file or directory, rename '/home/arnatyco/snatchiuat/logs/info.log.1' -> '/home/arnatyco/snatchiuat/logs/info.log.2'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: '/home/arnatyco/snatchiuat/logs/info.log.1',
+  dest: '/home/arnatyco/snatchiuat/logs/info.log.2'
+}
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+Error: Invalid date format
+    at m (.next/server/app/api/webhooks/route.js:1:9725)
+    at f (.next/server/app/api/task/route.js:1:2977)
+    at b (.next/server/app/api/task/route.js:1:5930)
+Error: Invalid date format
+    at m (.next/server/app/api/webhooks/route.js:1:9725)
+    at f (.next/server/app/api/task/route.js:1:2977)
+    at b (.next/server/app/api/task/route.js:1:5930)
+Error: Invalid date format
+    at m (.next/server/app/api/webhooks/route.js:1:9725)
+    at f (.next/server/app/api/task/route.js:1:2977)
+    at b (.next/server/app/api/task/route.js:1:5930)
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: retry: Resource temporarily unavailable
+/home/arnatyco/nodevenv/snatchiuat/18/bin/node: fork: Resource temporarily unavailable
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+ ⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
+ ⨯ uncaughtException:  [Error: ENOENT: no such file or directory, rename '/home/arnatyco/snatchiuat/logs/info.log.1' -> '/home/arnatyco/snatchiuat/logs/info.log.2'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: '/home/arnatyco/snatchiuat/logs/info.log.1',
+  dest: '/home/arnatyco/snatchiuat/logs/info.log.2'
+}
+ ⨯ uncaughtException:  [Error: ENOENT: no such file or directory, rename '/home/arnatyco/snatchiuat/logs/error.log.5' -> '/home/arnatyco/snatchiuat/logs/error.log.6'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: '/home/arnatyco/snatchiuat/logs/error.log.5',
+  dest: '/home/arnatyco/snatchiuat/logs/error.log.6'
+}
+ ⨯ uncaughtException:  [Error: ENOENT: no such file or directory, rename '/home/arnatyco/snatchiuat/logs/trace.log.1' -> '/home/arnatyco/snatchiuat/logs/trace.log.2'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'rename',
+  path: '/home/arnatyco/snatchiuat/logs/trace.log.1',
+  dest: '/home/arnatyco/snatchiuat/logs/trace.log.2'
+}
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+[31m[auth][error][0m UntrustedHost: Host must be trusted. URL was: https://localhost:4000/api/auth/session. Read more at https://errors.authjs.dev#untrustedhost
+    at /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:53127
+    at ij (/home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:55805)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async tr.do (/home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:18:17582)
+[31m[auth][error][0m UntrustedHost: Host must be trusted. URL was: https://localhost:4000/api/auth/session. Read more at https://errors.authjs.dev#untrustedhost
+    at /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:53127
+    at ij (/home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:55805)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async tr.do (/home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:18:17582)
+[31m[auth][error][0m UntrustedHost: Host must be trusted. URL was: https://localhost:4000/api/auth/providers. Read more at https://errors.authjs.dev#untrustedhost
+    at /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:53127
+    at ij (/home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:55805)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async tr.do (/home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:18:17582)
+[31m[auth][error][0m UntrustedHost: Host must be trusted. URL was: https://localhost:4000/api/auth/error. Read more at https://errors.authjs.dev#untrustedhost
+    at /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:53127
+    at ij (/home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:55805)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async tr.do (/home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:18:17582)
+[31m[auth][error][0m UntrustedHost: Host must be trusted. URL was: https://localhost:4000/api/auth/session. Read more at https://errors.authjs.dev#untrustedhost
+    at /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:53127
+    at ij (/home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:55805)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async tr.do (/home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:18:17582)
+[31m[auth][error][0m UntrustedHost: Host must be trusted. URL was: https://localhost:4000/api/auth/session. Read more at https://errors.authjs.dev#untrustedhost
+    at /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:53127
+    at ij (/home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:55805)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async tr.do (/home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:18:17582)
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'serverComponentsExternalPackages', 'serverExternalPackages' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ ⚠ `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your next.config.js file accordingly.
+[31m[auth][error][0m UntrustedHost: Host must be trusted. URL was: https://localhost:4000/api/auth/providers. Read more at https://errors.authjs.dev#untrustedhost
+    at /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:53127
+    at ij (/home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:55805)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async tr.do (/home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:18:17582)
+[31m[auth][error][0m UntrustedHost: Host must be trusted. URL was: https://localhost:4000/api/auth/error. Read more at https://errors.authjs.dev#untrustedhost
+    at /home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:53127
+    at ij (/home/arnatyco/snatchiuat/.next/server/app/api/auth/[...nextauth]/route.js:368:55805)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async tr.do (/home/arnatyco/nodevenv/snatchiuat/18/lib/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:18:17582)

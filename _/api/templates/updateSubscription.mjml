@@ -1,0 +1,36 @@
+<mjml>
+  <mj-body background-color="#f1f1f1">
+    <mj-section>
+      <mj-column>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#fff">
+      <mj-column>
+        <mj-text font-size="30px" align="center">
+          Subscription Update
+        </mj-text>
+        <mj-divider border-color="#06adef" width="100px"></mj-divider>
+        <mj-text font-size="18px" align="left" color="#555" line-height="30px">
+          Dear {{contact}},
+          <p>
+            Your subscription upgrade is successful.
+          </p>
+
+          <p>
+            Your new subscription details is now:
+
+            <br> Plan : {{plan}}
+            <br> Amount : {{price}}
+            <br> Billing Cycle : {{billingCycle}}
+          </p>
+
+          <p>
+            Please remember - if you do have any questions, please drop an email to {{contactEmail}}, or give us a call at {{contactMobile}}
+          </p>
+          <p>Thank again for subscribing to Jerur!.<br> We look forward to working with you!</p>
+           <p>Sincerely,<br />{{team}}</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

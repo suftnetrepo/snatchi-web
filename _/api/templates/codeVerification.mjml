@@ -1,0 +1,25 @@
+<mjml>
+  <mj-body background-color="#f1f1f1">
+    <mj-section>
+      <mj-column>
+    
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#fff">
+      <mj-column>
+        <mj-text font-size="30px" align="center">
+          Your Code for verification 
+        </mj-text>
+        <mj-divider border-color="#06adef" width="100px"></mj-divider>
+        <mj-text font-size="18px" align="left" color="#555" line-height="30px">Hi {{name}},
+          <P>
+           <br>Your Code for verification is :<h3> {{code}} </h3>
+            If you're not sure why you're receiving this message, you can report it to us by emailing {{contact_email}}.<br>
+          </P>
+          <p>Sincerely,<br />{{team}}</p>
+        </mj-text>
+
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

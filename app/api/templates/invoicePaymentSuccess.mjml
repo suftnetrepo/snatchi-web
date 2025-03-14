@@ -1,0 +1,31 @@
+<mjml>
+  <mj-body background-color="#f1f1f1">
+    <mj-section>
+      <mj-column>
+       
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#fff">
+      <mj-column>
+        <mj-text font-size="30px" align="center">
+          Invoice paid successfully
+        </mj-text>
+        <mj-divider border-color="#06adef" width="100px"></mj-divider>
+        <mj-text font-size="18px" align="left" color="#555" line-height="30px">
+          Dear {{contact}},
+          <p>Thank you for your Snatchi subscription payment, registered to {{email}}</p>
+          <p><b>Total Amount Paid</b>: {{amount_paid}}</p>
+          <p>To view and download your invoice, copy the following link and past on your broswer : {{hosted_invoice_url}} .<br> </p>
+          <p>Please remember - if you do have any questions, please drop an email to {{contactEmail}}, or give us a call at {{contactMobile}}
+        
+          <p>
+            We hope you enjoy our services.<br>
+            Thank again for subscribing to <strong>Snatchi</strong> !. We look forward to working with you!
+          </p>
+         
+          <p>Sincerely,<br />{{team}}</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

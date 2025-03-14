@@ -1,0 +1,1 @@
+self.__REACT_LOADABLE_MANIFEST={"_app.tsx -> plugins/scrollcue":{id:1926,files:["static/chunks/926.2ef97ab579552fdf.js"]}};

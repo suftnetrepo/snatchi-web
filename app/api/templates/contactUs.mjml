@@ -1,0 +1,31 @@
+<mjml>
+  <mj-body background-color="#f1f1f1">
+    <mj-section>
+      <mj-column>
+        <mj-image width="100px" src="https://isap-api.herokuapp.com/img/avatars/logo123.png"></mj-image>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#fff">
+      <mj-column>
+        <mj-text font-size="30px" align="center">
+          {{subject}}
+        </mj-text>
+        <mj-divider border-color="#06adef" width="100px"></mj-divider>
+        <mj-text font-size="18px" align="left" color="#555" line-height="30px">Hi ,
+           <P>Names : {{names}}<br>
+             Email : {{email}}<br>
+             </P>
+          <P>
+          {{body}}
+            <br>
+            If you're not sure why you're receiving this message, you can report it to us by emailing {{contact}}.<br>
+          </P>
+
+          <p>Sincerely,<br />{{team}}</p>
+        </mj-text>
+
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
+
