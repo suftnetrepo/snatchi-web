@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { AuthService } from './lib/AuthService';
 import { getToken } from 'next-auth/jwt';
+import { jwtVerify } from 'jose';
 
 export async function middleware(request) {
   try {
@@ -28,16 +29,26 @@ export async function middleware(request) {
       }
     } else {
       try {
-        // Attempt to retrieve the session token
+        const sessionToken = request.cookies.get('__Secure-authjs.session-token')?.value;
 
-        console.log(".............................................................request.headers", request.cookies )
-        console.log(".............................................................process.env.NEXTAUTH_SECRET ", process.env.NEXTAUTH_SECRET.trim() )
+        if (!sessionToken) {
+          console.log('No session token found');
+          const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+          const { payload } = await jwtVerify(sessionToken, secret);
 
+          console.log('Decoded session:', payload);
+        }
+
+        console.log('.............................................................request.headers', request.cookies);
+        console.log(
+          '.............................................................process.env.NEXTAUTH_SECRET ',
+          process.env.NEXTAUTH_SECRET.trim()
+        );
 
         const session = await getToken({
           req: request,
           secret: process.env.NEXTAUTH_SECRET.trim(),
-          secureCookie: false
+          secureCookie: true
         });
 
         console.log('Session token:', session);
