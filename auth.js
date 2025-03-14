@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
-import User from "@/api/models/user";
+import User from '@/api/models/user';
 import { mongoConnect } from './utils/connectDb';
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
@@ -13,9 +13,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-       await mongoConnect();
+        await mongoConnect();
         try {
-
           const user = await User.findOne({ email: credentials.email });
 
           if (!user) {
@@ -43,8 +42,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     })
   ],
   session: { strategy: 'jwt' },
-  secret: process.env.NEXTAUTH_SECRET,
-  trustHost: process.env.AUTH_TRUST_HOST === "true",
+  secret: process.env.NEXTAUTH_SECRET.trim(),
+  trustHost: process.env.AUTH_TRUST_HOST === 'true',
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -73,5 +72,3 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     signIn: '/login'
   }
 });
-
-
