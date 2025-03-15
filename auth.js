@@ -43,8 +43,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   ],
   session: { strategy: 'jwt' },
   secret: process.env.NEXTAUTH_SECRET?.trim(),
-  useSecureCookies: process.env.NODE_ENV === "production",
-  trustHost: process.env.AUTH_TRUST_HOST === 'true',
+  useSecureCookies: true,
+  trustHost: true,
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
