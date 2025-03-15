@@ -30,7 +30,7 @@ export async function middleware(request) {
       try {
         const session = await getToken({
           req: request,
-          secret: process.env.NEXTAUTH_SECRET.trim(),
+          secret: process.env.NEXTAUTH_SECRET?.trim(),
           secureCookie: true
         });
 
