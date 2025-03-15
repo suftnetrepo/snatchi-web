@@ -1,4 +1,4 @@
-const HOST = process.env.NEXT_PUBLIC_BASE_URL;
+const HOST = process.env.NEXT_PUBLIC_BASE_URL || "https://snatchi-web.onrender.com/api/";
 
 const VERBS = {
   POST: 'POST',
