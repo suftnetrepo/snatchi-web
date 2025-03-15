@@ -3,11 +3,6 @@ import mongoose, { ConnectOptions } from 'mongoose';
 export const mongoConnect = async () => {
   const connectionUrl = process.env.MONGO_URI;
 
-  if (!connectionUrl) {
-    console.error('Error: MONGO_URI is not defined in environment variables.');
-    return;
-  }
-
   const options = {  
     serverSelectionTimeoutMS: 30000, 
     socketTimeoutMS: 30000 
