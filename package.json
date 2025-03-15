@@ -146,5 +146,9 @@
   },
   "resolutions": {
     "@types/react": "^17.0.38"
+  },
+  "engines": {
+    "node": "18.x",
+    "yarn": "1.22.22"
   }
 }
