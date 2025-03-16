@@ -30,8 +30,8 @@ export async function middleware(request) {
       try {
         const session = await getToken({
           req: request,
-          secret: process.env.NEXT_AUTH_SECRET?.trim()|| 'ft8c95VaAkJiIl7x2zyI5vdVvqblSmF5THeod78WA34=',
-          secureCookie: false
+          secret: process.env.NEXTAUTH_SECRET?.trim()|| 'ft8c95VaAkJiIl7x2zyI5vdVvqblSmF5THeod78WA34=',
+          secureCookie: true
         });
 
         if (!session) {
