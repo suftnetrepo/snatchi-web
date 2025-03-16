@@ -39,9 +39,6 @@ const LoginForm = () => {
       password: fields.password
     });
 
-
-    console.error('..........................result:', result);
-
     if (!result?.ok) {
       handleError(result.error);
       return;

@@ -1,3 +1,5 @@
+
+
 import {
   Dropdown,
   DropdownItem,
@@ -23,9 +25,9 @@ const ItemWithIcon = (props) => {
   );
 };
 
-export default function HeaderProfileNav() {
+export default async function HeaderProfileNav() {
   const handleSignOut = async () => {
-    await signOut({ redirect: true, callbackUrl: "/login" });
+    await signOut({ callbackUrl: "/" });
   };
 
   return (
