@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import { signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 const ItemWithIcon = (props) => {
   const { icon, children } = props;
@@ -16,8 +17,10 @@ const ItemWithIcon = (props) => {
 };
 
 export default function HeaderProfileNav() {
+  const router = useRouter();
   const handleSignOut = async () => {
-    signOut({ callbackUrl: "/" })
+    signOut({ redirect:false })
+    router.push("/");
   };
 
   return (
