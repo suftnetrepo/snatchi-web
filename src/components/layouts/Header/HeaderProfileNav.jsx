@@ -1,17 +1,7 @@
-
-
-import {
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownToggle,
-  Nav,
-  NavItem
-} from 'react-bootstrap';
+import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Nav, NavItem } from 'react-bootstrap';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPowerOff } from '@fortawesome/free-solid-svg-icons';
-import HeaderLogout from './HeaderLogout';
 import { signOut } from 'next-auth/react';
 
 const ItemWithIcon = (props) => {
@@ -25,9 +15,9 @@ const ItemWithIcon = (props) => {
   );
 };
 
-export default async function HeaderProfileNav() {
+export default function HeaderProfileNav() {
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/" });
+    signOut({ callbackUrl: "/" })
   };
 
   return (
@@ -44,14 +34,9 @@ export default async function HeaderProfileNav() {
           </div>
         </DropdownToggle>
         <DropdownMenu className="pt-4">
-                  
-          <HeaderLogout>
-            <DropdownItem
-              onClick={handleSignOut}
-            >
-              <ItemWithIcon icon={faPowerOff}>logout</ItemWithIcon>
-            </DropdownItem>
-          </HeaderLogout>
+          <DropdownItem onClick={handleSignOut}>
+            <ItemWithIcon icon={faPowerOff}>logout</ItemWithIcon>
+          </DropdownItem>
         </DropdownMenu>
       </Dropdown>
     </Nav>
