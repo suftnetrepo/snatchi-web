@@ -28,7 +28,6 @@ const LoginForm = () => {
     const validationResult = validate(fields, loginValidator.rules);
     if (validationResult.hasError) {
       setValidationError(validationResult.errors);
-
       return;
     }
 
@@ -54,8 +53,6 @@ const LoginForm = () => {
     const returnUrl = urlParams.get('returnUrl');
 
     const updatedSession = await getSession();
-
-    console.error('..........................updatedSession:', updatedSession);
   
     let redirectPath;
     if (returnUrl) {

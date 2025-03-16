@@ -43,7 +43,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   ],
   session: { strategy: 'jwt' },
   secret: process.env.NEXTAUTH_SECRET?.trim() || 'ft8c95VaAkJiIl7x2zyI5vdVvqblSmF5THeod78WA34=',
-  useSecureCookies: true,
+  useSecureCookies: false,
   trustHost: true,
   callbacks: {
     async jwt({ token, user }) {
@@ -68,6 +68,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       };
       return session;
     }
+  },
+  events: {
+    signOut(message) {
+      console.log("User signed out:", message);
+    },
   },
   pages: {
     signIn: '/login'

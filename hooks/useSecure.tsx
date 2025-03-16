@@ -98,23 +98,23 @@ const useSecure = () => {
     }
   };
 
-  const handleLogout = async () => {
-    const { success, errorMessage } = await zat(ACCOUNT.logout, null, VERBS.POST);
+  // const handleLogout = async () => {
+  //   const { success, errorMessage } = await zat(ACCOUNT.logout, null, VERBS.POST);
 
-    if (success) {
-      setState((pre) => {
-        return { ...pre, data: success, loading: false };
-      });
-      return success;
-    } else {
-      handleError(errorMessage);
-    }
-  };
+  //   if (success) {
+  //     setState((pre) => {
+  //       return { ...pre, data: success, loading: false };
+  //     });
+  //     return success;
+  //   } else {
+  //     handleError(errorMessage);
+  //   }
+  // };
 
   return {
     ...state,
     handleLogin,
-    handleLogout,
+    // handleLogout,
     handleChange,
     handleForgotPassword,
     handleResetPassword,
