@@ -3,7 +3,7 @@ const { findPrice } = require('../../../src/data/pricing');
 const { formatUnix } = require('../utils/date-format');
 const { updateIntegratorStatus } = require('./integrator');
 const { DATE_FORMAT_DD_MM_YYYY_HH_mm_ss_sz, DATE_FORMAT_dd_MMM_YYYY } = require('../utils/date-constants');
-const { sendGridMail } = require('../../../lib/mail');
+const { sendEmail } = require('../../../lib/mail');
 const { compileEmailTemplate } = require('../templates/compile-email-template');
 const { logger } = require('../utils/logger');
 import { emailTemplates } from '../../email';
@@ -48,7 +48,7 @@ const invoicePaymentSuccess = async (event) => {
       html
     };
 
-    sendGridMail(mailOptions);
+    await sendEmail(mailOptions);
   } catch (error) {
     logger.error(error);
   }
@@ -100,7 +100,7 @@ const invoicePaymentFailed = async (event) => {
       html
     };
 
-    sendGridMail(mailOptions);
+    await sendEmail(mailOptions);
   } catch (error) {
     logger.error(error);
   }
@@ -127,7 +127,7 @@ const trialWillEnd = async (event) => {
       html
     };
 
-    sendGridMail(mailOptions);
+    await sendEmail(mailOptions);
   } catch (error) {
     logger.error(error);
   }
@@ -170,7 +170,7 @@ const updateSubscription = async (event) => {
     };
 
     if (status === 'active') {
-      sendGridMail(mailOptions);
+      await sendEmail(mailOptions);
     }
   } catch (error) {
     logger.error(error);
@@ -206,7 +206,7 @@ const createSubscription = async (event) => {
       html
     };
 
-    sendGridMail(mailOptions);
+    await sendEmail(mailOptions);
   } catch (error) {
     logger.error(error);
   }
@@ -240,7 +240,7 @@ const cancelSubscription = async (event) => {
       html
     };
 
-    sendGridMail(mailOptions);
+    await sendEmail(mailOptions);
   } catch (error) {
     logger.error(error);
   }
@@ -273,7 +273,7 @@ const cancelTrial = async (event) => {
       html
     };
 
-    sendGridMail(mailOptions);
+    await sendEmail(mailOptions);
   } catch (error) {
     logger.error(error);
   }
