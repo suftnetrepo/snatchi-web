@@ -1,7 +1,7 @@
 import { mongoConnect } from '../../../../utils/connectDb';
 import User from '../../models/user';
 import { errorHandler } from '../../../../utils/errors';
-import { sendGridMail } from '../../../../lib/mail';
+import { sendEmail } from '../../../../lib/mail';
 import { emailTemplates } from '../../../email';
 import { compileEmailTemplate } from '../../templates/compile-email-template';
 import { NextResponse } from 'next/server';
@@ -12,7 +12,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    console.log("...............................body.email", body.email)
     if (!body.email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
@@ -50,7 +49,7 @@ export async function POST(req: Request) {
       html: template
     };
    
-    sendGridMail(mailOptions);
+    await sendEmail(mailOptions);
 
     return NextResponse.json({ data: true }, { status: 200 });
   } catch (err) {      
