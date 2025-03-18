@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     );
 
     const mailOptions = {
-      from:process.env.USER_NAME,
+      from:process.env.USER_NAME || "kabelsus@gmail.com",
       to: emailAddress,
       subject: 'Instructions for changing your Snatchi Account password',
       text: template,
