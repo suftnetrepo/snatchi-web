@@ -5,24 +5,24 @@ import { Container, Row, Col, Form, ListGroup, InputGroup, Modal } from 'react-b
 import { BsPaperclip, BsSend } from 'react-icons/bs';
 import { useChatInput, useChatRoom, useChatMessage } from '../../../../hooks/useChat';
 import { useChatContext } from '../../../../hooks/ChatContext';
-import { useAppContext } from '../../../../hooks/../Store/AppContext';
 import { FaSearch } from 'react-icons/fa';
 import SimpleBar from 'simplebar-react';
 import { formatTimeForObject, convertTimestampToTime } from '../../../../utils/helpers';
 import { RenderChatOffcanvas } from './renderChatOffcanvas';
+import { useSession } from 'next-auth/react';
 
 const RenderChat = () => {
-  const { currentUser } = useAppContext();
+  const { data: session }= useSession()
   const { changeChatRoom, chatRoomId, chatRoom } = useChatContext();
   const { handleSend, handleReset, handleChange, text, img } = useChatInput();
-  const { handleSearch, handleSearchChange, handleAddMember, handleNewRoom, handleNewRoomChange, roomName, search_terms, chats } = useChatRoom(currentUser?.user_id);
-  const { messages } = useChatMessage(chatRoomId, currentUser?.user_id);
+  const { handleSearch, handleSearchChange, handleAddMember, handleNewRoom, handleNewRoomChange, roomName, search_terms, chats } = useChatRoom(session?.user?.id);
+  const { messages } = useChatMessage(chatRoomId, session?.user?.id);
   const [showChatOffcanvas, setShowChatOffcanvas] = useState(false);
   const [show, setShow] = useState(false);
   const ref = useRef();
  
   useEffect(() => {
-    const chat = chats.find((j) => j.users.includes(currentUser.user_id));
+    const chat = chats.find((j) => j.users.includes(session?.user?.id));
    
     if (chat) {
       changeChatRoom(chat);
@@ -44,7 +44,7 @@ const RenderChat = () => {
   };
 
   const handleSendMessage = async () => {
-    handleSend(chatRoomId, currentUser.user_id, chatRoom.users, text, img).then(() => {
+    handleSend(chatRoomId, session?.user?.id, chatRoom.users, text, img).then(() => {
       handleReset();
     });
   };
@@ -157,12 +157,12 @@ const RenderChat = () => {
                 <div
                   key={index}
                   className={`d-flex mb-3 ${
-                    message?.senderId === currentUser.user_id ? 'justify-content-end' : 'justify-content-start'
+                    message?.senderId === session?.user?.id? 'justify-content-end' : 'justify-content-start'
                   }`}
                 >
                   <div
                     className={`message p-3 rounded-3 ${
-                      message?.senderId === currentUser.user_id ? 'bg-primary text-white' : 'bg-light text-dark'
+                      message?.senderId === session?.user?.id ? 'bg-primary text-white' : 'bg-light text-dark'
                     }`}
                   >
                     <p className="mb-0">{message.text}</p>
@@ -176,7 +176,7 @@ const RenderChat = () => {
                           style={{
                             fontWeight: 'bold',
                             textDecoration: 'none',
-                            color: message?.senderId === currentUser.user_id ? '#eceef0' : '#007bff'
+                            color: message?.senderId === session?.user?.id ? '#eceef0' : '#007bff'
                           }}
                         >
                           Open Attachment
@@ -245,7 +245,7 @@ const RenderChat = () => {
           <Button variant="secondary" onClick={() => setShow(false)}>
             Close
           </Button>
-          <Button variant="primary" disabled={!roomName.length} onClick={async () => handleNewRoom([currentUser.user_id], roomName)}>
+          <Button variant="primary" disabled={!roomName.length} onClick={async () => handleNewRoom([session?.user?.id], roomName)}>
             Save Changes
           </Button>
         </Modal.Footer>
