@@ -16,6 +16,8 @@ export const GET = async (req) => {
     const userData = req.headers.get('x-user-data');
     const user = userData ? JSON.parse(userData) : null;
 
+    console.log(".....................user", user)
+
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
