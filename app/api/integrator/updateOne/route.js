@@ -63,14 +63,6 @@ export const POST = async (req) => {
     return NextResponse.json({ data }, { status: 200 });
   } catch (error) {
     logger.error(error);
-
-    if (error.message === "Unauthorized") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
     return NextResponse.json(
       { success: false, error: error.message || "Something went wrong" },
       { status: 500 }

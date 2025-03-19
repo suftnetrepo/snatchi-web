@@ -16,8 +16,6 @@ export const GET = async (req) => {
     const userData = req.headers.get('x-user-data');
     const user = userData ? JSON.parse(userData) : null;
 
-    console.log(".....................user", user)
-
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
@@ -56,18 +54,13 @@ export const GET = async (req) => {
     }
 
     if (action === 'aggregate') {
-      const aggregated = await getTaskStatusAggregates(user._id);
+      const aggregated = await getTaskStatusAggregates(user.id);
       return NextResponse.json({ success: true, data: aggregated });
     }
 
     return NextResponse.json({ success: false, message: 'Invalid action parameter' }, { status: 400 });
   } catch (error) {
-    console.error(error);
-
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
+    logger.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -85,11 +78,6 @@ export const DELETE = async (req) => {
     return NextResponse.json({ success: true, data: deleted }, { status: 200 });
   } catch (error) {
     logger.error(error);
-
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -114,11 +102,6 @@ export const PUT = async (req) => {
     }
   } catch (error) {
     logger.error(error);
-
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -134,11 +117,6 @@ export const POST = async (req) => {
     return NextResponse.json({ success: true, data: result }, { status: 200 });
   } catch (error) {
     logger.error(error);
-
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
