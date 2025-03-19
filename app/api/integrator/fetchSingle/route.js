@@ -12,11 +12,6 @@ export const GET = async (req) => {
     return NextResponse.json({ data: results });
   } catch (error) {
     logger.error(error);
-  
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-   
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

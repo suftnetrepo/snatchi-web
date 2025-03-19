@@ -21,8 +21,6 @@ export const GET = async (req) => {
     const taskId = url.searchParams.get('taskId');
   
     const result = await getAll(taskId, projectId);
-
-    console.log("...............................result", result)
     
     return NextResponse.json({ success: true, data: result }, { status: 200 });
   } catch (error) {

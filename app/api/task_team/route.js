@@ -12,11 +12,6 @@ export const POST = async (req) => {
     return NextResponse.json({ success: true, data: result }, { status: 200 });
   } catch (error) {
     logger.error(error);
-
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
@@ -33,11 +28,6 @@ export const GET = async (req) => {
     return NextResponse.json({ success: true, data: result }, { status: 200 });
   } catch (error) {
     logger.error(error);
-
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
@@ -55,11 +45,6 @@ export const DELETE = async (req) => {
     return NextResponse.json({ success: true, data: deleted }, { status: 200 });
   } catch (error) {
     logger.error(error);
-
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

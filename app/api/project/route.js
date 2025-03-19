@@ -60,7 +60,7 @@ export const GET = async (req) => {
 
     return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    console.error(error)
+    logger.error(error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -92,11 +92,6 @@ export const PUT = async (req) => {
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     logger.error(error);
-
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
