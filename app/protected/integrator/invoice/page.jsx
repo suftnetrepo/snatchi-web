@@ -95,7 +95,7 @@ const Invoice = () => {
         textAlign: 'right',
         Cell: ({ row }) => (
           <div className="d-flex justify-content-center align-items-center">
-            <Tooltip title="Edit Project" arrow>
+            <Tooltip title="View Invoice" arrow>
               <span className="p-0">
                 <FaEye
                   size={30}
