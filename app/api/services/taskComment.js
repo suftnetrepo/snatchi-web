@@ -1,8 +1,11 @@
 
+import { mongoConnect } from '@/utils/connectDb';
 import Task from '../models/task';
 import User from '../models/user';
 import { isValidObjectId } from '../utils/helps';
 const { logger } = require('../utils/logger');
+
+mongoConnect()
 
 async function getAll(taskId, projectId) {
  

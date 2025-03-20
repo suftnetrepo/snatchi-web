@@ -2,8 +2,11 @@ const mongoose = require('mongoose');
 import { userValidator, userEditValidator } from '../validator/user';
 import User from '../models/user';
 import { isValidObjectId } from '../utils/helps';
+import { mongoConnect } from '@/utils/connectDb';
 const { generatePassword } = require('../utils/helps');
 const { logger } = require('../utils/logger');
+
+mongoConnect()
 
 async function getUsers({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
   if (!isValidObjectId(suid)) {

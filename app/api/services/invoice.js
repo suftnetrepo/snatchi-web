@@ -1,8 +1,11 @@
 const mongoose = require('mongoose');
+import { mongoConnect } from '@/utils/connectDb';
 import Invoice from '../models/invoice';
 import User from '../models/user';
 import { isValidObjectId } from '../utils/helps';
 const { logger } = require('../utils/logger');
+
+mongoConnect()
 
 async function getInvoices({ suid, page = 1, limit = 10, sortField = 'status', sortOrder = 'desc', searchQuery = '' }) {
   if (!isValidObjectId(suid)) {
@@ -63,7 +66,7 @@ async function getMyInvoices(user_id) {
       throw error;
     }
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }

@@ -1,3 +1,4 @@
+
 import {
   searchInvoiceByUser,
   getMyInvoices,
@@ -19,7 +20,6 @@ export const GET = async (req) => {
     const action = url.searchParams.get('action');
 
     if (action === 'paginate') {
-
       const sortField = url.searchParams.get('sortField');
       const sortOrder = url.searchParams.get('sortOrder');
       const searchQuery = url.searchParams.get('searchQuery');
@@ -35,7 +35,7 @@ export const GET = async (req) => {
         searchQuery
       });
 
-      return NextResponse.json({ data, success: true, totalCount});
+      return NextResponse.json({ data, success: true, totalCount });
     }
 
     if (action === 'myInvoices') {
@@ -99,7 +99,7 @@ export const POST = async (req) => {
     const result = await createInvoice(user?.integrator, user?.id, body);
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };

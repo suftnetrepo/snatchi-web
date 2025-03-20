@@ -45,16 +45,21 @@ const invoiceSchema = new mongoose.Schema(
           required: false,
           trim: true
         },
-        quantity: {
+        hour: {
           type: Number,
           required: true,
           default: 1
         },
-        unitPrice: {
+        rate: {
           type: Number,
           required: true,
           default: 0
-        }
+        },
+        date: {
+          type: String,
+          required: false,
+          trim: true
+        },
       }
     ],
     subtotal: {

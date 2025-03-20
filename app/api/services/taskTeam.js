@@ -1,7 +1,10 @@
-import { teamValidator } from '../validator/user';
+
 import Task from '../models/task';
 import { isValidObjectId } from '../utils/helps';
+import { mongoConnect } from '@/utils/connectDb';
 const { logger } = require('../utils/logger');
+
+mongoConnect()
 
 async function getAll(taskId, projectId) {
  
