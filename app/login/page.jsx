@@ -7,7 +7,6 @@ const Login = () => {
   return (
     <Fragment>
       <main className="content-wrapper">
-        {/* ========== title section ========== */}
         <section className="wrapper bg-dark text-white">
           <div className="container pt-18 pt-md-20 pb-21 pb-md-21 text-center">
             <div className="row">
@@ -18,7 +17,6 @@ const Login = () => {
           </div>
         </section>
 
-        {/* ========== form section ========== */}
         <section className="wrapper bg-light">
           <div className="container pb-14 pb-md-16">
             <div className="row">
@@ -43,8 +41,6 @@ const Login = () => {
         </section>
       </main>
 
-      {/* ========== footer section ========== */}
-      {/* <Footer /> */}
     </Fragment>
   );
 };

@@ -3,7 +3,6 @@ import { errorHandler } from '../../../utils/errors';
 import { createUser } from '../services/user';
 import { createIntegrator } from '../services/subscriber';
 const { NextResponse } = require('next/server');
-import { AuthService } from '../../../lib/AuthService';
 
 mongoConnect();
 
@@ -19,15 +18,6 @@ export async function POST(req) {
       visible: 'private'
     };
     const user = await createUser(integrator._id, userPayload);
-
-    const { accessToken, refreshToken } = await AuthService.generateTokens({
-      id: user._id,
-      email: user.email,
-      role: user.role,
-      integrator: user.integrator
-    });
-
-    await AuthService.setTokens({ accessToken, refreshToken });
    
     const payload = {
       user_id: user._id,

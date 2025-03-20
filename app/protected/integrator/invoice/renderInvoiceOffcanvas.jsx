@@ -26,29 +26,37 @@ const RenderInvoiceOffcanvas = ({ show, handleClose, invoice, handleEditInvoice 
 
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
-      <Offcanvas.Header closeButton>
-      
-      </Offcanvas.Header>
+      <Offcanvas.Header closeButton></Offcanvas.Header>
       <Offcanvas.Body>
         <div>
-        <Offcanvas.Title>
-          Invoice - {invoice?._id?.toString().slice(-8) || ''} <br />{' '}
-          <span
-            className={`badge rounded-pill me-2 py-2 px-3 text-white fw-normal fs-12 text-uppercase ${getStatusBadgeClass()}`}
-          >
-            {status}
-          </span>
-        </Offcanvas.Title>
+          <Offcanvas.Title>
+            Invoice - {invoice?._id?.toString().slice(-8) || ''} <br />{' '}
+            <span
+              className={`badge rounded-pill me-2 py-2 px-3 text-white fw-normal fs-12 text-uppercase ${getStatusBadgeClass()}`}
+            >
+              {status}
+            </span>
+          </Offcanvas.Title>
         </div>
-        <Form.Label htmlFor="issueDate" className="">
+        <Form.Label htmlFor="invoice_description" className="text-dark">
+          Description
+        </Form.Label>
+        <Form.Control
+          className="text-dark "
+          readOnly
+          value={invoice.invoice_description}
+          id="invoice_description"
+          aria-describedby="invoice_description"
+        />
+        <Form.Label htmlFor="issueDate" className="text-dark mt-2">
           Issue Date
         </Form.Label>
         <Form.Control
-          className="text-dark"
+          className="text-dark "
           readOnly
           value={formatReadableDate(invoice.issueDate)}
-          id="inputPassword5"
-          aria-describedby="passwordHelpBlock"
+          id="issueDate"
+          aria-describedby="issueDate"
         />
 
         <div className="table-responsive mt-4">
@@ -93,8 +101,8 @@ const RenderInvoiceOffcanvas = ({ show, handleClose, invoice, handleEditInvoice 
           </div>
         </div>
 
-        <Form.Label htmlFor="issueDate">Note</Form.Label>
-        <Form.Control value={invoice.notes} id="inputPassword5" aria-describedby="passwordHelpBlock" />
+        <Form.Label htmlFor="notes">Note</Form.Label>
+        <Form.Control value={invoice.notes} id="notes" aria-describedby="notes" />
         <div className="d-flex justify-content-md-start gap-2 mt-3">
           <select
             className="form-select w-auto"
