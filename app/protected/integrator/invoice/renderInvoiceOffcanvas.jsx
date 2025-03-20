@@ -27,16 +27,19 @@ const RenderInvoiceOffcanvas = ({ show, handleClose, invoice, handleEditInvoice 
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
       <Offcanvas.Header closeButton>
+      
+      </Offcanvas.Header>
+      <Offcanvas.Body>
+        <div>
         <Offcanvas.Title>
-          Invoice - ${invoice?._id?.toString().slice(-8) || ''} <br />{' '}
+          Invoice - {invoice?._id?.toString().slice(-8) || ''} <br />{' '}
           <span
             className={`badge rounded-pill me-2 py-2 px-3 text-white fw-normal fs-12 text-uppercase ${getStatusBadgeClass()}`}
           >
             {status}
           </span>
         </Offcanvas.Title>
-      </Offcanvas.Header>
-      <Offcanvas.Body>
+        </div>
         <Form.Label htmlFor="issueDate" className="">
           Issue Date
         </Form.Label>
@@ -48,32 +51,23 @@ const RenderInvoiceOffcanvas = ({ show, handleClose, invoice, handleEditInvoice 
           aria-describedby="passwordHelpBlock"
         />
 
-        <Form.Label htmlFor="issueDate" className="">
-          Description
-        </Form.Label>
-        <Form.Control
-          className="text-dark"
-          readOnly
-          value={invoice.invoice_description}
-          id="inputPassword5"
-          aria-describedby="passwordHelpBlock"
-        />
-
         <div className="table-responsive mt-4">
           <Table striped bordered hover>
             <thead className="thead-light">
               <tr>
+                <th>Date</th>
                 <th>Item</th>
-                <th className="text-end">Quantity</th>
-                <th className="text-end">Unit Price</th>
+                <th className="text-end">Hour</th>
+                <th className="text-end">Rate</th>
               </tr>
             </thead>
             <tbody>
               {invoice.items.map((item) => (
                 <tr key={item._id}>
+                  <td className="text-dark">{item.date}</td>
                   <td className="text-dark">{item.description}</td>
-                  <td className="text-end text-dark">{item.quantity}</td>
-                  <td className="text-end text-dark">{formatCurrency('£', item.unitPrice || 0)}</td>
+                  <td className="text-end text-dark">{item.hour}</td>
+                  <td className="text-end text-dark">{formatCurrency('£', item.rate || 0)}</td>
                 </tr>
               ))}
             </tbody>
