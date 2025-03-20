@@ -4,7 +4,10 @@ import Project from '../models/project';
 import User from '../models/user';
 import Task from '../models/task';
 import { isValidObjectId } from '../utils/helps';
+import { mongoConnect } from '@/utils/connectDb';
 const { logger } = require('../utils/logger');
+
+mongoConnect()
 
 async function getProjects({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
   if (!isValidObjectId(suid)) {

@@ -1,7 +1,10 @@
 import { documentValidator } from '../validator/user';
 import Project from '../models/project';
 import { isValidObjectId } from '../utils/helps';
+import { mongoConnect } from '@/utils/connectDb';
 const { logger } = require('../utils/logger');
+
+mongoConnect()
 
 async function getDocuments(suid, projectId) {
   if (!isValidObjectId(suid)) {

@@ -5,7 +5,10 @@ import User from '../models/user';
 const mongoose = require('mongoose');
 import { isValidObjectId } from '../utils/helps';
 import { getDayStartEnd } from '../utils/date-format';
+import { mongoConnect } from '@/utils/connectDb';
 const { logger } = require('../utils/logger');
+
+mongoConnect()
 
 async function getTasks({ projectId, page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
   if (!isValidObjectId(projectId)) {

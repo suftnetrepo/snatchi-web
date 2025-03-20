@@ -1,4 +1,4 @@
-import { verifyToken } from '../utils/helps';
+
 import { logger } from '../utils/logger';
 import { addOne, getAll, removeOne } from '../services/team';
 const { NextResponse } = require('next/server');

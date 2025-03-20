@@ -1,7 +1,10 @@
 
+import { mongoConnect } from '@/utils/connectDb';
 import Project from '../models/project';
 import { isValidObjectId } from '../utils/helps';
 const { logger } = require('../utils/logger');
+
+mongoConnect()
 
 async function getAll(suid, projectId) {
 
