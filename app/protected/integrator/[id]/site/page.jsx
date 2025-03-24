@@ -19,7 +19,6 @@ const SiteView = () => {
   const {
     data,
     notifications,
-    loading,
     error,
     handleReset,
     handleMultiplePushNotification,
@@ -29,14 +28,16 @@ const SiteView = () => {
   const onHandleMultiple = () => {
     const body = {
       data: data
-        .filter((j) => j.fcm !== '')
+        .filter((j) => j.id.fcm !== '')
         .map((item) => {
+
           return {
             projectId: id,
-            userId: item.id,
-            fcm: item?.fcm,
-            role: item?.role,
-            name: item?.name
+            userId: item._id,
+            fcm: item?.id?.fcm,
+            role: item?.id?.role,
+            first_name: item?.id?.first_name,
+            last_name: item?.id?.last_name,
           };
         })
     };
@@ -49,10 +50,11 @@ const SiteView = () => {
   const onHandleSingle = (user) => {
     const body = {
       projectId: id,
-      userId: user?.id,
+      userId: user?._id,
       fcm: user?.fcm,
       role: user?.role,
-      name: user?.name
+      first_name: user?.first_name,
+      last_name: user?.last_name,
     };
 
     handleSinglPushNotification(body).then((result) => {
@@ -150,7 +152,8 @@ const SiteView = () => {
                 <thead>
                   <tr>
                     <th>Date</th>
-                    <th>Name</th>
+                    <th>FirstName</th>
+                    <th>LastName</th>
                     <th>Role</th>
                     <th>Location</th>
                     <th>Action</th>
@@ -161,7 +164,8 @@ const SiteView = () => {
                     return (
                       <tr key={index}>
                         <td>{formatDateTime(item.updatedAt)}</td>
-                        <td>{item.name}</td>
+                        <td>{item.first_name}</td>
+                        <td>{item.last_name}</td>
                         <td>{item.role}</td>
                         <td>{item.completeAddress}</td>
                         <td>

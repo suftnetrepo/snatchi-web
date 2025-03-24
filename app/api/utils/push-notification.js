@@ -1,6 +1,6 @@
 const { GoogleAuth } = require('google-auth-library');
 const axios = require('axios');
-const serviceAccountKeyPath = require('../data/snatchichat-firebase-adminsdk-1vpcs-e127d7282f.json');
+const serviceAccountKeyPath = require('../data/snatchichat-firebase-adminsdk-1vpcs-e84d03fd83.json');
 const { logger } = require('../utils/logger');
 
 class FCMNotificationService {
@@ -22,22 +22,28 @@ class FCMNotificationService {
     try {
       const accessToken = await this.getAccessToken();
   
+      console.log("........................fcmToken", fcmToken)
+
       const message = {
         message: {
           token: fcmToken,
-          priority: "high",
-          silent: true,
-          data: {
+          notification: {
             title,
-            body,
+            body
+          },
+          data: {
             ...data
           },
           apns: {
             payload: {
               aps: {
-                'content-available': 1
+                'content-available': 1,
+                sound: 'default'
               }
             }
+          },
+          android: {
+            priority: "high"
           }
         }
       };
@@ -68,7 +74,9 @@ class FCMNotificationService {
       const data = {
         userId: body[i]?.userId,
         role: body[i]?.role,
-        name: body[i]?.name,
+        first_name: body[i]?.first_name,
+        last_name: body[i]?.last_name,
+        secure_url: body[i]?.secure_url,
         projectId: body[i]?.projectId
       };
 
