@@ -1,4 +1,3 @@
-
 import { logger } from '../utils/logger';
 import { FCMNotificationService } from '../utils/push-notification';
 const { NextResponse } = require('next/server');
@@ -13,13 +12,14 @@ export const PUT = async (req) => {
     const notificationService = new FCMNotificationService();
 
     if (action === 'single') {
-      const { fcm, projectId, userId, role, name } = body;
+      const { fcm, projectId, userId, role, first_name, last_name } = body;
 
       const result = await notificationService.sendNotification(fcm, 'Hello!', 'Fetching your current location', {
         projectId,
         userId,
         role,
-        name
+        first_name,
+        last_name
       });
 
       return NextResponse.json({ success: true, data: result }, { status: 200 });
