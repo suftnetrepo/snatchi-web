@@ -101,8 +101,6 @@ const usePushNotification = (id) => {
               { latitude:  project.location?.coordinates[0], longitude:   project.location?.coordinates[1] }
             );
 
-            console.log('..................................distance', distance);
-
             return {
               ...item,
               distance,
@@ -112,8 +110,6 @@ const usePushNotification = (id) => {
             };
           })
         );
-
-        console.log('..................................project', project);
 
         setState((pre) => ({
           ...pre,
