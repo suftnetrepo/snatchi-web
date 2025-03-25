@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { onSnapshot, query, orderBy, collection, where } from 'firebase/firestore';
+import { onSnapshot, query, collection, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
 import { PROJECT, PUSH_NOTIFICATION } from '../utils/apiUrl';
-import { reverseGeocode } from '../utils/helpers';
+import { haversineDistance } from '../utils/helpers';
 
 const usePushNotification = (id) => {
   const [state, setState] = useState({
     data: [],
     notifications: [],
+    project: null,
     loading: false,
     error: null,
     success: false
@@ -42,10 +43,14 @@ const usePushNotification = (id) => {
       setState((prevState) => ({
         ...prevState,
         data: data?.assignedTo,
+        project: data,
         loading: false
       }));
+
+      return data;
     } else {
       handleError(errorMessage || 'Failed to fetch the project.');
+      return false;
     }
   }
 
@@ -75,50 +80,59 @@ const usePushNotification = (id) => {
     }
   }
 
-  const handleFetchNotifications = async (projectId) => {
+  const handleFetchNotifications = async (projectId, project) => {
     try {
       const notificationRef = collection(db, 'notification_locations');
       const notificationQuery = query(
         notificationRef,
         where('projectId', '==', projectId) // Filter by projectId
       );
-  
+
       const unsubscribe = onSnapshot(notificationQuery, async (snapshot) => {
         const notifications = snapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data(),
+          ...doc.data()
         }));
-  
-        // Wait for all reverseGeocode calls to finish
+
         const notificationsWithAddresses = await Promise.all(
           notifications.map(async (item) => {
-            const address = await reverseGeocode(item?.latitude, item?.longitude);
+            const {distance, formattedDistance } = haversineDistance(
+              { latitude: item?.latitude, longitude: item?.longitude },
+              { latitude:  project.location?.coordinates[0], longitude:   project.location?.coordinates[1] }
+            );
+
+            console.log('..................................distance', distance);
+
             return {
               ...item,
-              completeAddress: address || "",
+              distance,
+              formattedDistance,
+              threshold: 50,
+              result : distance > 1 ?  "Not on Site" : distance.toFixed(2) >= 20 && distance.toFixed(2) <= 50 ? "On Site" : "Not on Site"
             };
           })
         );
-  
-        // Update state with resolved addresses
+
+        console.log('..................................project', project);
+
         setState((pre) => ({
           ...pre,
           notifications: notificationsWithAddresses,
-          loading: false,
+          loading: false
         }));
       });
-  
+
       return unsubscribe;
     } catch (error) {
       handleError(error.message);
     }
   };
-  
 
   useEffect(() => {
     if (id) {
-      handleSelect(id);
-      handleFetchNotifications(id);
+      handleSelect(id).then((result) => {
+        handleFetchNotifications(id, result);
+      });
     }
   }, [id]);
 
