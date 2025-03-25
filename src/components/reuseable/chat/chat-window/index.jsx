@@ -1,0 +1,92 @@
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import ChatMessage from '../chat-message';
+import './chat-window.scss';
+import { convertTimestampToTime } from '@/utils/helpers';
+
+const ChatWindow = ({ messages, onMessageSent, sender_Id }) => {
+  const chatWindow = useRef();
+  const chatWindowBody = useRef();
+  const userInput = useRef();
+  const [message, setMessage] = useState('');
+
+  console.log(".......................................sender_Id", sender_Id)
+
+  const handleChange = useCallback((e) => {
+    setMessage(e.target.value);
+  }, []);
+
+  const handleKeyDown = async (e) => {
+    if (e.key === 'Enter' && text.length) {
+      e.preventDefault();
+      onMessageSent(message);
+      setMessage('');
+    }
+  };
+
+  const handleSubmit = useCallback(() => {
+    if (message.trim()) {
+      onMessageSent(message);
+      setMessage('');
+    }
+  }, [message, onMessageSent]);
+
+  const autExpandInput = useCallback(() => {
+    const _userInput = userInput.current;
+    if (_userInput) {
+      _userInput.style.height = 'auto';
+      _userInput.style.height = `${_userInput.scrollHeight}px`;
+    }
+  }, []);
+
+  const setChatWindowScrollPosition = useCallback(() => {
+    const _chatWindowBody = chatWindowBody.current;
+    if (_chatWindowBody) {
+      _chatWindowBody.scrollTop = _chatWindowBody.scrollHeight;
+    }
+  }, []);
+
+  useEffect(() => {
+    setChatWindowScrollPosition;
+  }, [messages, setChatWindowScrollPosition]);
+
+  useEffect(() => {
+    autExpandInput();
+  }, [message, autExpandInput]);
+
+  return (
+    <div ref={chatWindow}>
+      <div ref={chatWindowBody} className="chat-panel__body">
+        {messages.map((message, index) => (
+          <ChatMessage
+            key={index}
+            text={message.text}
+            dateTimeStamp={convertTimestampToTime(message.timestamp)}
+            isSameOrigin={message.senderId === sender_Id}
+            message={message}
+          />
+        ))}
+      </div>
+      <div className="chat-panel__footer">
+        <textarea
+          ref={userInput}
+          className="chat-panel__input"
+          rows="1"
+          placeholder="Enter your message..."
+          value={message}
+          onChange={handleChange}
+        />
+        <button
+          className="chat-panel__send-btn"
+          type="button"
+          onKeyDown={(e) => handleKeyDown(e)}
+          onClick={handleSubmit}
+          disabled={!message.trim()}
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default ChatWindow;
