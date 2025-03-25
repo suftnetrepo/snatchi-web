@@ -208,7 +208,7 @@ function convertTimestampToTime(timestamp) {
 
 const formatDateTime = (isoString) => {
   const date = new Date(isoString);
-  
+
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
   const day = String(date.getDate()).padStart(2, '0');
@@ -237,9 +237,7 @@ function formatCurrency(currencySymbol, amount) {
     return amount;
   }
 
-  const formattedAmount =
-    currencySymbol +
-    numericAmount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+  const formattedAmount = currencySymbol + numericAmount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
 
   return formattedAmount;
 }
@@ -260,7 +258,7 @@ function currencySymbolMapper(currencySymbol) {
     svc: 'svc',
     vef: 'vef',
     ltl: 'ltl',
-    sll: 'sll',
+    sll: 'sll'
   };
 
   if (currencySymbol in currencyMap) {
@@ -276,7 +274,42 @@ function formatReadableDate(isoDate) {
   return date.toLocaleDateString('en-US', options);
 }
 
+function haversineDistance(coords1, coords2) {
+
+
+  console.log('..................................coords1....', coords1);
+
+  console.log('..................................coords2.....', coords2);
+  
+  function toRad(x) {
+    return (x * Math.PI) / 180;
+  }
+  const R = 6371; // Earth radius in km
+  const dLat = toRad(coords2.latitude - coords1.latitude);
+  const dLon = toRad(coords2.longitude - coords1.longitude);
+
+  const lat1 = toRad(coords1.latitude);
+  const lat2 = toRad(coords2.latitude);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  const distance = R * c;
+  const formattedDistance = distance > 1 ? `${distance.toFixed(2)} km` : `${Math.round(distance * 1000)} meters`;
+  return {
+    formattedDistance ,
+    distance 
+  };
+}
+
+function capitalizeFirstLetter(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 export {
+  haversineDistance,
   formatReadableDate,
   formatCurrency,
   currencySymbolMapper,
@@ -297,5 +330,6 @@ export {
   getAggregate,
   dateFormatted,
   getSortedCounts,
-  formatDateTime
+  formatDateTime,
+  capitalizeFirstLetter
 };

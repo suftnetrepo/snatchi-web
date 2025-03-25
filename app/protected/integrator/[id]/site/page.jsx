@@ -11,7 +11,7 @@ import { MdArrowBack } from 'react-icons/md';
 import Tooltip from '@mui/material/Tooltip';
 import { FaLocationDot } from 'react-icons/fa6';
 import { TiMap } from 'react-icons/ti';
-import { formatDateTime } from '../../../../../utils/helpers';
+import { formatDateTime, capitalizeFirstLetter } from '../../../../../utils/helpers';
 
 const SiteView = () => {
   const router = useRouter();
@@ -32,11 +32,11 @@ const SiteView = () => {
         .map((item) => {
 
           return {
+            first_name: item?.id?.first_name,
             projectId: id,
             userId: item._id,
             fcm: item?.id?.fcm,
             role: item?.id?.role,
-            first_name: item?.id?.first_name,
             last_name: item?.id?.last_name,
           };
         })
@@ -60,6 +60,17 @@ const SiteView = () => {
     handleSinglPushNotification(body).then((result) => {
       console.log('.................result', result);
     });
+  };
+
+  const getStatusColorCode = (status) => {
+    const statusColorMap = {
+      "Not on Site": "bg-danger",  // Red for negative status
+      "On Site": "bg-success",     // Green for positive status
+      // Add more status-color mappings as needed
+    };
+  
+    // Fallback to 'bg-danger' (red) if status is undefined or not found
+    return statusColorMap[status] || "bg-danger";
   };
 
   return (
@@ -155,7 +166,9 @@ const SiteView = () => {
                     <th>FirstName</th>
                     <th>LastName</th>
                     <th>Role</th>
-                    <th>Location</th>
+                    <th>Distance apart</th>
+                    <th>Threshold</th>
+                    <th>Status</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -166,8 +179,10 @@ const SiteView = () => {
                         <td>{formatDateTime(item.updatedAt)}</td>
                         <td>{item.first_name}</td>
                         <td>{item.last_name}</td>
-                        <td>{item.role}</td>
-                        <td>{item.completeAddress}</td>
+                        <td>{capitalizeFirstLetter(item.role)}</td>
+                        <td>{item.formattedDistance}</td>
+                        <td>{item.threshold} meters</td>
+                        <td> <span className={`badge ${getStatusColorCode(item.result)}`}>{item.result}</span></td>
                         <td>
                           {' '}
                           <Tooltip title="View location in map" arrow>
