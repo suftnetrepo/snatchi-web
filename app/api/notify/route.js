@@ -1,4 +1,5 @@
-import { logger } from '../utils/logger';
+
+import { logger } from '@/_/api/utils/logger';
 import { FCMNotificationService } from '../utils/push-notification';
 const { NextResponse } = require('next/server');
 
