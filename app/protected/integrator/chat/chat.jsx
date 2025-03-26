@@ -2,12 +2,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { Container, Row, Col, Form, ListGroup, InputGroup, Modal } from 'react-bootstrap';
-import { BsPaperclip, BsSend } from 'react-icons/bs';
 import { useChatInput, useChatRoom, useChatMessage } from '../../../../hooks/useChat';
 import { useChatContext } from '../../../../hooks/ChatContext';
 import { FaSearch } from 'react-icons/fa';
 import SimpleBar from 'simplebar-react';
-import { formatTimeForObject, convertTimestampToTime } from '../../../../utils/helpers';
+import { formatTimeForObject } from '../../../../utils/helpers';
 import { RenderChatOffcanvas } from './renderChatOffcanvas';
 import { useSession } from 'next-auth/react';
 import ChatWindow from '@/components/reuseable/chat/chat-window';
@@ -15,7 +14,7 @@ import ChatWindow from '@/components/reuseable/chat/chat-window';
 const RenderChat = () => {
   const { data: session } = useSession();
   const { changeChatRoom, chatRoomId, chatRoom } = useChatContext();
-  const { handleSend, handleReset, handleChange, text, img } = useChatInput();
+  const { handleSend, handleReset} = useChatInput();
   const {
     handleSearch,
     handleSearchChange,
@@ -30,8 +29,6 @@ const RenderChat = () => {
   const [showChatOffcanvas, setShowChatOffcanvas] = useState(false);
   const [show, setShow] = useState(false);
   const ref = useRef();
-
-  console.log(".............................", session)
 
   useEffect(() => {
     const chat = chats.find((j) => j.users.includes(session?.user?.id));
@@ -165,10 +162,10 @@ const RenderChat = () => {
               <ChatWindow
                 messages={messages}
                 onMessageSent={(message) => handleSendMessage(message)}
-                senderId={session?.user?.id}
+                sender_Id={session?.user?.id}
               />
             </div>
-            {/* <div ref={ref}> </div> */}
+            <div ref={ref}> </div>
           </Col>
         </Row>
       </Container>
