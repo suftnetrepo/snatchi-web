@@ -219,6 +219,19 @@ const formatDateTime = (isoString) => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
+const convertTimestampToDate = (timestamp) => {
+  if (!timestamp) return;
+  const date = new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000)
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+};
+
 const reverseGeocode = async (latitude, longitude) => {
   try {
     const response = await fetch(
@@ -331,5 +344,6 @@ export {
   dateFormatted,
   getSortedCounts,
   formatDateTime,
-  capitalizeFirstLetter
+  capitalizeFirstLetter,
+  convertTimestampToDate
 };

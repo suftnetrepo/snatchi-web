@@ -1,15 +1,13 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import ChatMessage from '../chat-message';
 import './chat-window.scss';
-import { convertTimestampToTime } from '@/utils/helpers';
+import { convertTimestampToDate } from '@/utils/helpers';
 
 const ChatWindow = ({ messages, onMessageSent, sender_Id }) => {
   const chatWindow = useRef();
   const chatWindowBody = useRef();
   const userInput = useRef();
   const [message, setMessage] = useState('');
-
-  console.log(".......................................sender_Id", sender_Id)
 
   const handleChange = useCallback((e) => {
     setMessage(e.target.value);
@@ -54,22 +52,22 @@ const ChatWindow = ({ messages, onMessageSent, sender_Id }) => {
   }, [message, autExpandInput]);
 
   return (
-    <div ref={chatWindow}>
-      <div ref={chatWindowBody} className="chat-panel__body">
+    <div ref={chatWindow} className='chat-panel__body'>
+      <div ref={chatWindowBody} className="messages-scroll-container">
         {messages.map((message, index) => (
           <ChatMessage
             key={index}
             text={message.text}
-            dateTimeStamp={convertTimestampToTime(message.timestamp)}
+            dateTimeStamp={convertTimestampToDate(message.timestamp)}
             isSameOrigin={message.senderId === sender_Id}
             message={message}
           />
         ))}
       </div>
-      <div className="chat-panel__footer">
+      <div className="chat-panel__footer chat-input-container">
         <textarea
           ref={userInput}
-          className="chat-panel__input"
+          className="chat-panel__input chat-input"
           rows="1"
           placeholder="Enter your message..."
           value={message}

@@ -4,6 +4,7 @@
   flex-direction: column;
   opacity: 0;
   pointer-events: none;
+  height: 100vh;
   transition: all 0.2s ease-in-out;
 
   &.is-open {
@@ -22,6 +23,27 @@
     color: #fff;
     font-size: 18px;
     text-transform: uppercase;
+  }
+
+  .messages-scroll-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .chat-input-container {
+    display: flex;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+
+    .chat-input {
+      flex-grow: 1;
+      margin-right: 10px;
+    }
   }
 
   &__body {
