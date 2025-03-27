@@ -85,7 +85,7 @@ const processList = [
 			"Receive a confirmation email with login details for immediate access.",
 	},
 	{
-		id: 3,
+		id: 4,
 		Icon: Settings,
 		title: "Setup Your Workspace",
 		description:
