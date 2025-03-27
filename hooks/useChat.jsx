@@ -166,7 +166,6 @@ const useChatRoom = (user_id) => {
     }
   };
 
-
   const handleAddMember = async (chatRoomId, newUserEmail) => {
     let newUserId;
     const newUserPassword = '123456!';
@@ -174,43 +173,42 @@ const useChatRoom = (user_id) => {
       // Step 1: Attempt to Sign In
       const userCredential = await signInWithEmailAndPassword(auth, newUserEmail, newUserPassword);
       newUserId = userCredential.user.uid;
-      console.log("User signed in successfully:", newUserId);
+      console.log('User signed in successfully:', newUserId);
     } catch (error) {
-      console.warn("Sign-in failed, trying to create an account...");
-  
+      console.warn('Sign-in failed, trying to create an account...');
+
       try {
         // Step 2: If sign-in fails, create a new account
         const userCredential = await createUserWithEmailAndPassword(auth, newUserEmail, newUserPassword);
         newUserId = userCredential.user.uid;
-  
+
         // Step 3: Store new user details in Firestore
-        await setDoc(doc(db, "users", newUserId), {
+        await setDoc(doc(db, 'users', newUserId), {
           email: newUserEmail,
           createdAt: Timestamp.now(),
-          roomId: chatRoomId, // Assign room immediately
+          roomId: chatRoomId // Assign room immediately
         });
-  
-        console.log("New user signed up and added to Firestore:", newUserId);
+
+        console.log('New user signed up and added to Firestore:', newUserId);
       } catch (signUpError) {
-        console.error("Account creation failed:", signUpError.message);
+        console.error('Account creation failed:', signUpError.message);
         return; // Stop execution if account creation fails
       }
     }
-  
+
     // Step 4: Add user to the chat room
     try {
-      const chatRoomRef = doc(db, "chats", chatRoomId);
+      const chatRoomRef = doc(db, 'chats', chatRoomId);
       await updateDoc(chatRoomRef, {
         users: arrayUnion(newUserId),
-        lastUpdated: Timestamp.now(),
+        lastUpdated: Timestamp.now()
       });
-  
+
       console.log(`User ${newUserId} added to chat room ${chatRoomId}`);
     } catch (chatRoomError) {
-      console.error("Error adding user to chat room:", chatRoomError.message);
+      console.error('Error adding user to chat room:', chatRoomError.message);
     }
   };
-
 
   const handleRemoveMember = async (chatRoomId, userIdToRemove) => {
     try {
@@ -437,7 +435,7 @@ const useChatInput = () => {
         isRead: false,
         user: {
           _id: senderId
-        },
+        }
       };
 
       await addDoc(messagesRef, newMessage);
@@ -462,4 +460,87 @@ const useChatInput = () => {
     handleChange
   };
 };
-export { useUserChat, useChatRoom, useChatMessage, useChatInput };
+
+const useIntegratorChat = (integratorId) => {
+  const [state, setState] = useState({
+    chats: [],
+    loading: false,
+    error: null
+  });
+
+  const handleError = (error) => {
+    setState((pre) => {
+      return { ...pre, error: error, loading: false };
+    });
+  };
+
+  const handleNewIntegratorChatRoom = async (integratorIds, chatName) => {
+    try {
+      const sortedIds = [...integratorIds].sort();
+
+      const q = query(
+        collection(db, 'chats'),
+        where('isIntegratorRoom', '==', true),
+        where('integratorIds', '==', sortedIds)
+      );
+
+      const existing = await getDocs(q);
+
+      if (!existing.empty) {
+        const existingRoomId = existing.docs[0].id;
+        console.log('Room already exists:', existingRoomId);
+        return existingRoomId;
+      }
+
+      const docRef = await addDoc(collection(db, 'chats'), {
+        name: chatName,
+        integratorIds: sortedIds,
+        isIntegratorRoom: true,
+        lastMessage: '',
+        lastUpdated: Timestamp.now()
+      });
+
+      console.log('New integrator room created:', docRef.id);
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating integrator room:', error.message);
+      handleError(error.message);
+    }
+  };
+
+  const handleFetchIntegratorRooms = async (integratorId) => {
+    try {
+      const q = query(
+        collection(db, 'chats'),
+        where('isIntegratorRoom', '==', true),
+        where('integratorIds', 'array-contains', integratorId)
+      );
+
+      const querySnapshot = await getDocs(q);
+      const chatRooms = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      setState((pre) => {
+        return { ...pre, chats: chatRooms, error: null };
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Failed to fetch integrator rooms:', error.message);
+      handleError(error.message);
+    }
+  };
+
+  useEffect(() => {
+    integratorId && handleFetchIntegratorRooms(integratorId);
+  }, [integratorId]);
+
+  return {
+    ...state,
+    handleNewIntegratorChatRoom
+  };
+};
+
+export { useIntegratorChat, useUserChat, useChatRoom, useChatMessage, useChatInput };
