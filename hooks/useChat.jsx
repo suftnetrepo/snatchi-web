@@ -19,7 +19,6 @@ import {
 } from 'firebase/firestore';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, auth } from '../firebase';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const useUserChat = () => {
   const [state, setState] = useState({
@@ -407,30 +406,19 @@ const useChatInput = () => {
     });
   };
 
-  const handleUploadImage = async (file) => {
-    if (!file) return;
-    const storage = getStorage();
-    const storageRef = ref(storage, `chat_images/${file.name}-${Date.now()}`);
-    try {
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      return downloadURL;
-    } catch (error) {
-      handleError(error.message);
-    }
-  };
 
-  const handleSend = async (chatRoomId, senderId, receiverId, text, image) => {
+  const handleSend = async (chatRoomId, senderId, receiverId, text) => {
+    console.log({ chatRoomId, senderId, receiverId, text });
     let imageURL = null;
     try {
-      imageURL = await handleUploadImage(image);
+   
       const messagesRef = collection(db, 'chats', chatRoomId, 'messages');
       const newMessage = {
         _id: new Date().getTime().toString(),
         senderId,
-        receiverId,
+        receiverId: receiverId || '',
         text: text || '',
-        imageURL: imageURL || null,
+        imageURL: null,
         timestamp: serverTimestamp(),
         isRead: false,
         user: {
@@ -463,8 +451,10 @@ const useChatInput = () => {
 
 const useIntegratorChat = (integratorId) => {
   const [state, setState] = useState({
-    chats: [],
+    integratorChatRooms: [],
     loading: false,
+    success: false,
+    integrator_search_terms: '',
     error: null
   });
 
@@ -472,6 +462,33 @@ const useIntegratorChat = (integratorId) => {
     setState((pre) => {
       return { ...pre, error: error, loading: false };
     });
+  };
+
+  const handleIntegratorSearchChange = (name, value) => {
+    setState((pre) => ({
+      ...pre,
+      [name]: value
+    }));
+  };
+
+  const handleIntegratorChatSearch = async (term) => {
+    try {
+      const chatRoomsRef = collection(db, 'chats');
+      const chatRoomsQuery = query(chatRoomsRef, orderBy('name'));
+      const querySnapshot = await getDocs(chatRoomsQuery);
+
+      const chatRooms = querySnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((doc) => doc.name.toLowerCase().includes(term.toLowerCase()));
+
+      setState((pre) => {
+        return { ...pre, integratorChatRooms: chatRooms, error: null };
+      });
+
+      return unsubscribe;
+    } catch (error) {
+      handleError(error.message);
+    }
   };
 
   const handleNewIntegratorChatRoom = async (integratorIds, chatName) => {
@@ -488,7 +505,9 @@ const useIntegratorChat = (integratorId) => {
 
       if (!existing.empty) {
         const existingRoomId = existing.docs[0].id;
-        console.log('Room already exists:', existingRoomId);
+        setState((pre) => {
+          return { ...pre, error: 'Room already exists:', loading: false };
+        });
         return existingRoomId;
       }
 
@@ -500,11 +519,12 @@ const useIntegratorChat = (integratorId) => {
         lastUpdated: Timestamp.now()
       });
 
-      console.log('New integrator room created:', docRef.id);
+      setState((pre) => {
+        return { ...pre, success: true, error: null, loading: false };
+      });
       return docRef.id;
     } catch (error) {
-      console.error('Error creating integrator room:', error.message);
-      handleError(error.message);
+      handleError('Error creating integrator room');
     }
   };
 
@@ -523,13 +543,12 @@ const useIntegratorChat = (integratorId) => {
       }));
 
       setState((pre) => {
-        return { ...pre, chats: chatRooms, error: null };
+        return { ...pre, integratorChatRooms: chatRooms, error: null };
       });
 
       return true;
     } catch (error) {
-      console.error('Failed to fetch integrator rooms:', error.message);
-      handleError(error.message);
+      handleError('Failed to fetch integrator rooms');
     }
   };
 
@@ -539,7 +558,9 @@ const useIntegratorChat = (integratorId) => {
 
   return {
     ...state,
-    handleNewIntegratorChatRoom
+    handleNewIntegratorChatRoom,
+    handleIntegratorChatSearch,
+    handleIntegratorSearchChange
   };
 };
 

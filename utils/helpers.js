@@ -288,11 +288,6 @@ function formatReadableDate(isoDate) {
 }
 
 function haversineDistance(coords1, coords2) {
-
-
-  console.log('..................................coords1....', coords1);
-
-  console.log('..................................coords2.....', coords2);
   
   function toRad(x) {
     return (x * Math.PI) / 180;

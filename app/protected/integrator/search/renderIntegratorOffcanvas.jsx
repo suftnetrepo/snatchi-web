@@ -1,91 +1,51 @@
 import React from 'react';
-import { Container, Offcanvas, Form, Row, Col } from 'react-bootstrap';
-import { dateFormatted } from '../../../../utils/helpers';
+import { Container, Offcanvas, Row, Col, Button, Image } from 'react-bootstrap';
+import { FaComment, FaEnvelope, FaPhone } from 'react-icons/fa';
+import { useIntegratorChat } from '@/hooks/useChat';
+import { capitalizeFirstLetter } from '@/utils/helpers';
+import { useRouter } from 'next/navigation';
 
-const RenderIntegratorOffcanvas = ({ show, handleClose, data }) => {
+const RenderIntegratorOffcanvas = ({ show, session, handleClose, data }) => {
+  const route = useRouter();
+  const { handleNewIntegratorChatRoom } = useIntegratorChat(session?.user?.integrator);
+  const chatName = `${capitalizeFirstLetter(session?.user?.first_name)} ${capitalizeFirstLetter(data?.name)}`.trim();
+
+  const onNewIntegratorRoom = async () => {
+    handleNewIntegratorChatRoom([session?.user?.integrator, data._id], chatName).then((result) => {
+      route.push(`/protected/integrator/chat?q=integrator&i=${result}`);
+    });
+  };
+
   return (
     <Container className="mt-5">
       <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
         <Offcanvas.Header closeButton></Offcanvas.Header>
         <Offcanvas.Body>
-          <Form>
-            <Row className="mb-3">
-              <Col>
-                <Form.Group>
-                  <Form.Label className="text-dark">Company</Form.Label>
-                  <Form.Control type="text" readOnly value={data.name} className="border-dark" />
-                </Form.Group>
-              </Col>
-              <Col>
-                <Form.Group>
-                  <Form.Label className="text-dark">Mobile</Form.Label>
-                  <Form.Control type="text" readOnly value={data.mobile} className="border-dark" />
-                </Form.Group>
-              </Col>
-            </Row>
+          <div className="d-flex flex-column align-items-center justify-content-center mb-5">
+            <Image height={120} width={120} src="/img/avatars/t1.jpg" roundedCircle alt="Profile Avatar" />
 
-            <Row className="mb-3">
-              <Col>
-                <Form.Group>
-                  <Form.Label className="text-dark">Email</Form.Label>
-                  <Form.Control type="text" readOnly value={data.email} className="border-dark" />
-                </Form.Group>
-              </Col>
-              <Col>
-                <Form.Group>
-                  <Form.Label className="text-dark">Status</Form.Label>
-                  <Form.Control type="text" readOnly value={data.status} className="border-dark" />
-                </Form.Group>
-              </Col>
-            </Row>
+            <span className="h3 mb-0 text-dark">{data?.name}</span>
+            <span className="h6 mb-0">
+              <FaPhone size={12} /> {data?.mobile}
+            </span>
+            <span className="h6 mb-5">
+              <FaEnvelope size={12} /> {data?.email}
+            </span>
+            <p className="mb-0 text-dark">{data?.description}</p>
+          </div>
 
-            <Form.Group className="mb-3">
-              <Form.Label className="text-dark">Plan</Form.Label>
-              <Form.Control type="text" readOnly value={data.plan} className="border-dark" />
-            </Form.Group>
-
-            <Row className="mb-3">
-              <Col>
-                <Form.Group>
-                  <Form.Label className="text-dark">Start Date</Form.Label>
-                  <Form.Control type="text" readOnly value={dateFormatted(data.startDate)} className="border-dark" />
-                </Form.Group>
-              </Col>
-              <Col>
-                <Form.Group>
-                  <Form.Label className="text-dark">End Date</Form.Label>
-                  <Form.Control type="text" readOnly value={dateFormatted(data.endDate)} className="border-dark" />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            {data.status === 'trialing' && (
-              <Row className="mb-3">
-                <Col>
-                  <Form.Group>
-                    <Form.Label className="text-dark">Trial Start</Form.Label>
-                    <Form.Control
-                      type="text"
-                      readOnly
-                      value={dateFormatted(data.trial_start)}
-                      className="border-dark"
-                    />
-                  </Form.Group>
-                </Col>
-                <Col>
-                  <Form.Group>
-                    <Form.Label className="text-dark">Trial End</Form.Label>
-                    <Form.Control type="text" readOnly value={dateFormatted(data.trial_end)} className="border-dark" />
-                  </Form.Group>
-                </Col>
-              </Row>
-            )}
-
-            <Form.Group className="mb-3">
-              <Form.Label className="text-dark">Description</Form.Label>
-              <Form.Control as="textarea" rows={3} readOnly value={data.description} className="border-dark" />
-            </Form.Group>
-          </Form>
+          <Row className="d-flex justify-content-start ">
+            <Col>
+              <Button
+                variant="success"
+                className="d-flex gap-1 px-3 justify-content-start align-items-center"
+                onClick={() => onNewIntegratorRoom()}
+              >
+                <FaComment size={24} />
+                Chat
+              </Button>
+            </Col>
+          </Row>
         </Offcanvas.Body>
       </Offcanvas>
     </Container>

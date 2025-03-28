@@ -6,11 +6,12 @@ import { useAdmin } from '../../../../hooks/useAdmin';
 import { TiEye } from 'react-icons/ti';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
 import useDebounce from '../../../../hooks/useDebounce';
-import { dateFormatted } from '../../../../utils/helpers';
 import RenderIntegratorOffcanvas from './renderIntegratorOffcanvas';
 import {  useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 const Search = () => {
+  const {data :session} = useSession()
   const [searchQuery, setSearchQuery] = useState('');
   const [show, setShow] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -123,7 +124,7 @@ const Search = () => {
       </div>
       {!loading && <span className="overlay__block" />}
       {error && <ErrorDialogue showError={error} onClose={() => {}} />}
-      <RenderIntegratorOffcanvas handleClose={handleClose} show={show} data={viewData} />
+      <RenderIntegratorOffcanvas handleClose={handleClose} session={session} show={show} data={viewData} />
     </>
   );
 };
