@@ -52,4 +52,31 @@ export const ConfirmationDialogue = ({ iconType ='success', show = false, title 
     return null;
 };
 
+export const OkDialogue = ({
+    iconType = 'success',
+    show = false,
+    title = 'Success!',
+    message = 'Your action was successful.',
+    onConfirm
+  }) => {
+    useEffect(() => {
+      if (show) {
+        MySwal.fire({
+          title: title,
+          text: message,
+          icon: iconType,
+          confirmButtonText: 'OK',
+          showCancelButton: false,
+          allowOutsideClick: false
+        }).then((result) => {
+          if (result.isConfirmed && onConfirm) {
+            onConfirm();
+          }
+        });
+      }
+    }, [show]);
+  
+    return null;
+  };
+
 
