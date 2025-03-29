@@ -36,6 +36,7 @@ export const TASK_COMMENTS = {
 
 export const INTEGRATOR = {
   fetchIntegrators: `${HOST}admin`,
+  searchIntegrators: `${HOST}integrator`,
   fetchSingle: `${HOST}integrator/fetchSingle`,
   uploadOne: `${HOST}integrator/updateOne`
 };

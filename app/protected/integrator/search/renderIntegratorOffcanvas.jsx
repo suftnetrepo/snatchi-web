@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Container, Offcanvas, Row, Col, Button, Image } from 'react-bootstrap';
 import { FaComment, FaEnvelope, FaPhone } from 'react-icons/fa';
@@ -12,7 +13,7 @@ const RenderIntegratorOffcanvas = ({ show, session, handleClose, data }) => {
 
   const onNewIntegratorRoom = async () => {
     handleNewIntegratorChatRoom([session?.user?.integrator, data._id], chatName).then((result) => {
-      route.push(`/protected/integrator/chat?q=integrator&i=${result}`);
+      route.push(`/protected/integrator/chat?q=integrator&i=${result}`)
     });
   };
 
