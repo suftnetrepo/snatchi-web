@@ -76,6 +76,45 @@ async function getIntegrators({ page = 1, limit = 10, sortField, sortOrder, sear
   }
 }
 
+async function getIntegratorsBySearch({ page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
+  const skip = (page - 1) * limit;
+
+  try {
+    const sortOptions = {};
+    if (sortField) {
+      sortOptions[sortField] = sortOrder === 'desc' ? -1 : 1;
+    }
+
+    const searchFilter = searchQuery
+      ? {
+          $or: [
+            { name: { $regex: searchQuery, $options: 'i' } },
+            { mobile: { $regex: searchQuery, $options: 'i' } },
+            { email: { $regex: searchQuery, $options: 'i' } },
+            { plan: { $regex: searchQuery, $options: 'i' } },
+          ]
+        }
+      : {};
+
+    const query = {
+      status: "active",  // Added this condition to only get active integrators
+      ...searchFilter
+    };
+
+    const [integrators, totalCount] = await Promise.all([
+      Integrator.find(query).select('name email mobile description _id address secure_url status').sort(sortOptions).skip(skip).limit(limit).exec(),
+      Integrator.countDocuments({ status: "active" })  // Updated to count only active integrators
+    ]);
+
+    return {
+      data: integrators,
+      totalCount
+    };
+  } catch (error) {
+    logger.error(error);
+    throw new Error('An unexpected error occurred. Please try again.');
+  }
+}
 async function getWeeklyUserSignOnData() {
   try {
     const sevenDaysAgo = new Date();
@@ -182,4 +221,4 @@ async function updateIntegratorStatus(stripeCustomerId, body) {
 }
 
 
-export { updateIntegratorStatus, getIntegratorById, updateIntegrator, recentInspectors, aggregateInspectorStatus, getIntegrators, getWeeklyUserSignOnData };
+export { getIntegratorsBySearch, updateIntegratorStatus, getIntegratorById, updateIntegrator, recentInspectors, aggregateInspectorStatus, getIntegrators, getWeeklyUserSignOnData };

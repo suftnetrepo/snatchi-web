@@ -47,7 +47,7 @@ const Integrator = () => {
   const columns = useMemo(
     () => [
       {
-        Header: 'Company',
+        Header: 'Name',
         Cell: ({ row }) => (
           <div className="d-flex align-items-center">
             <img

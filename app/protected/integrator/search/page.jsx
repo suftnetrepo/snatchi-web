@@ -2,21 +2,21 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { Table } from '../../../../src/components/elements/table/table';
-import { useAdmin } from '../../../../hooks/useAdmin';
+import { useSearchIntegrator } from '../../../../hooks/useAdmin';
 import { TiEye } from 'react-icons/ti';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
 import useDebounce from '../../../../hooks/useDebounce';
 import RenderIntegratorOffcanvas from './renderIntegratorOffcanvas';
-import {  useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
 const Search = () => {
-  const {data :session} = useSession()
+  const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState('');
   const [show, setShow] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const { data, error, loading, totalCount, handleFetchIntegrators, handleReset, handleSelect, viewData } =
-    useAdmin(debouncedSearchQuery);
+  useSearchIntegrator(debouncedSearchQuery);
   const searchParams = useSearchParams();
   const query = searchParams.get('q');
 
@@ -32,15 +32,20 @@ const Search = () => {
     setShow(true);
   };
 
-  const getStatusColorCode = (status) => {
-    const colors = {
-      canceled: 'bg-danger',
-      unpaid: 'bg-warning',
-      inactive: 'bg-info',
-      active: 'bg-primary',
-      past_due: 'bg-secondary'
-    };
-    return colors[status] || 'bg-secondary';
+  const Avatar = ({ src, alt }) => {
+    const [imgSrc, setImgSrc] = useState(src || '/img/blank.png');
+  
+    return (
+      <Image
+        src={imgSrc}
+        alt={alt}
+        width={40}
+        height={40}
+        roundedCircle
+        className="me-2"
+        onError={() => setImgSrc('/img/blank.png')}
+      />
+    );
   };
 
   const columns = useMemo(
@@ -49,34 +54,22 @@ const Search = () => {
         Header: 'Name',
         Cell: ({ row }) => (
           <div className="d-flex align-items-center">
-            <img
+            {/* <img
               src={row.original.logo_url}
               alt={row.original.name}
               className="rounded-circle me-2"
               width="40"
               height="40"
               onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '/img/blank.png';
+                e.currentTarget.src = '/img/blank.png';
               }}
-            />
+            /> */}
             <span>{row.original.name}</span>
           </div>
         )
-      
       },
       { Header: 'Mobile', accessor: 'mobile', sortType: 'basic' },
       { Header: 'Email', accessor: 'email' },
-      {
-        Header: 'Status',
-        accessor: 'status',
-        headerClassName: { textAlign: 'center' },
-        Cell: ({ value }) => (
-          <div className="d-flex justify-content-center align-items-center">
-            <span className={`badge ${getStatusColorCode(value)}`}>{value}</span>
-          </div>
-        )
-      },
       {
         Header: 'Actions',
         disableSortBy: true,

@@ -1,4 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+'use client';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { Container, Row, Col, Form, ListGroup, InputGroup, Modal, Tab, Tabs } from 'react-bootstrap';

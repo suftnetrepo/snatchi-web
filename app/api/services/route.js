@@ -13,7 +13,7 @@ mongoConnect();
 export async function GET() {
   try {
     await clearSeeds();
-    //await seedDatabase(); // Uncomment this if needed
+    await seedDatabase(); // Uncomment this if needed
     return NextResponse.json(
       { message: 'Database cleared and seeded successfully' },
       { status: 200 }
@@ -30,10 +30,10 @@ export async function GET() {
 // Function to clear seeds
 const clearSeeds = async () => {
   try {
-    await Integrator.deleteMany({});
-    await User.deleteMany({});
-    await Project.deleteMany({});
-    await Task.deleteMany({});
+    // await Integrator.deleteMany({});
+    // await User.deleteMany({});
+    // await Project.deleteMany({});
+    // await Task.deleteMany({});
     console.log('Existing seeds cleared');
   } catch (error) {
     console.error('Error clearing seeds:', error);
@@ -189,19 +189,19 @@ const seedDatabase = async () => {
     console.log('10 Integrators successfully inserted');
    
     // Create 2 Users for each Integrator
-    for (const integrator of savedIntegrators) {
-      const users = await Promise.all([generateRandomUser(integrator._id), generateRandomUser(integrator._id)]);
-      await User.insertMany(users);
-      console.log(`2 Users created for Integrator.stripe_status: ${integrator.status}`);
-      console.log(`2 Users created for Integrator_id: ${integrator._id}`);
-    }
+    // for (const integrator of savedIntegrators) {
+    //   const users = await Promise.all([generateRandomUser(integrator._id), generateRandomUser(integrator._id)]);
+    //   await User.insertMany(users);
+    //   console.log(`2 Users created for Integrator.stripe_status: ${integrator.status}`);
+    //   console.log(`2 Users created for Integrator_id: ${integrator._id}`);
+    // }
 
-    const projects = Array.from({ length: 100 }, () => {
-      const randomIntegrator = faker.helpers.arrayElement(savedIntegrators);
-      return generateRandomProject(randomIntegrator._id);
-    });
+    // const projects = Array.from({ length: 100 }, () => {
+    //   const randomIntegrator = faker.helpers.arrayElement(savedIntegrators);
+    //   return generateRandomProject(randomIntegrator._id);
+    // });
 
-     await Project.insertMany(projects);
+    //  await Project.insertMany(projects);
 
   } catch (error) {
     console.error('Error seeding database:', error);
