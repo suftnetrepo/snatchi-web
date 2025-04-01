@@ -1,14 +1,16 @@
 'use client';
 
-import React from 'react';
+import { Suspense } from 'react';
 import { ChatContextProvider } from '../../../../hooks/ChatContext';
 import RenderChat from './chat';
 
 const Chat = () => {
   return (
-    <ChatContextProvider>
-      <RenderChat />
-    </ChatContextProvider>
+    <Suspense fallback={<div>Loading...</div>}>
+      <ChatContextProvider>
+        <RenderChat />
+      </ChatContextProvider>
+    </Suspense>
   );
 };
 
