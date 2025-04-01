@@ -1,3 +1,4 @@
+'use client';
 
 import React from 'react';
 import { Container, Offcanvas, Row, Col, Button, Image } from 'react-bootstrap';
