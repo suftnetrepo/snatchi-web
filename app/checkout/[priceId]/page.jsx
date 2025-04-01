@@ -43,12 +43,12 @@ const CheckOut = () => {
     const handleResult = async (data) => {
       await signIn('credentials', {
         redirect: false,
-        email:  data.email,
+        email:  fields.email,
         csrfToken,
         password: '#12345!'
       });
 
-      handleSignUp(`${data.first_name} ${data.last_name}`, data.email, '12345!').then(() => {
+      handleSignUp(`${fields.first_name} ${fields.last_name}`, fields.email, '12345!').then(() => {
         handleNewRoom([data?.user_id], fields.name).then(() => {});
       });
 
