@@ -44,11 +44,11 @@ const RenderChat = () => {
     }
   }, [integratorChatRooms, id]);
 
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages?.length]);
+  // useEffect(() => {
+  //   if (ref.current) {
+  //     ref.current.scrollIntoView({ behavior: 'smooth' });
+  //   }
+  // }, [messages?.length]);
 
   const handleSendMessage = async (text) => {
     handleSend(chatRoomId, session?.user?.id, chatRoom.users, text).then(() => {
