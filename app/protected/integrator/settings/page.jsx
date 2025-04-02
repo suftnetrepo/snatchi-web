@@ -20,6 +20,8 @@ const SettingsPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    console.log(".....................", fields)
+
     useEffect(() => {
         return () => {
             if (previewUrl) {
