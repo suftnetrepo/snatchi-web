@@ -1,23 +1,10 @@
 import {
-  faBug,
-  faCalculator,
-  faChartPie,
-  faCode,
-  faDroplet,
   faGauge,
-  faLayerGroup,
-  faLocationArrow,
-  faPencil,
-  faPuzzlePiece,
-  faRightToBracket,
-  faAddressCard,
-  faBell, faFileLines, faStar,
   faProjectDiagram,
   faCogs,
   faUser,
   faBuildingUser,
   faComment,
-  faMoneyBillTrendUp,
   faMoneyCheck
 } from '@fortawesome/free-solid-svg-icons'
 import {  } from 'react-icons/ti';

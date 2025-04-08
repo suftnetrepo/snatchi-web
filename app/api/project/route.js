@@ -11,11 +11,15 @@ import {
 } from '../services/project';
 import { logger } from '../utils/logger';
 const { NextResponse } = require('next/server');
+import { getUserSession } from '@/utils/generateToken';
 
 export const GET = async (req) => {
   try {
-    const userData = req.headers.get("x-user-data");
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
