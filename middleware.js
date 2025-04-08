@@ -2,70 +2,45 @@ import { NextResponse } from 'next/server';
 import { AuthService } from './lib/AuthService';
 import { getToken } from 'next-auth/jwt';
 
-export async function middleware(request) {
+const isApiRoute = (pathname) => pathname.startsWith('/api');
+
+export async function middleware(req) {
   try {
-    const isMobileApp = request.headers.get('X-App-Route') === 'mobile';
+    const { pathname } = req.nextUrl;
 
-    let token, userData;
-    const authHeader = request.headers.get('authorization');
+    const token = await getToken({
+      req: req,
+      secret: process.env.NEXTAUTH_SECRET?.trim(),
+      secureCookie: false
+    });
 
-    if (isMobileApp) {
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return createAuthError(request, isMobileApp, 'Invalid authorization header');
-      }
+    if (token) {
+      return NextResponse.next();
+    }
 
-      token = authHeader.split('Bearer ')[1];
-
-      if (!token) {
-        return createAuthError(request, isMobileApp, 'No token provided');
-      }
-
+    const authHeader = req.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const bearerToken = authHeader.split(' ')[1];
       try {
-        userData = await AuthService.verifyAccessToken(token);
-      } catch (error) {
-        console.error('Session verification error:', error);
-        return createAuthError(request, isMobileApp, error.message || 'Invalid token');
-      }
-    } else {
-      try {
-        const session = await getToken({
-          req: request,
-          secret: process.env.NEXTAUTH_SECRET?.trim()|| 'ft8c95VaAkJiIl7x2zyI5vdVvqblSmF5THeod78WA34=',
-          secureCookie: false
-        });
-
-        if (!session) {
-          console.error('Session verification error:', session);
-          return createAuthError(request, isMobileApp, 'Session expired or not authenticated');
-        }
-
-        userData = session;
-      } catch (error) {
-        console.error('Session verification error:', error);
-        return createAuthError(request, isMobileApp, 'Session verification failed');
+        const decoded = await AuthService.verifyAccessToken(bearerToken);
+        if (decoded) return NextResponse.next();
+      } catch (e) {
+        console.warn('Invalid bearer token');
       }
     }
 
-    const response = NextResponse.next();
-
-    if (userData) {
-      response.headers.set('x-user-id', userData.id);
-      response.headers.set('x-user-data', JSON.stringify(userData));
+    if (isApiRoute(pathname)) {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: message || 'Authentication required' },
+        { status: 401 }
+      );
     }
 
-    return response;
+    const returnUrl = encodeURIComponent(req.nextUrl.pathname);
+    return NextResponse.redirect(new URL(`/login?returnUrl=${returnUrl}`, req.url));
   } catch (error) {
     console.error('Authentication middleware error:', error);
     return NextResponse.json({ error: 'Internal server error', message: 'Authentication failed' }, { status: 500 });
-  }
-}
-
-function createAuthError(request, isMobileApp, message) {
-  if (isMobileApp) {
-    return NextResponse.json({ error: 'Unauthorized', message: message || 'Authentication required' }, { status: 401 });
-  } else {
-    const returnUrl = encodeURIComponent(request.nextUrl.pathname);
-    return NextResponse.redirect(new URL(`/login?returnUrl=${returnUrl}`, request.url));
   }
 }
 

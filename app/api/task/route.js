@@ -1,4 +1,3 @@
-
 import {
   getMyTasks,
   getTaskById,
@@ -11,11 +10,15 @@ import {
 } from '../services/task';
 import { logger } from '../utils/logger';
 const { NextResponse } = require('next/server');
+import { getUserSession } from '@/utils/generateToken';
 
 export const GET = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
@@ -68,8 +71,11 @@ export const GET = async (req) => {
 
 export const DELETE = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     const projectId = url.searchParams.get('projectId');
@@ -85,8 +91,11 @@ export const DELETE = async (req) => {
 
 export const PUT = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     const action = url.searchParams.get('action');
@@ -109,8 +118,11 @@ export const PUT = async (req) => {
 
 export const POST = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await req.json();
 
     const result = await createTask(body);

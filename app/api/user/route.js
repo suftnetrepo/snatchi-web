@@ -11,6 +11,7 @@ import {
 } from '../services/user';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
+import { getUserSession } from '@/utils/generateToken';
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUD_NAME,
@@ -20,8 +21,11 @@ cloudinary.config({
 
 export const GET = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
@@ -76,8 +80,11 @@ export const GET = async (req) => {
 
 export const DELETE = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
 
@@ -96,8 +103,11 @@ export const DELETE = async (req) => {
 
 export const PUT = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     const action = url.searchParams.get('action');
@@ -116,14 +126,14 @@ export const PUT = async (req) => {
       const email = formData.get('email');
       const mobile = formData.get('mobile');
 
-      const body ={
+      const body = {
         first_name: first_name,
         last_name: last_name,
         email: email,
         mobile: mobile,
-        public_id:'',
+        public_id: '',
         secure_url: ''
-      }
+      };
 
       const file = formData.get('file');
       if (file) {
@@ -146,9 +156,8 @@ export const PUT = async (req) => {
 
         const result = await uploadToCloudinary();
 
-        if(result) {
-          body.public_id = result?.public_id,
-          body.secure_url = result?.secure_url
+        if (result) {
+          (body.public_id = result?.public_id), (body.secure_url = result?.secure_url);
         }
       }
 
@@ -172,8 +181,11 @@ export const PUT = async (req) => {
 
 export const POST = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await req.json();
 
     const result = await createUser(user?.integrator, body);

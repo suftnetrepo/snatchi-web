@@ -95,7 +95,6 @@ const TaskForm = ({ errorMessages, handleDelete, handleSubmit, handleChange, fie
                 <Form.Label className="text-dark">Status</Form.Label>
                 <Form.Select
                   className="border-dark"
-                  aria-label="Select Status"
                   value={fields?.status}
                   onChange={(e) => handleChange('status', e.target.value)}
                 >
@@ -115,7 +114,6 @@ const TaskForm = ({ errorMessages, handleDelete, handleSubmit, handleChange, fie
                 <Form.Label className="text-dark">Priority</Form.Label>
                 <Form.Select
                   className="border-dark"
-                  aria-label="Select Priority"
                   value={fields?.priority}
                   onChange={(e) => handleChange('priority', e.target.value)}
                 >

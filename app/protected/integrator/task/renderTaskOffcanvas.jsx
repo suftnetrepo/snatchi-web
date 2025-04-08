@@ -5,7 +5,7 @@ import { Offcanvas } from 'react-bootstrap';
 import { validate } from '../../../../validator/validator';
 import { taskValidator } from '../../../protected/integrator/rules';
 
-import { ConfirmationDialogue } from '../../../../src/components/elements/ConfirmDialogue';
+import { ConfirmationDialogue, OkDialogue } from '../../../../src/components/elements/ConfirmDialogue';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
 import dynamic from 'next/dynamic';
 const TaskForm = dynamic(() => import('./taskForm'), { ssr: false });
@@ -24,7 +24,7 @@ const RenderTaskOffcanvas = ({
   handleDelete
 }) => {
   const [errorMessages, setErrorMessages] = useState({});
- 
+
   const handleSubmit = async () => {
     setErrorMessages({});
     const validationResult = validate(fields, taskValidator.rules);
@@ -43,7 +43,7 @@ const RenderTaskOffcanvas = ({
       await handleEdit(body, fields._id);
     } else {
       await handleSave(body);
-    }   
+    }
   };
 
   return (
@@ -67,14 +67,30 @@ const RenderTaskOffcanvas = ({
         />
       </Offcanvas.Body>
       {success && (
-        <ConfirmationDialogue
-          show={success}
-          onClose={async () => {
-            setShow(false);
-            handleReset()
-          }}
-          onConfirm={() => { setShow(false); handleReset() }}
-        />
+        <>
+          {fields?._id ? (
+            <OkDialogue
+              show={success}
+              message='Your changes was save successfully'
+              onConfirm={() => {
+                setShow(false);
+                handleReset();
+              }}
+            />
+          ) : (
+            <ConfirmationDialogue
+              show={success}
+              onClose={async () => {
+                setShow(false);
+                handleReset();
+              }}
+              onConfirm={() => {
+                setShow(false);
+                handleReset();
+              }}
+            />
+          )}
+        </>
       )}
       {error && <ErrorDialogue showError={error} onClose={() => handleReset()} />}
     </Offcanvas>

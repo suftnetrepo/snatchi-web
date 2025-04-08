@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { logger } from '../utils/logger';
 import { createDocument, getDocuments, removeDocument } from '../services/document';
 const { NextResponse } = require('next/server');
+import { getUserSession } from '@/utils/generateToken';
 
 export const config = {
   api: { bodyParser: false }
@@ -15,8 +16,11 @@ cloudinary.config({
 
 export const POST = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const formData = await req.formData();
 
@@ -35,13 +39,14 @@ export const POST = async (req) => {
 
     const uploadToCloudinary = () => {
       return new Promise((resolve, reject) => {
-        cloudinary.uploader.upload(fileUri, {
-          folder: 'snatchi_project_uploads',
-          resource_type: 'auto',
-          invalidate: true
-        })
-          .then(result => resolve(result))
-          .catch(error => reject(error));
+        cloudinary.uploader
+          .upload(fileUri, {
+            folder: 'snatchi_project_uploads',
+            resource_type: 'auto',
+            invalidate: true
+          })
+          .then((result) => resolve(result))
+          .catch((error) => reject(error));
       });
     };
 
@@ -63,8 +68,11 @@ export const POST = async (req) => {
 
 export const GET = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
 
@@ -78,8 +86,11 @@ export const GET = async (req) => {
 
 export const DELETE = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     const projectId = url.searchParams.get('projectId');

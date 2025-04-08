@@ -36,13 +36,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           };
         } catch (error) {
           console.error('Authentication error:', error.message);
-          throw new Error(error.message);
+          return null; 
         }
       }
     })
   ],
   session: { strategy: 'jwt' },
-  secret: process.env.NEXTAUTH_SECRET?.trim() || 'ft8c95VaAkJiIl7x2zyI5vdVvqblSmF5THeod78WA34=',
+  secret: process.env.NEXTAUTH_SECRET?.trim(),
   useSecureCookies: false,
   trustHost: true,
   callbacks: {

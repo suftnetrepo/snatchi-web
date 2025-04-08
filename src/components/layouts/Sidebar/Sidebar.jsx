@@ -7,7 +7,7 @@ import classNames from 'classnames'
 import { Button } from 'react-bootstrap'
 import { useSidebar } from '../SidebarProvider'
 
-export default function Sidebar({ children }: { children: React.ReactNode }) {
+export default function Sidebar({ children }) {
 	const [isNarrow, setIsNarrow] = useState(false)
 
 	const { showSidebarState: [isShowSidebar] } = useSidebar()
@@ -33,7 +33,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
 	)} id="sidebar">
 		<div className="sidebar-brand d-none d-md-flex align-items-center justify-content-center">
 			<div className="sidebar-brand-full">
-				<img src="/img/logo2-removebg-preview.png" alt="" className="img-fluid" />
+				<img src="/img/logo__.png" alt="" className="img-fluid" />
 			</div>
 			<div className="sidebar-brand-narrow d-none">
 				<img src="/img/logosmall.png" alt="" height={20} className="img-fluids" />

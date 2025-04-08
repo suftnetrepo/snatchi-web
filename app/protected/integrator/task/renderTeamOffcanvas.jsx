@@ -12,8 +12,6 @@ const RenderTeamOffcanvas = ({ show, handleClose, projectId, taskId }) => {
   const { data, error, customStyles,options, handleSelect, fields, handleChange, handleFetchOptions, handleDelete } =
     useTaskTeam(projectId, taskId);
 
-  console.log('........................singleData', options);
-
   useEffect(() => {
     handleFetchOptions(projectId);
   }, []);
