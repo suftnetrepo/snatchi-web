@@ -58,7 +58,7 @@ const LoginForm = () => {
     if (returnUrl) {
       redirectPath = returnUrl;
     } else {
-      redirectPath = updatedSession?.user.role === 'integrator' 
+      redirectPath = updatedSession?.user?.role === 'integrator' 
         ? '/protected/integrator/dashboard' 
         : '/protected/admin/dashboard';
     }

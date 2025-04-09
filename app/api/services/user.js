@@ -38,7 +38,7 @@ async function getUsers({ suid, page = 1, limit = 10, sortField, sortOrder, sear
     };
 
     const [users, totalCount] = await Promise.all([
-      User.find(query).sort(sortOptions).skip(skip).limit(limit).exec(),
+      User.find(query).sort(sortOptions).skip(skip).select("-password").limit(limit).exec(),
       User.countDocuments({ integrator: suid })
     ]);
 

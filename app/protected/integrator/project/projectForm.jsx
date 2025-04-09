@@ -3,7 +3,6 @@
 import React from 'react';
 import { Form, Button } from 'react-bootstrap';
 import Editor from '../../../../src/components/reuseable/editor';
-import Datetime from 'react-datetime';
 import 'react-datetime/css/react-datetime.css';
 import FindAddress from '../../../share/findAddress';
 
@@ -20,7 +19,7 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
       <div className="row">
         <div className="col-md-6">
           <Form.Group controlId="formName" className="mb-3">
-            <Form.Label className="text-dark">Name</Form.Label>
+            <Form.Label className="text-dark">Project Name</Form.Label>
             <Form.Control
               type="text"
               placeholder="Enter project name"
@@ -43,10 +42,10 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
           <div className="row">
             <div className="col-md-6">
               <Form.Group controlId="formManager" className="mb-3">
-                <Form.Label className="text-dark">Manager</Form.Label>
+                <Form.Label className="text-dark">Project Number</Form.Label>
                 <Form.Control
                   type="text"
-                  placeholder="Enter manager"
+                  placeholder="Enter project number"
                   name="manager"
                   value={fields?.manager}
                   onChange={(e) => handleChange('manager', e.target.value)}
@@ -59,10 +58,10 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
             </div>
             <div className="col-md-6">
               <Form.Group controlId="formStakeHolder" className="mb-3">
-                <Form.Label className="text-dark">Stakeholder</Form.Label>
+                <Form.Label className="text-dark">Site Contact</Form.Label>
                 <Form.Control
                   type="stakeholder"
-                  placeholder="Enter stakeholder"
+                  placeholder="Enter site contact"
                   name="stakeholder"
                   value={fields?.stakeholder}
                   onChange={(e) => handleChange('stakeholder', e.target.value)}

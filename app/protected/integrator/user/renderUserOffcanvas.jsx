@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Offcanvas, Button, Form } from 'react-bootstrap';
 import { validate } from '../../../../validator/validator';
-import { userValidator } from '../rules';
 
-const RenderUserOffcanvas = ({ show, handleClose, userData, handleSaveUser, handleEditUser }) => {
+import { ConfirmationDialogue, OkDialogue } from '../../../../src/components/elements/ConfirmDialogue';
+
+const RenderUserOffcanvas = ({
+  show,
+  fields,
+  setFields,
+  success,
+  handleClose,
+  userData,
+  handleSaveUser,
+  handleEditUser,
+  userValidator
+}) => {
   const [errorMessages, setErrorMessages] = useState({});
-  const [fields, setFields] = useState(userValidator.fields);
+
+  console.log('.................................fields', fields);
 
   useEffect(() => {
     setFields((pre) => {
@@ -16,11 +28,6 @@ const RenderUserOffcanvas = ({ show, handleClose, userData, handleSaveUser, hand
     });
   }, [userData]);
 
-  const resetFields = () => {
-    setFields(userValidator.reset());
-    if (userData?._id) handleClose();
-  };
-
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFields({
@@ -29,23 +36,19 @@ const RenderUserOffcanvas = ({ show, handleClose, userData, handleSaveUser, hand
     });
   };
 
-  const handleSubmit = async () => {   
+  const handleSubmit = async () => {
     setErrorMessages({});
     const validationResult = validate(fields, userValidator.rules);
 
     if (validationResult.hasError) {
       setErrorMessages(validationResult.errors);
       return;
-    }   
+    }
 
     if (userData) {
-      handleEditUser(fields, userData?._id).then((result) => {
-        result && resetFields();
-      });
+      handleEditUser(fields, userData?._id).then((result) => {});
     } else {
-      handleSaveUser(fields).then((result) => {
-        result && resetFields();
-      });
+      handleSaveUser(fields).then((result) => {});
     }
   };
 
@@ -88,9 +91,9 @@ const RenderUserOffcanvas = ({ show, handleClose, userData, handleSaveUser, hand
                   <span className="text-danger">{errorMessages.last_name?.message}</span>
                 )}
               </Form.Group>
-            </div>        
+            </div>
           </div>
-         
+
           <div className="row">
             <div className="col-md-6">
               <Form.Group controlId="formEmail" className="mb-3">
@@ -122,7 +125,7 @@ const RenderUserOffcanvas = ({ show, handleClose, userData, handleSaveUser, hand
                 )}
               </Form.Group>
             </div>
-          </div>   
+          </div>
 
           <div className="row">
             <div className="col-md-6">
@@ -130,7 +133,9 @@ const RenderUserOffcanvas = ({ show, handleClose, userData, handleSaveUser, hand
                 <Form.Label className="text-dark">Role</Form.Label>
                 <Form.Select name="role" value={fields.role} className="border-dark" onChange={handleChange}>
                   <option value="">Select a role</option>
-                  <option value="engineer">engineer</option>
+                  <option value="engineer">Engineer</option>
+                  <option value="manager">Manager</option>
+                  <option value="guest">Guest</option>
                 </Form.Select>
                 {errorMessages.role?.message && <span className="text-danger">{errorMessages.role?.message}</span>}
               </Form.Group>
@@ -143,12 +148,14 @@ const RenderUserOffcanvas = ({ show, handleClose, userData, handleSaveUser, hand
                   <option value="private">Private</option>
                   <option value="public">Public</option>
                 </Form.Select>
-                {errorMessages.visible?.message && <span className="text-danger">{errorMessages.visible?.message}</span>}
+                {errorMessages.visible?.message && (
+                  <span className="text-danger">{errorMessages.visible?.message}</span>
+                )}
               </Form.Group>
             </div>
-          </div> 
-    
-         <Form.Group controlId="formUserStatus" className="mb-3">
+          </div>
+
+          <Form.Group controlId="formUserStatus" className="mb-3">
             <Form.Check
               type="checkbox"
               label="Active Status"
@@ -169,6 +176,29 @@ const RenderUserOffcanvas = ({ show, handleClose, userData, handleSaveUser, hand
           </div>
         </Form>
       </Offcanvas.Body>
+      {success && (
+        <>
+          {fields?._id ? (
+            <OkDialogue
+              show={success}
+              message="Your changes was save successfully"
+              onConfirm={() => {
+                handleClose();
+              }}
+            />
+          ) : (
+            <ConfirmationDialogue
+              show={success}
+              onClose={async () => {
+                handleClose();
+              }}
+              onConfirm={() => {
+                handleClose();
+              }}
+            />
+          )}
+        </>
+      )}
     </Offcanvas>
   );
 };

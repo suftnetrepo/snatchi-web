@@ -3,7 +3,7 @@ import { FaSearch } from 'react-icons/fa';
 import { Form, Button } from 'react-bootstrap';
 import { searchAddress, formatAddressParts } from '../../utils/helpers';
 
-const FindAddress = ({ handleSelectedAddress }) => {
+const FindAddress = ({ label ='Find Site Address', handleSelectedAddress }) => {
   const [fields, setFields] = useState({
     status: false,
     query: '',
@@ -38,7 +38,7 @@ const FindAddress = ({ handleSelectedAddress }) => {
               setFields({ ...fields, status: e.target.checked });
             }}
           />
-          <span className="text-dark ms-1">Find Address</span>
+          <span className="text-dark ms-1">{label}</span>
         </div>
       </Form.Group>
       {findAddressStatus && (

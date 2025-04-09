@@ -20,8 +20,6 @@ const SettingsPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    console.log(".....................", fields)
-
     useEffect(() => {
         return () => {
             if (previewUrl) {
@@ -55,7 +53,9 @@ const SettingsPage = () => {
 
         const formData = new FormData();
         formData.append('description', fields.description);
-        formData.append('file', file);
+        if (file) {
+            formData.append('file', file);
+          }
         formData.append('name', fields.name);
         formData.append('email', fields.email);
         formData.append('mobile', fields.mobile);

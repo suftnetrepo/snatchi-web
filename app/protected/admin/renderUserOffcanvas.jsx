@@ -132,6 +132,7 @@ const RenderUserOffcanvas = ({ show, handleClose, userData, handleSaveUser, hand
                   <option value="">Select a role</option>
                   <option value="guest">Guest</option>
                   <option value="admin">Admin</option>
+                  <option value="integrator">Integrator</option>
                 </Form.Select>
                 {errorMessages.role?.message && <span className="text-danger">{errorMessages.role?.message}</span>}
               </Form.Group>
