@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { Offcanvas, Form, Table } from 'react-bootstrap';
 import { formatCurrency, formatReadableDate } from '../../../../utils/helpers';
+import { OkDialogue } from '../../../../src/components/elements/ConfirmDialogue';
 
-const RenderInvoiceOffcanvas = ({ show, handleClose, invoice, handleEditInvoice }) => {
+const RenderInvoiceOffcanvas = ({ show, success, handleClose, invoice, handleEditInvoice }) => {
   const [status, setStatus] = useState(invoice?.status);
 
   const handleStatusChange = (e) => {
@@ -120,9 +121,16 @@ const RenderInvoiceOffcanvas = ({ show, handleClose, invoice, handleEditInvoice 
               handleEditInvoice && handleEditInvoice({ status: status }, invoice._id).then(() => {});
             }}
           >
-            SaveChanges
+            Save Changes
           </button>
         </div>
+        <OkDialogue
+          show={success}
+          message="Your changes was save successfully"
+          onConfirm={() => {
+            handleClose();
+          }}
+        />
       </Offcanvas.Body>
     </Offcanvas>
   );

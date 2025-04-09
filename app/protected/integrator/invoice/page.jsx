@@ -15,10 +15,11 @@ const Invoice = () => {
   const [show, setShow] = useState(false);
   const [invoice, setInvoice] = useState();
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const { data, error, loading, totalCount, handleFetch, handleEditInvoice } = useInvoice(debouncedSearchQuery);
+  const { data, error, loading, totalCount, handleFetch, handleEditInvoice, success,handleReset } = useInvoice(debouncedSearchQuery);
 
   const handleClose = () => {
     setShow(false);
+    handleReset()
   };
   const handleShow = () => {
     setShow(true);
@@ -133,7 +134,7 @@ const Invoice = () => {
       </div>
       {!loading && <span className="overlay__block" />}
       {error && <ErrorDialogue showError={error} onClose={() => {}} />}
-      {invoice && <RenderInvoiceOffcanvas show={show} handleEditInvoice={handleEditInvoice} handleClose={handleClose} invoice={invoice} /> }
+      {invoice && <RenderInvoiceOffcanvas show={show} success={success} handleEditInvoice={handleEditInvoice} handleClose={handleClose} invoice={invoice} /> }
     </Fragment>
   );
 };

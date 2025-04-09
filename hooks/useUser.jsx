@@ -12,7 +12,8 @@ const useUser = (searchQuery) => {
     loading: false,
     searchTerm : '',
     error: null,
-    totalCount: 0
+    totalCount: 0,
+    success : false
   });
 
   const handleChange = (value) => {
@@ -30,13 +31,13 @@ const useUser = (searchQuery) => {
 
   const handleError = (error) => {
     setState((pre) => {
-      return { ...pre, error: error, loading: false };
+      return { ...pre, error: error, success: false,loading: false };
     });
   };
 
   const handleReset = () => {
     setState((pre) => {
-      return { ...pre, editData: null, error: null };
+      return { ...pre, editData: null, success: false, error: null };
     });
   };
 
@@ -94,11 +95,12 @@ const useUser = (searchQuery) => {
       setState((prevState) => ({
         ...prevState,
         data: [data, ...prevState.data],
-        loading: false
+        loading: false,
+        success : true
       }));
       return true;
     } else {
-      handleError(errorMessage || 'Failed to update the user.');
+      handleError(errorMessage || 'Failed to save the user.');
       return false;
     }
   }
@@ -142,8 +144,9 @@ const useUser = (searchQuery) => {
     if (success) {
       setState((prevState) => ({
         ...prevState,
-        data: prevState.data.map((user) => (user._id === id ? data : user)),
-        loading: false
+        data: prevState.data.map((user) => (user._id === id ? body : user)),
+        loading: false,
+        success : true
       }));
       return true;
     } else {

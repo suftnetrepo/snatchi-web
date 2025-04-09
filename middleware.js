@@ -10,7 +10,7 @@ export async function middleware(req) {
 
     const token = await getToken({
       req: req,
-      secret: process.env.NEXTAUTH_SECRET?.trim(),
+      secret: process.env.NEXTAUTH_SECRET,
       secureCookie: false
     });
 
@@ -29,9 +29,9 @@ export async function middleware(req) {
       }
     }
 
-    if (isApiRoute(pathname)) {
+    if (!isApiRoute(pathname)) {
       return NextResponse.json(
-        { error: 'Unauthorized', message: message || 'Authentication required' },
+        { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
       );
     }

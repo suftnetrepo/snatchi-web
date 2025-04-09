@@ -12,10 +12,12 @@ import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
 import useDebounce from '../../../../hooks/useDebounce';
 import RenderUserOffcanvas from './renderUserOffcanvas';
 import Tooltip from '@mui/material/Tooltip';
+import { userValidator } from '../rules';
 
 const User = () => { 
   const [searchQuery, setSearchQuery] = useState('');
   const [show, setShow] = useState(false);
+  const [fields, setFields] = useState(userValidator.fields);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const {
     data,
@@ -28,16 +30,19 @@ const User = () => {
     handleEdit,
     handleEditUser,
     handleSaveUser,
-    handleReset
+    handleReset,
+    success
   } = useUser(debouncedSearchQuery);
 
   const handleClose = () => {
     handleReset();
     setShow(false);
+    setFields(userValidator.reset())
   };
   const handleShow = () => {
     handleReset();
     setShow(true);
+    setFields(userValidator.reset())
   };
 
   const columns = useMemo(
@@ -135,9 +140,13 @@ const User = () => {
       <RenderUserOffcanvas
         handleClose={handleClose}
         show={show}
+        success={success}
         userData={editData}
+        fields ={fields}
+        setFields ={setFields}
         handleEditUser={handleEditUser}
         handleSaveUser={handleSaveUser}
+        userValidator={userValidator}
       />
     </>
   );

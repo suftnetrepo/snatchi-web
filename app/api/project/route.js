@@ -72,8 +72,12 @@ export const GET = async (req) => {
 
 export const DELETE = async (req) => {
   try {
-    const userData = req.headers.get("x-user-data");
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
 
@@ -87,8 +91,12 @@ export const DELETE = async (req) => {
 
 export const PUT = async (req) => {
   try {
-    const userData = req.headers.get("x-user-data");
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     const body = await req.json();
@@ -103,14 +111,18 @@ export const PUT = async (req) => {
 
 export const POST = async (req) => {
   try {
-    const userData = req.headers.get("x-user-data");
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    
     const body = await req.json();
 
     const result = await createProject(user?.integrator, body);
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };

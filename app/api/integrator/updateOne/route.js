@@ -1,8 +1,8 @@
 import { updateIntegrator } from '../../services/integrator';
 import { v2 as cloudinary } from 'cloudinary';
 import { logger } from '../../utils/logger';
-const { NextResponse } = require('next/server');
 import { getUserSession } from '@/utils/generateToken';
+const { NextResponse } = require('next/server');
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUD_NAME,
@@ -16,11 +16,12 @@ export const config = {
 
 export const POST = async (req) => {
   try {
-    const user = await getUserSession(req);
+     const user = await getUserSession(req);
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
     let result = null;
     const formData = await req.formData();
 
@@ -34,7 +35,7 @@ export const POST = async (req) => {
       const fileBuffer = await file.arrayBuffer();
       const base64Data = Buffer.from(fileBuffer).toString('base64');
       const fileUri = `data:${file.type};base64,${base64Data}`;
-
+   
       try {
         const uploadToCloudinary = () => {
           return new Promise((resolve, reject) => {

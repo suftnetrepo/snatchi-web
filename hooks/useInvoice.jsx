@@ -98,7 +98,7 @@ const useInvoice = ( searchQuery) => {
           ? prevState.data.map((invoice) =>
               invoice._id === invoice_id ? { ...invoice, status: body.status } : invoice
             )
-          : [], // Ensure `data` is always an array
+          : [], 
         success: true,
       }));
       return true;
