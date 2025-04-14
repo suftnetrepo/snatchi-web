@@ -5,8 +5,8 @@ import { Table } from '@/components/elements/table/table';
 import { Button } from 'react-bootstrap';
 import { useProject } from '../../../../hooks/useProject';
 import { MdDelete } from 'react-icons/md';
-import { TiEdit, TiDocument, TiUser,  } from 'react-icons/ti';
-import { RiUserLocationLine } from "react-icons/ri";
+import { TiEdit, TiDocument, TiUser } from 'react-icons/ti';
+import { RiUserLocationLine } from 'react-icons/ri';
 import { FaTasks } from 'react-icons/fa';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
@@ -63,8 +63,16 @@ const Project = () => {
   const columns = useMemo(
     () => [
       { Header: 'Name', accessor: 'name', sortType: 'basic' },
-      { Header: 'Manager', accessor: 'manager', sortType: 'basic' },
-      { Header: 'StakeHolder', accessor: 'stakeholder', sortType: 'basic' },
+      {
+        Header: 'Start Date',
+        accessor: 'startDate',
+        Cell: ({ value }) => <div className="d-flex align-items-center">{dateFormatted(value)}</div>
+      },
+      {
+        Header: 'End Date',
+        accessor: 'endDate',
+        Cell: ({ value }) => <div className="d-flex align-items-center">{dateFormatted(value)}</div>
+      },
       {
         Header: 'Priority',
         accessor: 'priority',
@@ -85,16 +93,7 @@ const Project = () => {
           </div>
         )
       },
-      {
-        Header: 'Start Date',
-        accessor: 'startDate',
-        Cell: ({ value }) => <div className="d-flex align-items-center">{dateFormatted(value)}</div>
-      },
-      {
-        Header: 'End Date',
-        accessor: 'endDate',
-        Cell: ({ value }) => <div className="d-flex align-items-center">{dateFormatted(value)}</div>
-      },
+
       {
         Header: 'Actions',
         disableSortBy: true,
@@ -134,7 +133,7 @@ const Project = () => {
                   className="pointer ms-2"
                   onClick={() => {
                     setProjectId(row.original._id);
-                   router.push(`/protected/integrator/task?projectId=${row.original._id}`);
+                    router.push(`/protected/integrator/task?projectId=${row.original._id}`);
                   }}
                 />
               </span>
