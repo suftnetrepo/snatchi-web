@@ -4,13 +4,9 @@ const projectValidator = {
       { pattern: /^.+$/, message: 'Name is required' },
       { pattern: /^.{0,250}$/, message: 'Name must not exceed 250 characters' }
     ],
-    manager: [
-      { pattern: /^.+$/, message: 'Manager name is required' },
-      { pattern: /^.{0,50}$/, message: 'Manager name must not exceed 50 characters' }
-    ],
-    stakeholder: [
-      { pattern: /^.+$/, message: 'Stakeholder name is required' },
-      { pattern: /^.{0,50}$/, message: 'Stakeholder name must not exceed 50 characters' }
+    project_number: [
+      { pattern: /^.+$/, message: 'Project number is required' },
+      { pattern: /^.{0,50}$/, message: 'Project number must not exceed 50 characters' }
     ],
     description: [
       { pattern: /^.+$/, message: 'Scope of Work is required' },
@@ -47,8 +43,13 @@ const projectValidator = {
   }, 
   fields: {
     name: '',
-    manager: '',
+    project_number: '',
     stakeholder: '',
+    first_name: '',
+    last_name: '',
+    mobile: '',
+    email: '',
+    ppe: [],
     status: '',
     priority: '',
     description: null,

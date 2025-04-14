@@ -9,15 +9,35 @@ const projectSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
-    manager: {
+    project_number: {
       type: String,
-      required: true,
+      required: false,
       trim: true
     },
     stakeholder: {
       type: String,
       trim: true
     },
+    first_name: {
+      type: String,
+      trim: true,
+      required: false,
+      default: ''
+    },
+    last_name: {
+      type: String,
+      trim: true,
+      required: false,
+      default: ''
+    },
+    mobile: {
+      type: String,
+      trim: true,
+      required: false,
+      default: ''
+    },
+    email: { type: String, required: false, lowercase: true, default: '' },
+    ppe: [],
     description: {
       type: String,
       trim: true

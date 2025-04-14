@@ -37,6 +37,7 @@ const FindAddress = ({ label ='Find Site Address', handleSelectedAddress }) => {
               setFindAddressStatus(e.target.checked);
               setFields({ ...fields, status: e.target.checked });
             }}
+             className="custom-switch"
           />
           <span className="text-dark ms-1">{label}</span>
         </div>

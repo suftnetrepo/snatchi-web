@@ -1,17 +1,30 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import Editor from '../../../../src/components/reuseable/editor';
 import 'react-datetime/css/react-datetime.css';
 import FindAddress from '../../../share/findAddress';
+import MultiSelectDropdown from './MultiSelectDropdown';
+import { ppeOptions } from '@/utils/helpers';
 
 const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handleSelectedAddress }) => {
+  const [showContact, setShowContact] = useState(false);
 
-  const handlePaste = (e) => {  
+  useEffect(() => {
+    if (!!fields?.first_name || !!fields?.last_name) {
+      setShowContact(true);
+    }
+  }, [fields?.first_name, fields?.last_name]);
+
+  const handlePaste = (e) => {
     const pastedText = e.clipboardData.getData('text');
     handleChange('description', pastedText);
     e.preventDefault();
+  };
+
+  const handlePPEChange = (values) => {
+    handleChange('ppe', values);
   };
 
   return (
@@ -46,31 +59,18 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
                 <Form.Control
                   type="text"
                   placeholder="Enter project number"
-                  name="manager"
-                  value={fields?.manager}
-                  onChange={(e) => handleChange('manager', e.target.value)}
+                  name="project_number"
+                  value={fields?.project_number}
+                  onChange={(e) => handleChange('project_number', e.target.value)}
                   className="border-dark"
                 />
-                {errorMessages?.manager?.message && (
-                  <span className="text-danger fs-13">{errorMessages?.manager?.message}</span>
+                {errorMessages?.project_number?.message && (
+                  <span className="text-danger fs-13">{errorMessages?.project_number?.message}</span>
                 )}
               </Form.Group>
             </div>
             <div className="col-md-6">
-              <Form.Group controlId="formStakeHolder" className="mb-3">
-                <Form.Label className="text-dark">Site Contact</Form.Label>
-                <Form.Control
-                  type="stakeholder"
-                  placeholder="Enter site contact"
-                  name="stakeholder"
-                  value={fields?.stakeholder}
-                  onChange={(e) => handleChange('stakeholder', e.target.value)}
-                  className="border-dark"
-                />
-                {errorMessages?.stakeholder?.message && (
-                  <span className="text-danger fs-13">{errorMessages?.stakeholder?.message}</span>
-                )}
-              </Form.Group>
+              
             </div>
           </div>
         </div>
@@ -86,6 +86,7 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
                   type="datetime-local"
                   value={fields?.startDate}
                   onChange={(e) => handleChange('startDate', e.target.value)}
+                       className="border-dark"
                 />
               </Form.Group>
               {errorMessages?.startDate?.message && (
@@ -94,11 +95,12 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
             </div>
             <div className="col-md-6">
               <Form.Group controlId="formEndDate">
-                <Form.Label className="text-dark">Due Date</Form.Label>
+                <Form.Label className="text-dark">End Date</Form.Label>
                 <Form.Control
                   type="datetime-local"
                   value={fields?.endDate}
                   onChange={(e) => handleChange('endDate', e.target.value)}
+                       className="border-dark"
                 />
               </Form.Group>
               {errorMessages?.endDate?.message && (
@@ -109,7 +111,105 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
         </div>
       </div>
 
-      <div className="row mt-3">
+      <Form.Group>
+        <div className="d-flex align-items-center justify-content-start mt-2 mb-1">
+          <Form.Check
+            type="switch"
+            id="custom-switch"
+            checked={showContact}
+            value={fields?.siteContact}
+            onChange={(e) => {
+              setShowContact(e.target.checked);
+            }}
+            className="custom-switch"
+          />
+          <span className="text-dark ms-1">{'Site Contact'}</span>
+        </div>
+      </Form.Group>
+      <div>
+        {showContact && (
+          <>
+            <div className="col-md-12">
+              <div className="col-md-6">
+                <div className="row">
+                  <div className="col-md-6">
+                    <Form.Group controlId="formFirstname" className="mb-3">
+                      <Form.Label className="text-dark">Firstname</Form.Label>
+                      <Form.Control
+                        type="firstname"
+                        placeholder="Enter firstname"
+                        name="firstname"
+                        value={fields?.first_name}
+                        onChange={(e) => handleChange('first_name', e.target.value)}
+                        className="border-dark"
+                      />
+                      {errorMessages?.first_name?.message && (
+                        <span className="text-danger fs-13">{errorMessages?.first_name?.message}</span>
+                      )}
+                    </Form.Group>
+                  </div>
+                  <div className="col-md-6">
+                    <Form.Group controlId="formLastname" className="mb-3">
+                      <Form.Label className="text-dark">Lastname</Form.Label>
+                      <Form.Control
+                        type="last_name"
+                        placeholder="Enter last_name"
+                        name="last_name"
+                        value={fields?.last_name}
+                        onChange={(e) => handleChange('last_name', e.target.value)}
+                        className="border-dark"
+                      />
+                      {errorMessages?.last_name?.message && (
+                        <span className="text-danger fs-13">{errorMessages?.last_name?.message}</span>
+                      )}
+                    </Form.Group>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-12">
+              <div className="col-md-6">
+                <div className="row">
+                  <div className="col-md-6">
+                    <Form.Group controlId="formMobile" className="mb-3">
+                      <Form.Label className="text-dark">Mobile</Form.Label>
+                      <Form.Control
+                        type="mobile"
+                        placeholder="Enter mobile"
+                        name="mobile"
+                        value={fields?.mobile}
+                        onChange={(e) => handleChange('mobile', e.target.value)}
+                        className="border-dark"
+                      />
+                      {errorMessages?.mobile?.message && (
+                        <span className="text-danger fs-13">{errorMessages?.mobile?.message}</span>
+                      )}
+                    </Form.Group>
+                  </div>
+                  <div className="col-md-6">
+                    <Form.Group controlId="formEmail" className="mb-3">
+                      <Form.Label className="text-dark">Email Address</Form.Label>
+                      <Form.Control
+                        type="email"
+                        placeholder="Enter email"
+                        name="email"
+                        value={fields?.email}
+                        onChange={(e) => handleChange('email', e.target.value)}
+                        className="border-dark"
+                      />
+                      {errorMessages?.email?.message && (
+                        <span className="text-danger fs-13">{errorMessages?.email?.message}</span>
+                      )}
+                    </Form.Group>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="row mt-1">
         <div className="col-md-12">
           <div className="row">
             <div className="col-md-6">
@@ -226,13 +326,30 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
         <div className="col-md-12">
           <Form.Group controlId="formFirstName" className="mb-3 mt-3">
             <Form.Label className="text-dark">Scope of Work</Form.Label>
-            <Editor onChange={(e) => handleChange('description', e)} onPaste={handlePaste} value={fields?.description} />
+            <Editor
+              onChange={(e) => handleChange('description', e)}
+              onPaste={handlePaste}
+              value={fields?.description}
+            />
             {errorMessages?.description?.message && (
               <span className="text-danger fs-13">{errorMessages.description?.message}</span>
             )}
           </Form.Group>
         </div>
-      </div>  
+      </div>
+
+      <div className="row">
+        <div className="col-md-3">
+          <MultiSelectDropdown
+            options={ppeOptions}
+            label="PPE"
+            selectedValues={fields?.ppe}
+            onChange={handlePPEChange}
+            placeholder="Select PPE..."
+          />
+        </div>
+        <div className="col-md-9"></div>
+      </div>
 
       <div className="row">
         <div className="col-md-6">

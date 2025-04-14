@@ -1,0 +1,18 @@
+.custom-switch .form-check-input {
+    width: 2.5rem;
+    height: 1.4rem;
+    cursor: pointer;
+    background-color: #ccc;
+    border-color: #ccc;
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  .custom-switch .form-check-input:checked {
+    background-color: #3b82f6; /* Blue when ON */
+    border-color: #3b82f6;
+  }
+  
+  .custom-switch .form-check-input:focus {
+    box-shadow: none;
+  }
+  
