@@ -316,7 +316,31 @@ function capitalizeFirstLetter(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+const ppeOptions = [
+  { value: 'helmet', label: '🪖 Helmet' },
+  { value: 'goggles', label: '👓 Safety Goggles' },
+  { value: 'gloves', label: '🧤 Protective Gloves' },
+  { value: 'boots', label: '🥾 Steel-Toe Boots' },
+  { value: 'earplugs', label: '🦻 Earplugs' },
+  { value: 'earmuffs', label: '🎧 Earmuffs' },
+  { value: 'mask', label: '😷 Respirator Mask' },
+  { value: 'vest', label: '🦺 Reflective Safety Vest' },
+  { value: 'coveralls', label: '🧥 Protective Coveralls' },
+  { value: 'face_shield', label: '🛡️ Face Shield' },
+  { value: 'safety_harness', label: '⛓️ Safety Harness' },
+  { value: 'lab_coat', label: '🔬 Lab Coat' },
+  { value: 'chemical_apron', label: '🧪 Chemical Resistant Apron' },
+  { value: 'dust_mask', label: '🌫️ Dust Mask' },
+  { value: 'knee_pads', label: '🦵 Knee Pads' },
+  { value: 'welding_shield', label: '🔥 Welding Shield' },
+  { value: 'anti_static_wristband', label: '🖐️ Anti-static Wristband' },
+  { value: 'insulated_gloves', label: '🧤 Insulated Gloves' },
+  { value: 'cut_resistant_gloves', label: '✂️ Cut-Resistant Gloves' },
+  { value: 'fall_arrest_kit', label: '🪢 Fall Arrest Kit' },
+];
+
 export {
+  ppeOptions,
   haversineDistance,
   formatReadableDate,
   formatCurrency,

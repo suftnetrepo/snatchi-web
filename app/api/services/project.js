@@ -7,7 +7,7 @@ import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
 const { logger } = require('../utils/logger');
 
-mongoConnect()
+mongoConnect();
 
 async function getProjects({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
   if (!isValidObjectId(suid)) {
@@ -59,8 +59,8 @@ async function getProjectById(id) {
   try {
     return Project.findOne({ _id: id })
       .populate({
-        path: 'assignedTo.id', 
-        select: 'first_name last_name fcm secure_url role id' 
+        path: 'assignedTo.id',
+        select: 'first_name last_name fcm secure_url role id'
       })
       .exec()
       .then((results) => {
@@ -113,6 +113,7 @@ async function updateProject(id, body) {
   }
 
   try {
+
     const updatedProject = await Project.findByIdAndUpdate(id, body, {
       new: true
     });
@@ -188,7 +189,6 @@ async function getProjectStatusAggregates(integratorId) {
 
 const getProjectSummaryByIntegrator = async (integratorId) => {
   try {
-  
     if (!mongoose.Types.ObjectId.isValid(integratorId)) {
       throw new Error('Invalid integrator ID');
     }
@@ -197,7 +197,7 @@ const getProjectSummaryByIntegrator = async (integratorId) => {
       { $match: { integrator: new mongoose.Types.ObjectId(integratorId) } },
       {
         $lookup: {
-          from: 'tasks', 
+          from: 'tasks',
           localField: '_id',
           foreignField: 'project',
           as: 'tasks'
@@ -205,7 +205,7 @@ const getProjectSummaryByIntegrator = async (integratorId) => {
       },
       {
         $addFields: {
-          totalTasks: { $size: '$tasks' }, 
+          totalTasks: { $size: '$tasks' },
           completedTasks: {
             $size: {
               $filter: {
@@ -221,28 +221,28 @@ const getProjectSummaryByIntegrator = async (integratorId) => {
         $addFields: {
           progress: {
             $cond: [
-              { $gt: ['$totalTasks', 0] }, 
-              { $multiply: [{ $divide: ['$completedTasks', '$totalTasks'] }, 100] }, 
-              0 
+              { $gt: ['$totalTasks', 0] },
+              { $multiply: [{ $divide: ['$completedTasks', '$totalTasks'] }, 100] },
+              0
             ]
           }
         }
       },
       {
         $addFields: {
-          progress: { $round: ['$progress', 2] } 
+          progress: { $round: ['$progress', 2] }
         }
       },
       {
         $project: {
           _id: 0,
           name: '$name',
-          assignedTo: { $size: '$assignedTo' }, 
-          tasks: { $concat: [{ $toString: '$completedTasks' }, '/', { $toString: '$totalTasks' }] }, 
-          progress: '$progress', 
+          assignedTo: { $size: '$assignedTo' },
+          tasks: { $concat: [{ $toString: '$completedTasks' }, '/', { $toString: '$totalTasks' }] },
+          progress: '$progress',
           status: '$status',
           endDate: {
-            $dateToString: { format: '%Y-%m-%d', date: '$endDate' } 
+            $dateToString: { format: '%Y-%m-%d', date: '$endDate' }
           },
           startDate: {
             $dateToString: { format: '%Y-%m-%d', date: '$startDate' }
@@ -260,7 +260,6 @@ const getProjectSummaryByIntegrator = async (integratorId) => {
 
 const getProjectWeeklySummary = async (integratorId) => {
   try {
-    
     if (!mongoose.Types.ObjectId.isValid(integratorId)) {
       throw new Error('Invalid integrator ID');
     }
@@ -268,16 +267,16 @@ const getProjectWeeklySummary = async (integratorId) => {
     const projects = await Project.find({ integrator: integratorId }).select('_id createdAt').lean();
 
     if (projects.length === 0) {
-     return { projects: [], tasks: [], days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
+      return { projects: [], tasks: [], days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
     }
 
     const projectIds = projects.map((project) => project._id);
 
     const tasksByDay = await Task.aggregate([
-      { $match: { project: { $in: projectIds } } }, 
+      { $match: { project: { $in: projectIds } } },
       {
         $group: {
-          _id: { $dayOfWeek: '$createdAt' }, 
+          _id: { $dayOfWeek: '$createdAt' },
           count: { $sum: 1 }
         }
       }
@@ -287,7 +286,7 @@ const getProjectWeeklySummary = async (integratorId) => {
       { $match: { _id: { $in: projectIds } } },
       {
         $group: {
-          _id: { $dayOfWeek: '$createdAt' }, 
+          _id: { $dayOfWeek: '$createdAt' },
           count: { $sum: 1 }
         }
       }

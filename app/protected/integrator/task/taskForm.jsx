@@ -17,7 +17,7 @@ const TaskForm = ({ errorMessages, handleDelete, handleSubmit, handleChange, fie
       <div className="row">
         <div className="col-md-12">
           <Form.Group controlId="formName" className="mb-3">
-            <Form.Label className="text-dark">Task Title</Form.Label>
+            <Form.Label className="text-dark"> Title</Form.Label>
             <Form.Control
               type="text"
               placeholder="Enter task name"
@@ -45,6 +45,7 @@ const TaskForm = ({ errorMessages, handleDelete, handleSubmit, handleChange, fie
                   type="datetime-local"
                   value={fields?.startDate}
                   onChange={(e) => handleChange('startDate', e.target.value)}
+                       className="border-dark"
                 />
               </Form.Group>
               {errorMessages?.startDate?.message && (
@@ -53,11 +54,12 @@ const TaskForm = ({ errorMessages, handleDelete, handleSubmit, handleChange, fie
             </div>
             <div className="col-md-6">
               <Form.Group controlId="formEndDate">
-                <Form.Label className="text-dark">Due Date</Form.Label>
+                <Form.Label className="text-dark">End Date</Form.Label>
                 <Form.Control
                   type="datetime-local"
                   value={fields?.endDate}
                   onChange={(e) => handleChange('endDate', e.target.value)}
+                       className="border-dark"
                 />
               </Form.Group>
               {errorMessages?.endDate?.message && (
@@ -79,6 +81,7 @@ const TaskForm = ({ errorMessages, handleDelete, handleSubmit, handleChange, fie
               value={fields.description}
               onPaste={handlePaste}
               onChange={(e) => handleChange('description', e.target.value)}
+                   className="border-dark"
             />
             {errorMessages?.description?.message && (
               <span className="text-danger fs-13">{errorMessages.description?.message}</span>

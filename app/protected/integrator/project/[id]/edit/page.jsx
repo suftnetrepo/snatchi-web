@@ -8,7 +8,6 @@ import { useProjectEdit } from '../../../../../../hooks/useProject';
 import ErrorDialogue from '../../../../../../src/components/elements/errorDialogue';
 import Button from 'react-bootstrap/Button';
 import { MdArrowBack } from 'react-icons/md';
-
 import dynamic from 'next/dynamic'
 
 const ProjectForm = dynamic(
@@ -20,7 +19,7 @@ const EditForm = () => {
   const { id } = useParams();
   const router = useRouter()
   const [errorMessages, setErrorMessages] = useState({});
-  const { handleEdit, fields, handleChange, error, handleReset, handleSelectedAddress } = useProjectEdit(id);
+  const { handleEdit, fields, handleChange, error, handleReset, handleSelectedAddress } = useProjectEdit(id)
    
   const resetFields = () => {
     router.push(`/protected/integrator/project`);
