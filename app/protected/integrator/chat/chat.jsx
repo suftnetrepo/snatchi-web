@@ -82,7 +82,7 @@ const RenderChat = () => {
                       onChange={(e) => handleSearchChange('search_terms', e.target.value)}
                       onKeyPress={(e) => {
                         if (e.key === 'Enter') {
-                          handleSearch(search_terms);
+                          search_terms && handleSearch(search_terms);
                         }
                       }}
                     />
@@ -149,7 +149,7 @@ const RenderChat = () => {
                       onChange={(e) => handleIntegratorSearchChange('integrator_search_terms', e.target.value)}
                       onKeyPress={(e) => {
                         if (e.key === 'Enter') {
-                          handleIntegratorChatSearch(integrator_search_terms);
+                          integrator_search_terms && handleIntegratorChatSearch(integrator_search_terms);
                         }
                       }}
                     />
