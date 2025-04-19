@@ -50,8 +50,7 @@ export const GET = async (req) => {
     }
 
     if (action === 'integrator_user') {
-      const integratorId = url.searchParams.get('integratorId');
-      const results = await getUserById(integratorId);
+      const results = await getUserById(user?.integrator);
       return NextResponse.json({ data: results });
     }
 

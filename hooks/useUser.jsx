@@ -57,7 +57,9 @@ const useUser = (searchQuery) => {
 
   const handleFetchUser = async () => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
-    const { data, success, errorMessage } = await zat(USER.fetch, null, VERBS.GET);
+    const { data, success, errorMessage } = await zat(USER.fetch, null, VERBS.GET, {
+      action:'integrator_user'
+    });
 
     if (success) {
       setState((pre) => {
