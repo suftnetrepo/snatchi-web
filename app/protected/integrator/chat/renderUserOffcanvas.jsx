@@ -7,6 +7,9 @@ import Tooltip from '@mui/material/Tooltip';
 const RenderUserOffcanvas = ({ show, handleClose, currentUserId, error, firstname, handleOneToOneChat }) => {
   const { data, handleFetchUser } = useUser();
 
+  console.log("......................data", data)
+  console.log("......................currentUserId", currentUserId)
+
   useEffect(() => {
     handleFetchUser();
   }, []);
@@ -28,7 +31,7 @@ const RenderUserOffcanvas = ({ show, handleClose, currentUserId, error, firstnam
           <div>
             <div className="mt-1">
               <ListGroup>
-                {data?.map((user, index) => {
+                {data.filter((j)=> j._id !== currentUserId).map((user, index) => {
                   return (
                     <ListGroup.Item
                       key={`${index}-${user._id}`}
