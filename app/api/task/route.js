@@ -6,6 +6,7 @@ import {
   updateTask,
   createTask,
   updateOneTask,
+  getMyRecentTasks,
   getTaskStatusAggregates
 } from '../services/task';
 import { logger } from '../utils/logger';
@@ -54,6 +55,11 @@ export const GET = async (req) => {
     if (action === 'myTasks') {
       const date = url.searchParams.get('date');
       const tasks = await getMyTasks(user.id, date);
+      return NextResponse.json({ data: tasks, success: true }, { status: 200 });
+    }
+
+    if (action === 'myRecentTasks') {
+      const tasks = await getMyRecentTasks(user.id);
       return NextResponse.json({ data: tasks, success: true }, { status: 200 });
     }
 

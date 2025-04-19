@@ -10,6 +10,7 @@ import { FaSearch } from 'react-icons/fa';
 import SimpleBar from 'simplebar-react';
 import { formatTimeForObject } from '../../../../utils/helpers';
 import { RenderChatOffcanvas } from './renderChatOffcanvas';
+import { RenderUserOffcanvas } from './renderUserOffcanvas';
 import { useSession } from 'next-auth/react';
 import ChatWindow from '@/components/reuseable/chat/chat-window';
 import { useSearchParams } from 'next/navigation';
@@ -26,16 +27,22 @@ const RenderChat = () => {
     handleNewRoomChange,
     roomName,
     search_terms,
-    chats
+    chats,
+    handleOneToOneChat
   } = useChatRoom(session?.user?.id);
   const { messages } = useChatMessage(chatRoomId, session?.user?.id);
   const { integratorChatRooms, handleIntegratorChatSearch, handleIntegratorSearchChange, integrator_search_terms } = useIntegratorChat(session?.user?.integrator);
   const [showChatOffcanvas, setShowChatOffcanvas] = useState(false);
+  const [showSingleChatOffcanvas, setShowSingleChatOffcanvas] = useState(false);
   const [show, setShow] = useState(false);
   const ref = useRef();
   const searchParams = useSearchParams();
   const query = searchParams.get('q');
   const id = searchParams.get('i');
+
+  console.log("....................integratorChatRooms", integratorChatRooms)
+  console.log("....................chatRoom", chatRoom)
+  console.log("....................chats", chats)
 
   useEffect(() => {
     const chat = integratorChatRooms.find((j) => j.id === id);
@@ -229,8 +236,11 @@ const RenderChat = () => {
               </div>
               {!chatRoom?.isIntegratorRoom && (
                 <div>
-                  <Button type="button" variant="outline-secondary" onClick={() => setShow(true)}>
-                    Create Room
+                   <Button type="button" variant="outline-secondary" onClick={() => setShowSingleChatOffcanvas(true)}>
+                   Create User
+                  </Button>
+                  <Button className='ms-2' type="button" variant="outline-secondary" onClick={() => setShow(true)}>
+                    Create Group
                   </Button>
                   <Button
                     type="button"
@@ -238,7 +248,7 @@ const RenderChat = () => {
                     className="ms-2"
                     onClick={() => setShowChatOffcanvas(true)}
                   >
-                    Add Participant
+                    Add User To Group
                   </Button>
                 </div>
               )}
@@ -259,6 +269,13 @@ const RenderChat = () => {
         handleClose={() => setShowChatOffcanvas(false)}
         chatRoomId={chatRoomId}
         handleAddMember={handleAddMember}
+      />
+      <RenderUserOffcanvas
+        show={showSingleChatOffcanvas}
+        handleClose={() => setShowSingleChatOffcanvas(false)}
+        currentUserId={session?.user?.id}
+        firstname={session?.user?.first_name}
+        handleOneToOneChat={handleOneToOneChat}
       />
       <Modal show={show} onHide={() => setShow(false)}>
         <Modal.Header closeButton>

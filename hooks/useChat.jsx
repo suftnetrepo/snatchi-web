@@ -288,12 +288,52 @@ const useChatRoom = (user_id) => {
     }
   };
 
+  const handleOneToOneChat = async (currentUserId, targetUserId, chatName) => {
+    try {
+     
+      const chatsRef = collection(db, 'chats');
+      const q = query(chatsRef, where('users', 'array-contains', currentUserId));
+
+      const querySnapshot = await getDocs(q);
+      let chatAlreadyExists = false;
+
+      querySnapshot.forEach((docSnap) => {
+        const users = docSnap.data().users;
+        if (users.includes(targetUserId) && users.length === 2) {
+          chatAlreadyExists = true;
+          console.log('Chat already exists with ID:', docSnap.id);
+        }
+      });
+
+      if (chatAlreadyExists) return;
+
+      const chatDocRef = await addDoc(collection(db, 'chats'), {
+        name: chatName,
+        users: [currentUserId, targetUserId],
+        lastMessage: '',
+        lastUpdated: Timestamp.now()
+      });
+
+      console.log(`One-to-one chat created with ID: ${chatDocRef.id}`);
+
+      setState((prev) => ({
+        ...prev,
+        roomName: '',
+        loading: false
+      }));
+    } catch (error) {
+      console.error('Error creating one-to-one chat:', error.message);
+      handleError(error.message);
+    }
+  };
+
   useEffect(() => {
-    handleFetchChatRooms(user_id);
+    user_id && handleFetchChatRooms(user_id);
   }, [user_id]);
 
   return {
     ...state,
+    handleOneToOneChat,
     handleReset,
     handleAddMember,
     handleDeleteChat,
@@ -406,12 +446,10 @@ const useChatInput = () => {
     });
   };
 
-
   const handleSend = async (chatRoomId, senderId, receiverId, text) => {
     console.log({ chatRoomId, senderId, receiverId, text });
     let imageURL = null;
     try {
-   
       const messagesRef = collection(db, 'chats', chatRoomId, 'messages');
       const newMessage = {
         _id: new Date().getTime().toString(),

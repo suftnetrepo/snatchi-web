@@ -70,8 +70,6 @@ const useTask = (searchQuery, projectId) => {
         searchQuery
       });
 
-      console.log(data)
-
       if (success) {
         setState((pre) => ({
           ...pre,
