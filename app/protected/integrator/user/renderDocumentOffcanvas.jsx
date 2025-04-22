@@ -4,6 +4,9 @@ import React from 'react';
 import { Offcanvas, ListGroup, Alert } from 'react-bootstrap';
 import { useUserDocument } from '../../../../hooks/useUserDocument';
 import { MdEditDocument } from 'react-icons/md';
+import { FaChevronCircleRight } from 'react-icons/fa';
+import { IoChevronForwardCircleOutline } from 'react-icons/io5';
+
 import Tooltip from '@mui/material/Tooltip';
 
 const RenderDocumentOffcanvas = ({ show, handleClose, userId }) => {
@@ -24,7 +27,7 @@ const RenderDocumentOffcanvas = ({ show, handleClose, userId }) => {
 
         <div>
           <div className="mt-1">
-            <div>
+            <div className="ms-1 mb-4">
               <h4>Documents({data.length}) </h4>
             </div>
             <ListGroup>
@@ -35,18 +38,17 @@ const RenderDocumentOffcanvas = ({ show, handleClose, userId }) => {
                     as="li"
                     className="d-flex justify-content-between align-items-center"
                   >
-                    <div className="d-flex flex-column justify-content-start align-items-start me-auto">
-                      <div className="fw-normal ms-1">{document.description}</div>
-                      <div className="fw-normal ms-1">
-                        {' '}
-                        <a href={document.secure_url} target="_blank" rel="noopener noreferrer">
-                          {document.name}
-                        </a>
+                    <div className="d-flex flex-column justify-content-start align-items-start ">
+                      <div className="fw-bold">
+                      {document.name}
                       </div>
+                      <div className="fw-normal">{document.description}</div>
                     </div>
 
-                    <Tooltip title="Delete document" arrow>
-                      <MdEditDocument size={30} className="pointer" />
+                    <Tooltip title="View document" arrow>
+                      <a href={document.secure_url} target="_blank" rel="noopener noreferrer">
+                        <IoChevronForwardCircleOutline size={48} className="pointer" />
+                      </a>
                     </Tooltip>
                   </ListGroup.Item>
                 );

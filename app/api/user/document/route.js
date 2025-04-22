@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { logger } from '../utils/logger';
+import { logger } from '../../utils/logger';
 import { createDocument, getDocuments, removeDocument } from '../../services/userDocument';
 const { NextResponse } = require('next/server');
 import { getUserSession } from '@/utils/generateToken';
@@ -27,6 +27,8 @@ export const POST = async (req) => {
     const description = formData.get('description');
     const name = formData.get('name');
     const userId = formData.get('userId');
+
+    console.log("....................", { description, name, userId})
 
     const file = formData.get('file');
     if (!file) {
@@ -61,7 +63,7 @@ export const POST = async (req) => {
 
     return NextResponse.json({ data }, { status: 200 });
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 };

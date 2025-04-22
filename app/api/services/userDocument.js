@@ -22,7 +22,9 @@ async function getDocuments(suid, userId) {
       throw new Error('User not found for the given integrator ID');
     }
 
-    return User.attachments;
+    const result = user.attachments;
+    
+    return result
   } catch (error) {
     logger.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
