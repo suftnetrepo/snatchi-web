@@ -87,7 +87,7 @@ const User = () => {
               <span className="p-0">
                 <TiEdit
                   size={30}
-                  className="pointer me-2"
+                  className="pointer"
                   onClick={() => {
                     handleShow();
                     handleEdit(row.original);
@@ -108,14 +108,14 @@ const User = () => {
                 </DeleteConfirmation>
               </span>
             </Tooltip>
-            <Tooltip title="Delete User" arrow>
+            <Tooltip title="View user documents" arrow>
               <span className="p-0">
                 <TiDocument
                   size={30}
-                  className="pointer me-2"
+                  className="pointer"
                   onClick={() => {
-                    setShowUserDocument();
-                    setUserId(row.original,_id);
+                    setShowUserDocument(true);
+                    setUserId(row.original._id);
                   }}
                 />
               </span>

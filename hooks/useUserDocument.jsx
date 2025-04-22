@@ -31,7 +31,7 @@ const useUserDocument = (userId) => {
     }));
   };
 
-  const handleError = (error) => {
+  const handleError = (error) => {                               
     setState((pre) => {
       return { ...pre, error, loading: false };
     });
@@ -55,7 +55,7 @@ const useUserDocument = (userId) => {
   };
 
   const handleFetch = async (userId) => {
-     setState((prev) => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null }));
     const { data, success, errorMessage } = await zat(USER_DOCUMENTS.fetch, null, VERBS.GET, {
       userId: userId,
     });
@@ -74,6 +74,7 @@ const useUserDocument = (userId) => {
      setState((prev) => ({ ...prev, loading: true, error: null }));
     const { success, errorMessage } = await zat(USER_DOCUMENTS.removeOne, null, VERBS.DELETE, {
       id: document_id,
+      userId: userId,
     });
 
     if (success) {
@@ -90,8 +91,8 @@ const useUserDocument = (userId) => {
   };
 
   useEffect(() => {
-    userId && handleFetch();
-  }, [userId, handleFetch]);
+    userId && handleFetch(userId);
+  }, [userId]);
 
   return { ...state, handleUpload, handleChange, handleFetch, handleDelete, handleReset };
 };

@@ -49,8 +49,7 @@ function userEditValidator(data) {
 function documentValidator(data) {
     const validator = new Validator();
     const schema = {
-        document_name: { type: 'string', empty: false, max: 50 },
-        document_type: { type: 'string', empty: false, max: 50 }       
+        name: { type: 'string', empty: false, max: 50 },    
     };
     return validator.validate(data, schema);
 }
