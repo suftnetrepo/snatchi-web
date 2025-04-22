@@ -6,17 +6,20 @@ import { Button } from 'react-bootstrap';
 import { useUser } from '../../../../hooks/useUser';
 import Badge from 'react-bootstrap/Badge';
 import { MdDelete } from 'react-icons/md';
-import { TiEdit } from 'react-icons/ti';
+import { TiEdit, TiDocument } from 'react-icons/ti';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
 import useDebounce from '../../../../hooks/useDebounce';
 import RenderUserOffcanvas from './renderUserOffcanvas';
+import RenderDocumentOffcanvas from './renderDocumentOffcanvas';
 import Tooltip from '@mui/material/Tooltip';
 import { userValidator } from '../rules';
 
-const User = () => { 
+const User = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [userId, setUserId] = useState('');
   const [show, setShow] = useState(false);
+  const [showUserDocument, setShowUserDocument] = useState(false);
   const [fields, setFields] = useState(userValidator.fields);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const {
@@ -43,6 +46,10 @@ const User = () => {
     handleReset();
     setShow(true);
     setFields(userValidator.reset())
+  };
+
+  const handleCloseUserDocument = () => {
+    setShowUserDocument(false);
   };
 
   const columns = useMemo(
@@ -94,11 +101,23 @@ const User = () => {
                   onConfirm={async (id) => {
                     handleDeleteUser(id);
                   }}
-                  onCancel={() => {}}
+                  onCancel={() => { }}
                   itemId={row.original._id}
                 >
                   <MdDelete size={30} className="pointer" />
                 </DeleteConfirmation>
+              </span>
+            </Tooltip>
+            <Tooltip title="Delete User" arrow>
+              <span className="p-0">
+                <TiDocument
+                  size={30}
+                  className="pointer me-2"
+                  onClick={() => {
+                    setShowUserDocument();
+                    setUserId(row.original,_id);
+                  }}
+                />
               </span>
             </Tooltip>
           </div>
@@ -136,17 +155,22 @@ const User = () => {
         </div>
       </div>
       {!loading && <span className="overlay__block" />}
-      {error && <ErrorDialogue showError={error} onClose={() => {}} />}
+      {error && <ErrorDialogue showError={error} onClose={() => { }} />}
       <RenderUserOffcanvas
         handleClose={handleClose}
         show={show}
         success={success}
         userData={editData}
-        fields ={fields}
-        setFields ={setFields}
+        fields={fields}
+        setFields={setFields}
         handleEditUser={handleEditUser}
         handleSaveUser={handleSaveUser}
         userValidator={userValidator}
+      />
+       <RenderDocumentOffcanvas
+        handleClose={handleCloseUserDocument}
+        show={showUserDocument}
+        userId={userId}
       />
     </>
   );

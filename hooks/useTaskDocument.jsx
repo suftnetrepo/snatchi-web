@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
 import { TASK_DOCUMENT } from '../utils/apiUrl';
-import { fileValidator } from './../app/protected/integrator/rules';
+import { fileValidator } from '../app/protected/integrator/rules';
 
 const useTaskDocument = (taskId, projectId) => {
   const [state, setState] = useState({
@@ -21,7 +21,7 @@ const useTaskDocument = (taskId, projectId) => {
     });
   };
 
-  const handleChange = (name: string, value: string) => {
+  const handleChange = (name, value) => {
     setState((prevState) => ({
       ...prevState,
       fields: {
@@ -31,13 +31,13 @@ const useTaskDocument = (taskId, projectId) => {
     }));
   };
 
-  const handleError = (error: string) => {
+  const handleError = (error) => {
     setState((pre) => {
       return { ...pre, error: error, loading: false };
     });
   };
 
-  const handleUpload = async (body: any) => {
+  const handleUpload = async (body) => {
     setState((prev) => ({ ...prev, loading: true, error : null }));
     const { data, success, errorMessage } = await zat(TASK_DOCUMENT.uploadOne, body, VERBS.POST);
 
@@ -54,7 +54,7 @@ const useTaskDocument = (taskId, projectId) => {
     }
   };
 
-  const handleFetch = async (taskId: string) => {
+  const handleFetch = async (taskId) => {
      setState((prev) => ({ ...prev, loading: true, error: null }));
     const { data, success, errorMessage } = await zat(TASK_DOCUMENT.fetch, null, VERBS.GET, {
       taskId: taskId,
@@ -71,7 +71,7 @@ const useTaskDocument = (taskId, projectId) => {
     }
   };
 
-  const handleDelete = async (document_id: string) => {
+  const handleDelete = async (document_id) => {
      setState((prev) => ({ ...prev, loading: true, error: null }));
     const { success, errorMessage } = await zat(TASK_DOCUMENT.removeOne, null, VERBS.DELETE, {
       id: document_id,

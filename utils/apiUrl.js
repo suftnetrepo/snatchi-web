@@ -105,3 +105,9 @@ export const TASK = {
   fetch: `${HOST}task/`,
   removeOne: `${HOST}task/`
 };
+
+export const USER_DOCUMENTS = {
+  addOne: `${HOST}user/document`,
+  fetch: `${HOST}user/document`,
+  removeOne: `${HOST}user/document/`
+};
