@@ -39,7 +39,7 @@ const userSchema = new Schema(
     visible: {
       type: String,
       required: false,
-      enum: ['private', 'public']     
+      enum: ['private', 'public']
     },
     password: {
       type: String,
@@ -59,7 +59,30 @@ const userSchema = new Schema(
       type: String,
       required: false,
       default: ''
-    }
+    },
+    attachments: [
+      {
+        name: {
+          type: String,
+          required: true,
+          trim: true
+        },
+        description: {
+          type: String,
+          required: false,
+          trim: true,
+          default :''
+        },
+        secure_url: {
+          type: String,
+          required: true,
+        },
+        public_id: {
+          type: String,
+          required: true,
+        }
+      }
+    ]
   },
   { timestamps: true }
 );
@@ -85,14 +108,10 @@ userSchema.methods.validatePassword = function (password) {
 };
 
 userSchema.statics.autocomplete = function (searchTerm) {
-  const regex = new RegExp(searchTerm, 'i'); 
+  const regex = new RegExp(searchTerm, 'i');
   return this.find({
-    $or: [
-      { first_name: regex },
-      { last_name: regex },
-      { email: regex }
-    ]
-  }).limit(10); 
+    $or: [{ first_name: regex }, { last_name: regex }, { email: regex }]
+  }).limit(10);
 };
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);

@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { logger } from '../utils/logger';
-import { createDocument, getDocuments, removeDocument } from '../services/projectDocument';
+import { createDocument, getDocuments, removeDocument } from '../../services/userDocument';
 const { NextResponse } = require('next/server');
 import { getUserSession } from '@/utils/generateToken';
 
@@ -24,9 +24,9 @@ export const POST = async (req) => {
 
     const formData = await req.formData();
 
-    const documentType = formData.get('document_type');
-    const documentName = formData.get('document_name');
-    const id = formData.get('id');
+    const description = formData.get('description');
+    const name = formData.get('name');
+    const userId = formData.get('userId');
 
     const file = formData.get('file');
     if (!file) {
@@ -52,9 +52,9 @@ export const POST = async (req) => {
 
     const result = await uploadToCloudinary();
 
-    const data = await createDocument(user.integrator, id, {
-      document_type: documentType,
-      document_name: documentName,
+    const data = await createDocument(user.integrator, userId, {
+      description: description,
+      name: name,
       public_id: result.public_id,
       secure_url: result.secure_url
     });
@@ -67,38 +67,40 @@ export const POST = async (req) => {
 };
 
 export const GET = async (req) => {
-  try {
-    const user = await getUserSession(req);
+    try {
+      const user = await getUserSession(req);
+  
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+  
+      const url = new URL(req.url);
+      const userId = url.searchParams.get('userId');
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const results = await getDocuments(user.integrator, userId);
+      return NextResponse.json({ data: results }, { status: 200 });
+    } catch (error) {
+      logger.error(error);
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
-    const url = new URL(req.url);
-    const id = url.searchParams.get('id');
-
-    const results = await getDocuments(user.integrator, id);
-    return NextResponse.json({ data: results }, { status: 200 });
-  } catch (error) {
-    logger.error(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-};
-
-export const DELETE = async (req) => {
-  try {
-    const user = await getUserSession(req);
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  };
+  
+  export const DELETE = async (req) => {
+    try {
+      const user = await getUserSession(req);
+  
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      const url = new URL(req.url);
+      const documentId = url.searchParams.get('id');
+      const userId = url.searchParams.get('userId');
+  
+      const deleted = await removeDocument(user.integrator, userId, documentId);
+      return NextResponse.json({ success: true, data: deleted }, { status: 200 });
+    } catch (error) {
+      logger.error(error);
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
-    const url = new URL(req.url);
-    const id = url.searchParams.get('id');
-    const projectId = url.searchParams.get('projectId');
-
-    const deleted = await removeDocument(user.integrator, projectId, id);
-    return NextResponse.json({ success: true, data: deleted }, { status: 200 });
-  } catch (error) {
-    logger.error(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-};
+  };
+  

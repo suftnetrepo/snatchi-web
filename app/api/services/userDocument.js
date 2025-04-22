@@ -1,35 +1,35 @@
 import { documentValidator } from '../validator/user';
-import Project from '../models/project';
+import User from '../models/user';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
-const { logger } = require('../utils/logger');
+import { logger } from '../utils/logger';
 
 mongoConnect()
 
-async function getDocuments(suid, projectId) {
+async function getDocuments(suid, userId) {
   if (!isValidObjectId(suid)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
 
-  if (!isValidObjectId(projectId)) {
-    throw new Error(JSON.stringify([{ field: 'projectId', message: 'Invalid MongoDB ObjectId' }]));
+  if (!isValidObjectId(userId)) {
+    throw new Error(JSON.stringify([{ field: 'userId', message: 'Invalid MongoDB ObjectId' }]));
   }
 
   try {
-    const project = await Project.findOne({ integrator: suid, _id: projectId }, { attachments: 1, _id : 0 });
+    const user = await User.findOne({ integrator: suid, _id: userId }, { attachments: 1, _id : 0 });
 
-    if (!project) {
-      throw new Error('Project not found for the given integrator ID');
+    if (!user) {
+      throw new Error('User not found for the given integrator ID');
     }
 
-    return project.attachments;
+    return User.attachments;
   } catch (error) {
     logger.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
 
-async function createDocument(suid, projectId, body) {
+async function createDocument(suid, userId, body) {
   if (!isValidObjectId(suid)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
@@ -40,14 +40,13 @@ async function createDocument(suid, projectId, body) {
   }
 
   try {
-    const project = await Project.findOneAndUpdate(
-      { integrator: suid , _id: projectId },
+    const user = await User.findOneAndUpdate(
+      { integrator: suid , _id: userId },
       { $push: { attachments: body } },
       { new: true }
     );
 
-    const createdDocument = project.attachments[project.attachments.length - 1];
-    
+    const createdDocument = user.attachments[user.attachments.length - 1];
     return createdDocument;
   } catch (error) {
     logger.error(error);
@@ -55,7 +54,7 @@ async function createDocument(suid, projectId, body) {
   }
 }
 
-async function removeDocument(suid, projectId, id) {
+async function removeDocument(suid, userId, id) {
   if (!isValidObjectId(suid)) {
     throw new Error(JSON.stringify([{ field: 'suid', message: 'Invalid MongoDB ObjectId' }]));
   }
@@ -64,19 +63,19 @@ async function removeDocument(suid, projectId, id) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
 
-  if (!isValidObjectId(projectId)) {
-    throw new Error(JSON.stringify([{ field: 'projectId', message: 'Invalid MongoDB ObjectId' }]));
+  if (!isValidObjectId(userId)) {
+    throw new Error(JSON.stringify([{ field: 'userId', message: 'Invalid MongoDB ObjectId' }]));
   }
 
   try {
-    const project = await Project.findOneAndUpdate(
-      { integrator: suid, _id: projectId },
+    const user = await User.findOneAndUpdate(
+      { integrator: suid, _id: userId },
       { $pull: { attachments: { _id: id } } },
       { new: true }
     );
 
-    if (!project) {
-      throw new Error('Project not found for the given integrator ID');
+    if (!user) {
+      throw new Error('User not found for the given integrator ID');
     }
 
     return true;
