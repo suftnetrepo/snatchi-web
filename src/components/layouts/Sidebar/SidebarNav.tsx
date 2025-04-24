@@ -5,7 +5,8 @@ import {
   faUser,
   faBuildingUser,
   faComment,
-  faMoneyCheck
+  faMoneyCheck,
+  faStickyNote
 } from '@fortawesome/free-solid-svg-icons'
 import {  } from 'react-icons/ti';
 import React from 'react'
@@ -34,7 +35,7 @@ export default function SidebarNav() {
 
 const IntegratorSidebarNav=()=> {
   return (
-    <ul className="list-unstyled mt-4">
+    <ul className="list-unstyled mt-0">
       <SidebarNavItem icon={faGauge} href="/protected/integrator/dashboard">
         Dashboard
       </SidebarNavItem>
@@ -49,6 +50,9 @@ const IntegratorSidebarNav=()=> {
       </SidebarNavItem>
       <SidebarNavItem icon={faComment} href="/protected/integrator/chat">
         Chat
+      </SidebarNavItem>
+      <SidebarNavItem icon={faStickyNote} href="/protected/integrator/attendance">
+      Attendance
       </SidebarNavItem>
       <SidebarNavItem icon={faCogs} href="/protected/integrator/settings">
         Settings

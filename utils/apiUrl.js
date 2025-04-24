@@ -111,3 +111,10 @@ export const USER_DOCUMENTS = {
   fetch: `${HOST}user/document`,
   removeOne: `${HOST}user/document/`
 };
+
+export const ATTENDANCE = {
+  addOne: `${HOST}attendance`,
+  fetch: `${HOST}attendance`,
+  removeOne: `${HOST}attendance/`
+};
+
