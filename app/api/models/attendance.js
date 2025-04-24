@@ -13,6 +13,16 @@ const attendanceSchema = new mongoose.Schema(
       ref: 'User',
       required: true
     },
+    first_name: {
+      type: String,
+      trim: true,
+      required: true
+    },
+    last_name: {
+      type: String,
+      trim: true,
+      required: true
+    },
     date: {
       type: Date,
       required: true,
