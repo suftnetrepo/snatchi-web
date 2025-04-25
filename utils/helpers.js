@@ -187,7 +187,6 @@ const formatTimeForObject = (lastUpdated) => {
     const formattedTime = date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
-
       hour12: false
     });
 
@@ -339,7 +338,21 @@ const ppeOptions = [
   { value: 'fall_arrest_kit', label: '🪢 Fall Arrest Kit' },
 ];
 
+function getHourAndMinutes(dateString) {
+  if (!dateString) return ''; // Or return '--:--' or something default
+  const date = new Date(dateString);
+  if (isNaN(date)) return ''; // Date is invalid
+  return date.toISOString().split('T')[1].slice(0, 5);
+}
+
+function getTimeFromDate(dateString) {
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[1].split('.')[0];
+}
+
 export {
+  getTimeFromDate,
+  getHourAndMinutes,
   ppeOptions,
   haversineDistance,
   formatReadableDate,

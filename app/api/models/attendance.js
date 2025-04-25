@@ -31,7 +31,7 @@ const attendanceSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ['chechin', 'checkout']
+      enum: ['checkin', 'checkout']
     },
     completeAddress: {
       type: String,

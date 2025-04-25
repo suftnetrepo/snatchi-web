@@ -1,9 +1,4 @@
-import {
-  get,
-  add,
-  remove,
-  getBydate
-} from '../services/attendance';
+import { get, add, remove, getBydate } from '../services/attendance';
 import { logger } from '../utils/logger';
 const { NextResponse } = require('next/server');
 import { getUserSession } from '@/utils/generateToken';
@@ -27,7 +22,7 @@ export const GET = async (req) => {
       const limit = parseInt(url.searchParams.get('limit') || '10', 10);
 
       const { data, success, totalCount } = await get({
-        suid :user.integrator,
+        suid: user.integrator,
         page,
         limit,
         sortField,
@@ -70,7 +65,6 @@ export const DELETE = async (req) => {
   }
 };
 
-
 export const POST = async (req) => {
   try {
     const user = await getUserSession(req);
@@ -78,13 +72,13 @@ export const POST = async (req) => {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const body = await req.json();
 
-    const result = await add(body);
+    const body = await req.json();
+    const result = await add({ integrator: user.integrator, ...body });
 
     return NextResponse.json({ success: true, data: result }, { status: 200 });
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };

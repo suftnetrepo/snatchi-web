@@ -6,7 +6,7 @@ import { useAttendance } from '../../../../hooks/useAttendance';
 import { FaEye } from 'react-icons/fa';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
 import useDebounce from '../../../../hooks/useDebounce';
-import { dateFormatted } from '../../../../utils/helpers';
+import { dateFormatted, getHourAndMinutes } from '../../../../utils/helpers';
 import Tooltip from '@mui/material/Tooltip';
 
 const Attendance = () => {
@@ -32,6 +32,10 @@ const Attendance = () => {
         accessor: 'date',
         Cell: ({ value }) => <div className="d-flex align-items-center">{dateFormatted(value)}</div>
       },
+      {
+        Header: 'Time',
+        Cell: ({ row }) => <div className="d-flex align-items-center">{getHourAndMinutes(row.original.date)}</div>
+      },
       { Header: 'Firstname', accessor: 'first_name', sortType: 'basic' },
       { Header: 'Lastname', accessor: 'last_name', sortType: 'basic' },
       { Header: 'Location', accessor: 'completeAddress', sortType: 'basic' },
@@ -42,26 +46,6 @@ const Attendance = () => {
         Cell: ({ value }) => (
           <div className="d-flex justify-content-start align-items-center">
             <span className={`badge ${getStatusBadgeClass(value)}`}>{value}</span>
-          </div>
-        )
-      },
-      {
-        Header: 'Actions',
-        disableSortBy: true,
-        textAlign: 'right',
-        Cell: ({ row }) => (
-          <div className="d-flex justify-content-center align-items-center">
-            <Tooltip title="View Invoice" arrow>
-              <span className="p-0">
-                <FaEye
-                  size={30}
-                  className="pointer me-2"
-                  onClick={() => {
-                  
-                  }}
-                />
-              </span>
-            </Tooltip>
           </div>
         )
       }
