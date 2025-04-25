@@ -142,7 +142,7 @@ function attendanceValidator(data) {
     },
     status: {
       type: 'enum',
-      values: ['chechin', 'checkout'],
+      values: ['checkin', 'checkout'],
       empty: false
     },
     completeAddress: {
