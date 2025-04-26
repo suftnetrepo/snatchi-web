@@ -18,6 +18,7 @@ export const GET = async (req) => {
       const sortField = url.searchParams.get('sortField');
       const sortOrder = url.searchParams.get('sortOrder');
       const searchQuery = url.searchParams.get('searchQuery');
+      const dateQuery = url.searchParams.get('dateQuery');
       const page = parseInt(url.searchParams.get('page') || '1', 10);
       const limit = parseInt(url.searchParams.get('limit') || '10', 10);
 
@@ -27,7 +28,8 @@ export const GET = async (req) => {
         limit,
         sortField,
         sortOrder,
-        searchQuery
+        searchQuery,
+        dateQuery
       });
 
       return NextResponse.json({ data, success, totalCount }, { status: 200 });

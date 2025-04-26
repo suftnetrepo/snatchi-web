@@ -3,7 +3,8 @@ import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import ThemeProvider from '@/theme/ThemeProvider';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 // Bootstrap and custom scss
 import '@/assets/scss/style.scss';
