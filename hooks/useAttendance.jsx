@@ -3,7 +3,7 @@ import { zat } from '../utils/api';
 import { VERBS } from '../config';
 import { ATTENDANCE } from '../utils/apiUrl';
 
-const useAttendance = ( searchQuery) => {
+const useAttendance = (searchQuery, dateQuery) => {
   const [state, setState] = useState({
     data: [],
     loading: false,
@@ -33,38 +33,41 @@ const useAttendance = ( searchQuery) => {
     });
   };
 
-  const handleFetch = useCallback(async ({ pageIndex = 1, pageSize = 10, sortBy = [], searchQuery = '' }) => {
-    const sortField = sortBy.length > 0 ? sortBy[0].id : null;
-    const sortOrder = sortBy.length > 0 ? (sortBy[0].desc ? 'desc' : 'asc') : 'null';
+  const handleFetch = useCallback(
+    async ({ pageIndex = 1, pageSize = 10, sortBy = [], searchQuery = '', dateQuery = '' }) => {
+      const sortField = sortBy.length > 0 ? sortBy[0].id : null;
+      const sortOrder = sortBy.length > 0 ? (sortBy[0].desc ? 'desc' : 'asc') : 'null';
 
-    try {
-      const { data, success, errorMessage, totalCount } = await zat(ATTENDANCE.fetch, null, VERBS.GET, {
-        action: 'paginate',
-        page: pageIndex === 0 ? 1 : pageIndex,
-        limit: pageSize,
-        ...(sortField && { sortField }),
-        ...(sortOrder && { sortOrder }),
-        searchQuery
-      });
+      try {
+        const { data, success, errorMessage, totalCount } = await zat(ATTENDANCE.fetch, null, VERBS.GET, {
+          action: 'paginate',
+          page: pageIndex === 0 ? 1 : pageIndex,
+          limit: pageSize,
+          ...(sortField && { sortField }),
+          ...(sortOrder && { sortOrder }),
+          searchQuery,
+          dateQuery
+        });
 
-      if (success) {
-        setState((pre) => ({
-          ...pre,
-          data: data,
-          totalCount: totalCount,
-          loading: false
-        }));
-        return true;
-      } else {
-        handleError(errorMessage);
+        if (success) {
+          setState((pre) => ({
+            ...pre,
+            data: data,
+            totalCount: totalCount,
+            loading: false
+          }));
+          return true;
+        } else {
+          handleError(errorMessage);
+          return false;
+        }
+      } catch (error) {
+        handleError('An unexpected error occurred while fetching attendances.');
         return false;
       }
-    } catch (error) {
-      handleError('An unexpected error occurred while fetching attendances.');
-      return false;
-    }
-  }, []);
-
+    },
+    []
+  );
 
   const handleDelete = async (id) => {
     const { success, errorMessage } = await zat(ATTENDANCE.removeOne, null, VERBS.DELETE, {
@@ -85,8 +88,8 @@ const useAttendance = ( searchQuery) => {
   };
 
   useEffect(() => {
-    handleFetch({ searchQuery });
-  }, [searchQuery, handleFetch]);
+    handleFetch({ searchQuery, dateQuery });
+  }, [searchQuery, dateQuery, handleFetch]);
 
   return {
     ...state,

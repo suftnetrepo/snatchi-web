@@ -1,13 +1,12 @@
 import { attendanceValidator } from '../validator/user';
 import Attendance from '../models/attendance';
-import mongoose from 'mongoose';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
 import { logger } from '../utils/logger';
 
-mongoConnect()
+mongoConnect();
 
-async function get({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
+async function get({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery, dateQuery }) {
   if (!isValidObjectId(suid)) {
     throw new Error(JSON.stringify([{ field: 'suid', message: 'Invalid MongoDB ObjectId' }]));
   }
@@ -22,14 +21,30 @@ async function get({ suid, page = 1, limit = 10, sortField, sortOrder, searchQue
           $or: [
             { first_name: { $regex: searchQuery, $options: 'i' } },
             { last_name: { $regex: searchQuery, $options: 'i' } },
-            { status: { $regex: searchQuery, $options: 'i' } },
+            { status: { $regex: searchQuery, $options: 'i' } }
           ]
         }
       : {};
 
+      let dateFilter = {};
+      if (dateQuery) {
+        if (typeof dateQuery === 'string') {
+          const startOfDay = new Date(dateQuery);
+          startOfDay.setHours(0, 0, 0, 0);
+          
+          const endOfDay = new Date(dateQuery);
+          endOfDay.setHours(23, 59, 59, 999);
+          
+          dateFilter = { date: { $gte: startOfDay, $lte: endOfDay } };
+        } else if (typeof dateQuery === 'object') {
+          dateFilter = { date: dateQuery };
+        }
+      }
+
     const query = {
       integrator: suid,
-      ...searchFilter
+      ...searchFilter,
+      ...(Object.keys(dateFilter).length > 0 ? dateFilter : {})
     };
 
     const [attendances, totalCount] = await Promise.all([
@@ -53,8 +68,8 @@ async function getBydate(dateString, suid) {
   nextDay.setDate(date.getDate() + 1);
 
   try {
-    const result =  await Attendance.find({
-      integrator : suid,
+    const result = await Attendance.find({
+      integrator: suid,
       date: {
         $gte: date,
         $lt: nextDay

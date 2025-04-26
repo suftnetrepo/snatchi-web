@@ -164,18 +164,6 @@ const Project = () => {
                 />
               </span>
             </Tooltip>
-
-            <Tooltip title="View Engineers location" arrow>
-              <span className="p-0">
-                <RiUserLocationLine
-                  size={30}
-                  className="pointer ms-2"
-                  onClick={() => {
-                    router.push(`/protected/integrator/${row.original._id}/site`);
-                  }}
-                />
-              </span>
-            </Tooltip>
           </div>
         )
       }
