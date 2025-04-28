@@ -343,7 +343,7 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
           <MultiSelectDropdown
             options={ppeOptions}
             label="PPE"
-            selectedValues={fields?.ppe}
+            selectedValues={fields?.ppe || []}
             onChange={handlePPEChange}
             placeholder="Select PPE..."
           />
