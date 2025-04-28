@@ -6,7 +6,6 @@ import { Button } from 'react-bootstrap';
 import { useProject } from '../../../../hooks/useProject';
 import { MdDelete } from 'react-icons/md';
 import { TiEdit, TiDocument, TiUser } from 'react-icons/ti';
-import { RiUserLocationLine } from 'react-icons/ri';
 import { FaTasks } from 'react-icons/fa';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
