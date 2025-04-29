@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Offcanvas, Button, ListGroup, Form, Spinner, Alert } from 'react-bootstrap';
 import { validate } from '../../../../validator/validator';
 import { useDocument } from '../../../../hooks/useDocument';
@@ -9,6 +9,7 @@ import { MdDelete } from 'react-icons/md';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilePdf, faFileWord, faImage } from '@fortawesome/free-solid-svg-icons';
 import Tooltip from '@mui/material/Tooltip';
+import { MdCancel } from 'react-icons/md';
 
 const RenderDocumentOffcanvas = ({ show, handleClose, id }) => {
   const { data, error, loading, rules, fields, handleChange, handleUpload, handleDelete, handleReset } =
@@ -41,7 +42,7 @@ const RenderDocumentOffcanvas = ({ show, handleClose, id }) => {
         return faFilePdf;
     }
   };
- 
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
 
@@ -77,9 +78,14 @@ const RenderDocumentOffcanvas = ({ show, handleClose, id }) => {
 
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
-      <Offcanvas.Header closeButton>
-        <Offcanvas.Title></Offcanvas.Title>
-      </Offcanvas.Header>
+      <div className="d-flex flex-row justify-content-between align-items-center p-7">
+        <div className="d-flex flex-column justify-content-start align-items-start">
+          <p className="text-dark fw-bold fs-18"> Documents</p>
+        </div>
+        <div>
+          <MdCancel size={48} color="black" onClick={handleClose} className="pointer" />
+        </div>
+      </div>
       <Offcanvas.Body>
         {error && (
           <div className="row">
@@ -126,16 +132,16 @@ const RenderDocumentOffcanvas = ({ show, handleClose, id }) => {
               </Form.Group>
             </div>
             <div className="col-md-12">
-              <div className="d-flex justify-content-between align-items-center mb-2">
+              <div className="d-flex justify-content-start align-items-center mb-2">
                 <Tooltip title="Select document to upload" arrow>
                   <span className="p-0">
                     <Form.Group controlId="formFileLg" className="mb-3">
-                      <Form.Label> Select File</Form.Label>
+                      {/* <Form.Label> Select File</Form.Label> */}
                       <Form.Control
                         type="file"
                         size="lg"
                         id="file-input"
-                        accept="image/*"                      
+                        accept="image/*"
                         onChange={handleFileChange}
                       />
                     </Form.Group>
@@ -143,8 +149,8 @@ const RenderDocumentOffcanvas = ({ show, handleClose, id }) => {
                 </Tooltip>
 
                 {loading ? (
-                  <Form.Group controlId="formFileLg" className="mb-3">
-                    <Form.Label> </Form.Label>
+                  <Form.Group controlId="formFileLg" className="mb-3 ms-2">
+                    {/* <Form.Label> </Form.Label> */}
                     <Button variant="secondary">
                       <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
                       <span className="visually-hidden">uploading...</span>
@@ -153,8 +159,8 @@ const RenderDocumentOffcanvas = ({ show, handleClose, id }) => {
                 ) : (
                   <Tooltip title="Upload document" arrow>
                     <span className="p-0 ps-2">
-                      <Form.Group controlId="formFileLg" className="mb-3">
-                          <Form.Label> Upload File</Form.Label>
+                      <Form.Group controlId="formFileLg" className="mb-3 ms-2">
+                        {/* <Form.Label> Upload File</Form.Label> */}
                         <Button variant={!file ? 'secondary' : 'success'} onClick={() => onsubmit()} disabled={!file}>
                           Upload
                         </Button>

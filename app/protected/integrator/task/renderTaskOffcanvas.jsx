@@ -6,6 +6,7 @@ import { validate } from '../../../../validator/validator';
 import { taskValidator } from '../../../protected/integrator/rules';
 import { ConfirmationDialogue, OkDialogue } from '../../../../src/components/elements/ConfirmDialogue';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
+import { MdCancel } from 'react-icons/md';
 import dynamic from 'next/dynamic';
 const TaskForm = dynamic(() => import('./taskForm'), { ssr: false });
 
@@ -52,9 +53,14 @@ const RenderTaskOffcanvas = ({
       placement="end"
       style={{ width: '30%', backgroundColor: 'white' }}
     >
-      <Offcanvas.Header closeButton>
-        <Offcanvas.Title></Offcanvas.Title>
-      </Offcanvas.Header>
+      <div className="d-flex flex-row justify-content-between align-items-center p-7">
+        <div className="d-flex flex-column justify-content-start align-items-start">
+          <p className="text-dark fw-bold fs-18">{fields._id ? 'Edit Task' : 'Add New Task'}</p>
+        </div>
+        <div>
+          <MdCancel size={48} color="black" onClick={() => setShow(false)} className="pointer" />
+        </div>
+      </div>
       <Offcanvas.Body>
         <TaskForm
           handleChange={handleChange}
@@ -70,7 +76,7 @@ const RenderTaskOffcanvas = ({
           {fields?._id ? (
             <OkDialogue
               show={success}
-              message='Your changes was save successfully'
+              message="Your changes was save successfully"
               onConfirm={() => {
                 setShow(false);
                 handleReset();

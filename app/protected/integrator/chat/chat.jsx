@@ -71,11 +71,13 @@ const RenderChat = () => {
             <Tabs
               defaultActiveKey={query === 'integrator' ? 'integrator' : 'engineer'}
               id="uncontrolled-tab-example"
-              className="mb-3"
+              variant='tabs'
+              className="mb-3 custom-tabs"
+             
             >
               <Tab eventKey="engineer" title="Engineer">
                 <>
-                  <InputGroup className="mb-3" style={{ maxWidth: '400px' }}>
+                  <InputGroup className="mb-3">
                     <Form.Control
                       placeholder="Search"
                       value={search_terms}
@@ -100,7 +102,7 @@ const RenderChat = () => {
                             className={`pointer ${chatRoomId === chat.id ? 'active' : ''}`}
                             onClick={() => changeChatRoom(chat)}
                           >
-                            <Row className="d-flex align-items-center py-2">
+                            <Row className="d-flex align-items-center">
                               <Col xs={2} className="text-center">
                                 <div className="position-relative">
                                   <img
@@ -117,7 +119,7 @@ const RenderChat = () => {
                                 </div>
                               </Col>
 
-                              <Col xs={8} className="ps-4">
+                              <Col xs={8} className="ps-1">
                                 <div className="d-flex flex-column">
                                   <div className="d-flex flex-row justify-content-between align-items-center">
                                   <p className=" text-dark mb-0">{chat?.name || 'Unknown'}</p>
@@ -142,7 +144,7 @@ const RenderChat = () => {
               </Tab>
               <Tab eventKey="integrator" title="Integrator">
                 <>
-                  <InputGroup className="mb-3" style={{ maxWidth: '400px' }}>
+                  <InputGroup className="mb-3" >
                     <Form.Control
                       placeholder="Search"
                       value={integrator_search_terms}
@@ -167,7 +169,7 @@ const RenderChat = () => {
                             className={`pointer ${chatRoomId === chat.id ? 'active' : ''}`}
                             onClick={() => changeChatRoom(chat)}
                           >
-                            <Row className="d-flex align-items-center py-2">
+                            <Row className="d-flex align-items-center">
                               <Col xs={2} className="text-center">
                                 <div className="position-relative">
                                   <img
@@ -184,7 +186,7 @@ const RenderChat = () => {
                                 </div>
                               </Col>
 
-                              <Col xs={8} className="ps-4">
+                              <Col xs={8} >
                                 <div className="d-flex flex-column">
                                   <div className="d-flex flex-column justify-content-between align-items-start">
                                     <p className=" text-dark mb-0">{chat?.name || 'Unknown'}</p>
@@ -226,11 +228,12 @@ const RenderChat = () => {
                 />
 
                 <div className="d-flex flex-column justify-content-start align-items-start ms-1">
-                  <p className=" text-dark mb-0">{chatRoom?.name || 'Unknown'}</p>
+                  <p className=" text-dark mb-0">{chatRoom?.name || 'No user selected'}</p>
                   {!chatRoom?.isIntegratorRoom && (
-                    <small className="text-muted">
-                      {chatRoom?.users?.length} member{chatRoom?.users?.length > 1 ? 's' : ''}
-                    </small>
+                   <small className="text-muted">
+                   {chatRoom?.users?.length > 0 &&
+                     `${chatRoom.users.length} member${chatRoom.users.length > 1 ? 's' : ''}`}
+                 </small>
                   )}
                 </div>
               </div>

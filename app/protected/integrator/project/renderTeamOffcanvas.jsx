@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { Offcanvas, ListGroup, Form, Alert } from 'react-bootstrap';
 import { useTeam } from '../../../../hooks/useTeam';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
-import { MdDelete } from 'react-icons/md';
+import { MdDelete, MdCancel } from 'react-icons/md';
 import Select from 'react-select';
 import Tooltip from '@mui/material/Tooltip';
 
@@ -23,9 +23,14 @@ const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
 
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
-      <Offcanvas.Header closeButton>
-        <Offcanvas.Title>Teams</Offcanvas.Title>
-      </Offcanvas.Header>
+      <div className="d-flex flex-row justify-content-between align-items-center p-7">
+        <div className="d-flex flex-column justify-content-start align-items-start">
+          <p className="text-dark fw-bold fs-18"> Teams</p>
+        </div>
+        <div>
+          <MdCancel size={48} color="black" onClick={handleClose} className="pointer" />
+        </div>
+      </div>
       <Offcanvas.Body>
         {error && (
           <div className="row">
@@ -86,7 +91,9 @@ const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
                           />
                         )}
                         <div className="d-flex flex-column justify-content-start align-items-start">
-                          <span>{team?.id.first_name} {team?.id.last_name}</span>
+                          <span>
+                            {team?.id.first_name} {team?.id.last_name}
+                          </span>
                           <span className={`badge bg-primary transparent`}>{team.id.role}</span>
                         </div>
                       </div>
@@ -96,13 +103,13 @@ const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
                             onConfirm={async () => {
                               handleDelete(team._id);
                             }}
-                            onCancel={() => { }}
+                            onCancel={() => {}}
                             itemId={team._id}
                           >
                             <MdDelete size={30} className="pointer" />
                           </DeleteConfirmation>
                         </span>
-                      </Tooltip>                     
+                      </Tooltip>
                     </ListGroup.Item>
                   );
                 })}

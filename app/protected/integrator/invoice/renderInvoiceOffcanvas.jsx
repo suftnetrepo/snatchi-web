@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Offcanvas, Form, Table } from 'react-bootstrap';
 import { formatCurrency, formatReadableDate } from '../../../../utils/helpers';
 import { OkDialogue } from '../../../../src/components/elements/ConfirmDialogue';
+import { MdCancel } from 'react-icons/md';
 
 const RenderInvoiceOffcanvas = ({ show, success, handleClose, invoice, handleEditInvoice }) => {
   const [status, setStatus] = useState(invoice?.status);
@@ -27,18 +28,22 @@ const RenderInvoiceOffcanvas = ({ show, success, handleClose, invoice, handleEdi
 
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
-      <Offcanvas.Header closeButton></Offcanvas.Header>
-      <Offcanvas.Body>
-        <div>
-          <Offcanvas.Title>
-            Invoice - {invoice?._id?.toString().slice(-8) || ''} <br />{' '}
-            <span
-              className={`badge rounded-pill me-2 py-2 px-3 text-white fw-normal fs-12 text-uppercase ${getStatusBadgeClass()}`}
-            >
-              {status}
-            </span>
-          </Offcanvas.Title>
+      <div className="d-flex flex-row justify-content-between align-items-center p-7">
+        <div className="d-flex flex-column justify-content-start align-items-start">
+          <p className="text-dark fw-normal fs-18">
+            Invoice - <strong>{invoice?._id?.toString().slice(-8) || ''}</strong>{' '}
+          </p>
+          <span
+            className={`badge rounded-pill me-2 px-3 text-white fw-normal fs-12 text-uppercase ${getStatusBadgeClass()}`}
+          >
+            {status}
+          </span>
         </div>
+        <div>
+          <MdCancel size={48} color="black" onClick={handleClose} className="pointer" />
+        </div>
+      </div>
+      <Offcanvas.Body>
         <Form.Label htmlFor="invoice_description" className="text-dark">
           Description
         </Form.Label>
@@ -103,27 +108,32 @@ const RenderInvoiceOffcanvas = ({ show, success, handleClose, invoice, handleEdi
         </div>
 
         <Form.Label htmlFor="notes">Note</Form.Label>
-        <Form.Control value={invoice.notes} id="notes" aria-describedby="notes" />
-        <div className="d-flex justify-content-md-start gap-2 mt-3">
-          <select
-            className="form-select w-auto"
-            value={status}
-            onChange={handleStatusChange}
-            aria-label="Invoice status"
-          >
-            <option value="Paid">PAID</option>
-            <option value="Unpaid">UNPAID</option>
-            <option value="Cancelled">CANCELLED</option>
-          </select>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              handleEditInvoice && handleEditInvoice({ status: status }, invoice._id).then(() => {});
-            }}
-          >
-            Save Changes
-          </button>
+        <Form.Control value={invoice.notes} id="notes" aria-describedby="notes" className='border-dark' />
+        <div className="row">
+          <div className="col-md-4">
+            <div className="d-flex flex-column justify-content-md-start gap-2 mt-3">
+              <select
+                className="form-select w-auto border-dark"
+                value={status}
+                onChange={handleStatusChange}
+                aria-label="Invoice status"
+              >
+                <option value="Paid">PAID</option>
+                <option value="Unpaid">UNPAID</option>
+                <option value="Cancelled">CANCELLED</option>
+              </select>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  handleEditInvoice && handleEditInvoice({ status: status }, invoice._id).then(() => {});
+                }}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
         </div>
+
         <OkDialogue
           show={success}
           message="Your changes was save successfully"

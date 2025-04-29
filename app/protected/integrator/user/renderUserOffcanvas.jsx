@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Offcanvas, Button, Form } from 'react-bootstrap';
 import { validate } from '../../../../validator/validator';
-
+import { MdCancel } from 'react-icons/md';
 import { ConfirmationDialogue, OkDialogue } from '../../../../src/components/elements/ConfirmDialogue';
 
 const RenderUserOffcanvas = ({
@@ -16,8 +16,6 @@ const RenderUserOffcanvas = ({
   userValidator
 }) => {
   const [errorMessages, setErrorMessages] = useState({});
-
-  console.log('.................................fields', fields);
 
   useEffect(() => {
     setFields((pre) => {
@@ -54,9 +52,14 @@ const RenderUserOffcanvas = ({
 
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
-      <Offcanvas.Header closeButton>
-        <Offcanvas.Title>{userData ? 'Edit User' : 'Add New User'}</Offcanvas.Title>
-      </Offcanvas.Header>
+      <div className="d-flex flex-row justify-content-between align-items-center p-7">
+        <div className="d-flex flex-column justify-content-start align-items-start">
+          <p className="text-dark fw-bold fs-18">{userData ? 'Edit User' : 'Add New User'}</p>
+        </div>
+        <div>
+          <MdCancel size={48} color="black" onClick={handleClose} className="pointer" />
+        </div>
+      </div>
       <Offcanvas.Body>
         <Form>
           <div className="row">
