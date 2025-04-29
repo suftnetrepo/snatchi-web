@@ -4,12 +4,12 @@ import React, { useEffect } from 'react';
 import { Offcanvas, ListGroup, Form, Alert } from 'react-bootstrap';
 import { useTaskTeam } from '../../../../hooks/useTaskTeam';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
-import { MdDelete } from 'react-icons/md';
+import { MdDelete, MdCancel } from 'react-icons/md';
 import Select from 'react-select';
 import Tooltip from '@mui/material/Tooltip';
 
 const RenderTeamOffcanvas = ({ show, handleClose, projectId, taskId }) => {
-  const { data, error, customStyles,options, handleSelect, fields, handleChange, handleFetchOptions, handleDelete } =
+  const { data, error, customStyles, options, handleSelect, fields, handleChange, handleFetchOptions, handleDelete } =
     useTaskTeam(projectId, taskId);
 
   useEffect(() => {
@@ -23,9 +23,14 @@ const RenderTeamOffcanvas = ({ show, handleClose, projectId, taskId }) => {
 
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
-      <Offcanvas.Header closeButton>
-        <Offcanvas.Title>Teams</Offcanvas.Title>
-      </Offcanvas.Header>
+      <div className="d-flex flex-row justify-content-between align-items-center p-7">
+        <div className="d-flex flex-column justify-content-start align-items-start">
+          <p className="text-dark fw-bold fs-18">Teams</p>
+        </div>
+        <div>
+          <MdCancel size={48} color="black" onClick={() => handleClose()} className="pointer" />
+        </div>
+      </div>
       <Offcanvas.Body>
         {error && (
           <div className="row">

@@ -40,8 +40,6 @@ const RenderTask = () => {
     projectId
   );
 
-  console.log(".......................calenderData", calenderData)
-
   const handleClose = () => {
     setShow(false);
   };
@@ -120,12 +118,12 @@ const RenderTask = () => {
                   size={30}
                   className="pointer me-2"
                   onClick={async () => {
-                    setShowTaskOffcanvas(true)
-                    await handleSelect(row.original._id)
+                    setShowTaskOffcanvas(true);
+                    await handleSelect(row.original._id);
                   }}
                 />
               </span>
-            </Tooltip>          
+            </Tooltip>
             <Tooltip title="Task Documents" arrow>
               <span className="p-0">
                 <TiDocument
@@ -158,7 +156,7 @@ const RenderTask = () => {
   );
 
   return (
-    <div className='ms-5 me-5 '>
+    <div className="ms-5 me-5 ">
       <div className="d-flex justify-content-start align-items-center mb-3">
         <Button variant="outline-secondary" onClick={() => router.push(`/protected/integrator/project`)}>
           <MdArrowBack size={24} /> Back
@@ -168,10 +166,8 @@ const RenderTask = () => {
       <Tabs key={success || deleteSuccess} defaultActiveKey="table" id="uncontrolled-tab-example" className="mb-3">
         <Tab eventKey="table" title="Table">
           <>
-            <div className={`ms-5 me-5 mt-2 ${!loading ? 'overlay__block' : null}`}>
+            <div className={`ms-1 me-1 mt-2 ${!loading ? 'overlay__block' : null}`}>
               <div className="card-body">
-               
-
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <input
                     type="text"
@@ -184,8 +180,8 @@ const RenderTask = () => {
                     type="submit"
                     size="sm"
                     onClick={async () => {
-                      setShowTaskOffcanvas(true)
-                      handleReset()
+                      setShowTaskOffcanvas(true);
+                      handleReset();
                     }}
                   >
                     + Add Task
@@ -195,7 +191,7 @@ const RenderTask = () => {
               </div>
             </div>
             {!loading && <span className="overlay__block" />}
-            {error && <ErrorDialogue showError={error} onClose={() => { }} />}
+            {error && <ErrorDialogue showError={error} onClose={() => {}} />}
             <RenderDocumentOffcanvas show={show} handleClose={handleClose} projectId={projectId} taskId={taskId} />
             <RenderTeamOffcanvas
               show={showTeamOffcanvas}
@@ -208,7 +204,6 @@ const RenderTask = () => {
         <Tab eventKey="calender" title="Calender">
           <TaskCalendar setShow={setShowTaskOffcanvas} data={calenderData} handleSelect={handleSelect} />
         </Tab>
-       
       </Tabs>
       <RenderTaskOffcanvas
         fields={fields}
@@ -224,7 +219,6 @@ const RenderTask = () => {
         projectId={projectId}
       />
     </div>
-   
   );
 };
 

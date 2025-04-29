@@ -5,7 +5,7 @@ import { Offcanvas, Button, ListGroup, Form, Spinner, Alert } from 'react-bootst
 import { validate } from '../../../../validator/validator';
 import { useTaskDocument } from '../../../../hooks/useTaskDocument';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
-import { MdDelete } from 'react-icons/md';
+import { MdDelete, MdCancel } from 'react-icons/md';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilePdf, faFileWord, faImage } from '@fortawesome/free-solid-svg-icons';
 import Tooltip from '@mui/material/Tooltip';
@@ -15,7 +15,6 @@ const RenderDocumentOffcanvas = ({ show, handleClose, projectId, taskId }) => {
     useTaskDocument(taskId, projectId);
   const [errorMessages, setErrorMessages] = useState({});
   const [file, setFile] = useState(null);
-  const fileInputRef = useRef(null);
 
   const getIcon = (type) => {
     switch (type.toLowerCase()) {
@@ -42,7 +41,7 @@ const RenderDocumentOffcanvas = ({ show, handleClose, projectId, taskId }) => {
         return faFilePdf;
     }
   };
- 
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
 
@@ -79,9 +78,14 @@ const RenderDocumentOffcanvas = ({ show, handleClose, projectId, taskId }) => {
 
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
-      <Offcanvas.Header closeButton>
-        <Offcanvas.Title></Offcanvas.Title>
-      </Offcanvas.Header>
+      <div className="d-flex flex-row justify-content-between align-items-center p-7">
+        <div className="d-flex flex-column justify-content-start align-items-start">
+          <p className="text-dark fw-bold fs-18">Documents</p>
+        </div>
+        <div>
+          <MdCancel size={48} color="black" onClick={() => handleClose()} className="pointer" />
+        </div>
+      </div>
       <Offcanvas.Body>
         {error && (
           <div className="row">
@@ -132,12 +136,12 @@ const RenderDocumentOffcanvas = ({ show, handleClose, projectId, taskId }) => {
                 <Tooltip title="Select document to upload" arrow>
                   <span className="p-0">
                     <Form.Group controlId="formFileLg" className="mb-3">
-                      <Form.Label> Select File</Form.Label>
+                      {/* <Form.Label> Select File</Form.Label> */}
                       <Form.Control
                         type="file"
                         size="lg"
                         id="file-input"
-                        accept="image/*"                      
+                        accept="image/*"
                         onChange={handleFileChange}
                       />
                     </Form.Group>
@@ -145,7 +149,7 @@ const RenderDocumentOffcanvas = ({ show, handleClose, projectId, taskId }) => {
                 </Tooltip>
                 {loading ? (
                   <Form.Group controlId="formFileLg" className="mb-3">
-                    <Form.Label> </Form.Label>
+                    {/* <Form.Label> </Form.Label> */}
                     <Button variant="secondary">
                       <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
                       <span className="visually-hidden">uploading...</span>
@@ -155,7 +159,7 @@ const RenderDocumentOffcanvas = ({ show, handleClose, projectId, taskId }) => {
                   <Tooltip title="Upload document" arrow>
                     <span className="p-0 ps-2">
                       <Form.Group controlId="formFileLg" className="mb-3">
-                        <Form.Label> Upload File</Form.Label>
+                        {/* <Form.Label> Upload File</Form.Label> */}
                         <Button variant={!file ? 'secondary' : 'success'} onClick={() => onsubmit()} disabled={!file}>
                           Upload
                         </Button>
@@ -167,7 +171,7 @@ const RenderDocumentOffcanvas = ({ show, handleClose, projectId, taskId }) => {
             </div>
           </div>
           <div>
-            <div className="mt-1">
+            <div className="mt-1 ps-1">
               <div>
                 <h4>Documents({data.length}) </h4>
               </div>
@@ -183,7 +187,7 @@ const RenderDocumentOffcanvas = ({ show, handleClose, projectId, taskId }) => {
                         <FontAwesomeIcon
                           icon={getIcon(document.document_type)}
                           style={{ color: getIconColor(document.document_type), fontSize: '20px' }}
-                        ></FontAwesomeIcon>                     
+                        ></FontAwesomeIcon>
                         <div className="fw-normal ms-1">
                           {' '}
                           <a href={document.secure_url} target="_blank" rel="noopener noreferrer">
@@ -198,13 +202,13 @@ const RenderDocumentOffcanvas = ({ show, handleClose, projectId, taskId }) => {
                             onConfirm={async () => {
                               handleDelete(document._id);
                             }}
-                            onCancel={() => { }}
+                            onCancel={() => {}}
                             itemId={document._id}
                           >
                             <MdDelete size={30} className="pointer" />
                           </DeleteConfirmation>
                         </span>
-                      </Tooltip>                     
+                      </Tooltip>
                     </ListGroup.Item>
                   );
                 })}
@@ -218,4 +222,4 @@ const RenderDocumentOffcanvas = ({ show, handleClose, projectId, taskId }) => {
   );
 };
 
-export default RenderDocumentOffcanvas
+export default RenderDocumentOffcanvas;

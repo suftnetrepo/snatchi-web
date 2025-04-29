@@ -31,7 +31,7 @@ export default function Sidebar({ children }) {
 			show: isShowSidebar,
 		},
 	)} id="sidebar">
-		<div className="sidebar-brand d-none d-md-flex align-items-center justify-content-center">
+		<div className="sidebar-brand d-none d-md-flex align-items-center justify-content-center py-8">
 			<div className="sidebar-brand-full">
 				<img src="/img/logo__.png" alt="" className="img-fluid" />
 			</div>

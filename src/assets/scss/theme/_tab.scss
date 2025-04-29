@@ -1,0 +1,15 @@
+.custom-tabs .nav-link {
+    color: white !important;             /* White text for active tab */
+    background-color: #ccc7c7 !important; /* Dark background */
+    border: none !important;
+    border-radius: 16 !important;
+  }
+  
+  .custom-tabs .nav-link.active {
+    color: white !important;             /* White text for active tab */
+    background-color: #444 !important;   /* Slightly lighter dark */
+    font-weight: bold;
+    border: none !important;
+    border-bottom: 3px solid white;
+  }
+  
