@@ -9,8 +9,10 @@ import useDebounce from '../../../../hooks/useDebounce';
 import RenderIntegratorOffcanvas from './renderIntegratorOffcanvas';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useChatContext } from '@/hooks/ChatContext';
 
 const Search = () => {
+  const { currentChatUser }= useChatContext()
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState('');
   const [show, setShow] = useState(false);
@@ -101,7 +103,7 @@ const Search = () => {
       </div>
       {!loading && <span className="overlay__block" />}
       {error && <ErrorDialogue showError={error} onClose={() => {}} />}
-      <RenderIntegratorOffcanvas handleClose={handleClose} session={session} show={show} data={viewData} />
+      <RenderIntegratorOffcanvas handleClose={handleClose} currentChatId={currentChatUser?.uid} session={session} show={show} data={viewData} />
     </>
   );
 };

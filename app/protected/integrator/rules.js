@@ -12,12 +12,8 @@ const projectValidator = {
       { pattern: /^.+$/, message: 'Scope of Work is required' },
       { pattern: /^.{0,5000}$/, message: 'Scope of Work must not exceed 1000 characters' }
     ],
-    status: [
-      { pattern: /^.+$/, message: 'Status is required' }
-    ],
-    priority: [
-      { pattern: /^.+$/, message: 'Priority is required' }
-    ],
+    status: [{ pattern: /^.+$/, message: 'Status is required' }],
+    priority: [{ pattern: /^.+$/, message: 'Priority is required' }],
     startDate: [
       { pattern: /^.+$/, message: 'Start date is required' },
       {
@@ -40,7 +36,7 @@ const projectValidator = {
         }
       }
     ]
-  }, 
+  },
   fields: {
     name: '',
     project_number: '',
@@ -55,16 +51,16 @@ const projectValidator = {
     description: null,
     startDate: '',
     endDate: '',
-    addressLine1: "",
-    county: "",
-    town: "",
-    country: "",
-    postcode: "",
-    completeAddress: "",
+    addressLine1: '',
+    county: '',
+    town: '',
+    country: '',
+    postcode: '',
+    completeAddress: '',
     location: {
-      type: "Point",
+      type: 'Point',
       coordinates: []
-    },
+    }
   }
 };
 
@@ -78,12 +74,8 @@ const taskValidator = {
       { pattern: /^.+$/, message: 'Scope of Work is required' },
       { pattern: /^.{0,5000}$/, message: 'Scope of Work must not exceed 1000 characters' }
     ],
-    status: [
-      { pattern: /^.+$/, message: 'Status is required' }
-    ],
-    priority: [
-      { pattern: /^.+$/, message: 'Priority is required' }
-    ],
+    status: [{ pattern: /^.+$/, message: 'Status is required' }],
+    priority: [{ pattern: /^.+$/, message: 'Priority is required' }],
     startDate: [
       { pattern: /^.+$/, message: 'Start date is required' },
       {
@@ -123,23 +115,19 @@ const fileValidator = {
       { pattern: /^.+$/, message: 'Document name is required' },
       { pattern: /^.{0,250}$/, message: 'Document name must not exceed 100 characters' }
     ],
-    document_type: [
-      { pattern: /^.+$/, message: 'Document Type is required' }     
-    ]
+    document_type: [{ pattern: /^.+$/, message: 'Document Type is required' }]
   },
   fields: {
     document_name: '',
     document_type: '',
     file: '',
-    fileName: ''   
+    fileName: ''
   }
 };
 
 const teamValidator = {
   rules: {
-    id: [
-      { pattern: /^.+$/, message: 'Select user is required' },
-    ]   
+    id: [{ pattern: /^.+$/, message: 'Select user is required' }]
   },
   fields: {
     id: '',
@@ -180,7 +168,7 @@ const userValidator = {
       }
     ],
     mobile: [
-      { pattern: /^.+$/, message: 'mobile is required' },      
+      { pattern: /^.+$/, message: 'mobile is required' },
       {
         pattern: /^.{0,50}$/,
         message: 'mobile number must not be more than 20 characters'
@@ -190,9 +178,15 @@ const userValidator = {
   },
   reset: () => {
     return {
-      ...userValidator.fields
-    }
-
+      first_name: '',
+      last_name: '',
+      email: '',
+      mobile: '',
+      user_status: false,
+      chat_status: false,
+      role: '',
+      visible: ''
+    };
   },
   fields: {
     first_name: '',
@@ -200,6 +194,7 @@ const userValidator = {
     email: '',
     mobile: '',
     user_status: false,
+    chat_status: false,
     role: '',
     visible: ''
   }
@@ -228,7 +223,7 @@ const integratorValidator = {
         pattern: /^.{0,50}$/,
         message: 'mobile number must not be more than 20 characters'
       }
-    ],
+    ]
   },
   fields: {
     description: '',
@@ -237,13 +232,12 @@ const integratorValidator = {
     mobile: '',
     secure_url: '',
     public_id: '',
-    status : '',
+    status: '',
     startDate: '',
     endDate: '',
-    password :'',
+    password: '',
     confirm_password: ''
   }
 };
-
 
 export { integratorValidator, taskValidator, projectValidator, fileValidator, userValidator, teamValidator };

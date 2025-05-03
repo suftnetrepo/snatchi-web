@@ -9,7 +9,7 @@ import { validate } from '../../../validator/validator';
 import { useSubscriber } from '../../../hooks/useSubscriber';
 import { useRouter, useParams } from 'next/navigation';
 import ErrorDialogue from '@/components/elements/errorDialogue';
-import { useUserChat, useChatRoom } from '../../../hooks/useChat';
+import { useUserChat, useChatRoom } from '../../../hooks/useUserChat';
 import { signIn, getCsrfToken } from 'next-auth/react';
 
 const CheckOut = () => {

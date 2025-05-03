@@ -14,6 +14,8 @@ import RenderUserOffcanvas from './renderUserOffcanvas';
 import RenderDocumentOffcanvas from './renderDocumentOffcanvas';
 import Tooltip from '@mui/material/Tooltip';
 import { userValidator } from '../rules';
+import { useUserChat } from '@/hooks/useUserChat';
+
 
 const User = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,6 +24,7 @@ const User = () => {
   const [showUserDocument, setShowUserDocument] = useState(false);
   const [fields, setFields] = useState(userValidator.fields);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const { handleSignUp } = useUserChat()
   const {
     data,
     error,
@@ -60,6 +63,23 @@ const User = () => {
       { Header: 'Email', accessor: 'email' },
       { Header: 'Role', accessor: 'role' },
       { Header: 'Visibility', accessor: 'visible' },
+      {
+        Header: 'Chat Status',
+        accessor: 'chat_status',
+        Cell: ({ value }) => (
+          <div className="d-flex justify-content-start align-items-center">
+            {value ? (
+              <Badge bg="success" className="p-2">
+                Yes
+              </Badge>
+            ) : (
+              <Badge bg="danger" className="p-2">
+                No
+              </Badge>
+            )}
+          </div>
+        )
+      },
       {
         Header: 'Status',
         accessor: 'user_status',
@@ -166,6 +186,7 @@ const User = () => {
         handleEditUser={handleEditUser}
         handleSaveUser={handleSaveUser}
         userValidator={userValidator}
+        handleSignUp={handleSignUp}
       />
        <RenderDocumentOffcanvas
         handleClose={handleCloseUserDocument}

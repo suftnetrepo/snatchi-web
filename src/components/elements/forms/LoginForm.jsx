@@ -7,10 +7,10 @@ import { loginValidator } from '../../../../validator/loginValidator';
 import { validate } from '../../../../validator/validator';
 import { useSecure } from '../../../../hooks/useSecure';
 import LoadingButton from '../button';
-import { useUserChat } from '../../../../hooks/useChat';
+import { useUserChat } from '../../../../hooks/useUserChat';
 
 const LoginForm = () => {
-  const { handleChatSignIn } = useUserChat();
+  const { handleChatSignIn, handleSignUp } = useUserChat();
   const [validationError, setValidationError] = useState({});
   const [fields, setFields] = useState({ email: '', password: '' });
   const [visiblePassword, setVisiblePassword] = useState(false);

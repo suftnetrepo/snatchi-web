@@ -3,18 +3,18 @@
 import React from 'react';
 import { Container, Offcanvas, Row, Col, Button, Image } from 'react-bootstrap';
 import { FaComment, FaEnvelope, FaPhone } from 'react-icons/fa';
-import { useIntegratorChat } from '@/hooks/useChat';
 import { capitalizeFirstLetter } from '@/utils/helpers';
 import { useRouter } from 'next/navigation';
+import { useUserChat } from '@/hooks/useUserChat';
 
-const RenderIntegratorOffcanvas = ({ show, session, handleClose, data }) => {
+const RenderIntegratorOffcanvas = ({ show, session, currentChatId, handleClose, data }) => {
   const route = useRouter();
-  const { handleNewIntegratorChatRoom } = useIntegratorChat(session?.user?.integrator);
+  const { handleCreateDirectChat, error, loading } = useUserChat();
   const chatName = `${capitalizeFirstLetter(session?.user?.first_name)} ${capitalizeFirstLetter(data?.name)}`.trim();
 
-  const onNewIntegratorRoom = async () => {
-    handleNewIntegratorChatRoom([session?.user?.integrator, data._id], chatName).then((result) => {
-      route.push(`/protected/integrator/chat?q=integrator&i=${result}`)
+  const handleNewDirectChat = async () => {
+    handleCreateDirectChat(currentChatId, data?.email, chatName, 'direct').then((result) => {
+      route.push(`/protected/integrator/chat?i=${result}`);
     });
   };
 
@@ -41,7 +41,7 @@ const RenderIntegratorOffcanvas = ({ show, session, handleClose, data }) => {
               <Button
                 variant="success"
                 className="d-flex gap-1 px-3 justify-content-start align-items-center"
-                onClick={() => onNewIntegratorRoom()}
+                onClick={() => handleNewDirectChat()}
               >
                 <FaComment size={24} />
                 Chat
