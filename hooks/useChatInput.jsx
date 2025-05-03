@@ -1,8 +1,8 @@
-
-
 import React, { useState } from 'react';
 import {
   collection,
+  addDoc,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -33,18 +33,17 @@ const useChatInput = () => {
     });
   };
 
-  const handleSend = async (chatRoomId, senderId, receiverId, text) => {
-    console.log({ chatRoomId, senderId, receiverId, text });
-
+  const handleSend = async (chatRoomId, senderId, text) => {
+    console.log({ chatRoomId, senderId, text });
+   const timestamp = Timestamp.now();
     try {
       const messagesRef = collection(db, 'chats', chatRoomId, 'messages');
       const newMessage = {
         _id: new Date().getTime().toString(),
         senderId,
-        receiverId: receiverId || '',
         text: text || '',
         imageURL: null,
-        timestamp: serverTimestamp(),
+        timestamp: timestamp,
         isRead: false,
         user: {
           _id: senderId

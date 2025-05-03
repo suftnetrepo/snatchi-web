@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
-import { Container, Row, Col, Form, ListGroup, InputGroup, Modal, Tab, Tabs } from 'react-bootstrap';
+import { Container, Row, Col, Form, ListGroup, InputGroup, Modal } from 'react-bootstrap';
 import { useChatMessage } from '../../../../hooks/useChatMessage';
 import { useChatInput } from '../../../../hooks/useChatInput';
 import { useChatRoom } from '../../../../hooks/useChatRoom';
@@ -16,7 +15,7 @@ import { RenderChatOffcanvas } from './renderChatOffcanvas';
 import { RenderUserOffcanvas } from './renderUserOffcanvas';
 import { useSession } from 'next-auth/react';
 import ChatWindow from '@/components/reuseable/chat/chat-window';
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation';
 
 const RenderChat = () => {
   const { data: session } = useSession();
@@ -31,20 +30,16 @@ const RenderChat = () => {
     handleSearchUsers,
     handleSearchChange,
     handleNewRoomChange,
-    handleNewRoom,
+    handleNewRoom
   } = useChatRoom(currentChatUser?.uid);
-  const { addMemberToGroupChat, handleCreateDirectChat }= useUserChat()
+  const { addMemberToGroupChat, handleCreateDirectChat } = useUserChat();
   const { messages } = useChatMessage(chatRoomId, currentChatUser?.uid);
   const [showChatOffcanvas, setShowChatOffcanvas] = useState(false);
   const [showSingleChatOffcanvas, setShowSingleChatOffcanvas] = useState(false);
   const [show, setShow] = useState(false);
   const ref = useRef();
   const searchParams = useSearchParams();
-  const query = searchParams.get('q');
   const id = searchParams.get('i');
-
-  console.log('.....................chats', chats);
-  console.log('.....................currentChatUser?.uid', currentChatUser?.uid);
 
   useEffect(() => {
     const chat = chats.find((j) => j.id === id);
@@ -60,7 +55,7 @@ const RenderChat = () => {
   // }, [messages?.length]);
 
   const handleSendMessage = async (text) => {
-    handleSend(chatRoomId,currentChatUser?.uid, chatRoom.users, text).then(() => {
+    handleSend(chatRoomId, currentChatUser?.uid, text).then(() => {
       handleReset();
     });
   };
@@ -70,81 +65,74 @@ const RenderChat = () => {
       <Container fluid>
         <Row>
           <Col md={3} className="bg-white sidebar">
-            <Tabs
-              defaultActiveKey={'chat'}
-              id="uncontrolled-tab-chat"
-              variant="tabs"
-              className="mb-3 custom-tabs"
-            >
-              <Tab eventKey="chat" title="Char">
-                <>
-                  <InputGroup className="mb-3">
-                    <Form.Control
-                      placeholder="Search"
-                      value={search_terms}
-                      onChange={(e) => handleSearchChange('search_terms', e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          search_terms && handleSearchUsers(search_terms, currentChatUser?.uid, 100);
-                        }
-                      }}
-                    />
-                    <Button variant="outline-secondary" onClick={() => handleSearchUsers(search_terms, currentChatUser?.uid, 100)}>
-                      <FaSearch />
-                    </Button>
-                  </InputGroup>
-                  <SimpleBar>
-                    <ListGroup>
-                      {chats.map((chat, index) => {
-                        const formattedTime = formatTimeForObject(chat.lastUpdated);
-                        return (
-                          <ListGroup.Item
-                            key={chat.id || index}
-                            className={`pointer ${chatRoomId === chat.id ? 'active' : ''}`}
-                            onClick={() => changeChatRoom(chat)}
-                          >
-                            <Row className="d-flex align-items-center">
-                              <Col xs={2} className="text-center">
-                                <div className="position-relative">
-                                  <img
-                                    src={chat?.photoURL || '/img/blank.png'}
-                                    alt={chat?.name || 'User'}
-                                    className="rounded-circle"
-                                    width="50"
-                                    height="50"
-                                    onError={(e) => {
-                                      e.target.onerror = null;
-                                      e.target.src = '/img/blank.png';
-                                    }}
-                                  />
-                                </div>
-                              </Col>
+            <>
+              <InputGroup className="mb-3">
+                <Form.Control
+                  placeholder="Search"
+                  value={search_terms}
+                  onChange={(e) => handleSearchChange('search_terms', e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      search_terms && handleSearchUsers(search_terms, currentChatUser?.uid, 100);
+                    }
+                  }}
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => handleSearchUsers(search_terms, currentChatUser?.uid, 100)}
+                >
+                  <FaSearch />
+                </Button>
+              </InputGroup>
+              <SimpleBar>
+                <ListGroup>
+                  {chats.map((chat, index) => {
+                    const formattedTime = formatTimeForObject(chat.lastUpdated);
+                    return (
+                      <ListGroup.Item
+                        key={chat.id || index}
+                        className={`pointer ${chatRoomId === chat.id ? 'active' : ''}`}
+                        onClick={() => changeChatRoom(chat)}
+                      >
+                        <Row className="d-flex align-items-center">
+                          <Col xs={2} className="text-center">
+                            <div className="position-relative">
+                              <img
+                                src={chat?.photoURL || '/img/blank.png'}
+                                alt={chat?.name || 'User'}
+                                className="rounded-circle"
+                                width="50"
+                                height="50"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = '/img/blank.png';
+                                }}
+                              />
+                            </div>
+                          </Col>
 
-                              <Col xs={8} className="ps-3">
-                                <div className="d-flex flex-column">
-                                  <div className="d-flex flex-row justify-content-between align-items-center">
-                                    <p className=" text-dark mb-0">{chat?.name || 'Unknown'}</p>
-                                    <p className="text-dark mb-0 small">{formattedTime}</p>
-                                  </div>
-                                  <p className="text-muted mb-0 small">{chat?.lastMessage}</p>
-                                </div>
-                              </Col>
+                          <Col xs={8} className="ps-3">
+                            <div className="d-flex flex-column">
+                              <div className="d-flex flex-row justify-content-between align-items-center">
+                                <p className=" text-dark mb-0">{chat?.name || 'Unknown'}</p>
+                                <p className="text-dark mb-0 small">{formattedTime}</p>
+                              </div>
+                              <p className="text-muted mb-0 small">{chat?.lastMessage}</p>
+                            </div>
+                          </Col>
 
-                              <Col xs={2} className="text-end">
-                                {chat?.unreadCount > 0 && (
-                                  <span className="badge rounded-pill bg-green">{chat.unreadCount}</span>
-                                )}
-                              </Col>
-                            </Row>
-                          </ListGroup.Item>
-                        );
-                      })}
-                    </ListGroup>
-                  </SimpleBar>
-                </>
-              </Tab>
-              
-            </Tabs>
+                          <Col xs={2} className="text-end">
+                            {chat?.unreadCount > 0 && (
+                              <span className="badge rounded-pill bg-green">{chat.unreadCount}</span>
+                            )}
+                          </Col>
+                        </Row>
+                      </ListGroup.Item>
+                    );
+                  })}
+                </ListGroup>
+              </SimpleBar>
+            </>
           </Col>
 
           <Col md={9}>
@@ -175,10 +163,10 @@ const RenderChat = () => {
 
               <div>
                 <Button type="button" variant="outline-secondary" onClick={() => setShowSingleChatOffcanvas(true)}>
-                  Create User
+                  Create User Chat
                 </Button>
                 <Button className="ms-2" type="button" variant="outline-secondary" onClick={() => setShow(true)}>
-                  Create Group
+                  Create Group Chat
                 </Button>
                 {chatRoom?.type === 'group' && (
                   <Button
@@ -187,7 +175,7 @@ const RenderChat = () => {
                     className="ms-2"
                     onClick={() => setShowChatOffcanvas(true)}
                   >
-                    Add user to group
+                    Add User to Group
                   </Button>
                 )}
               </div>
@@ -208,7 +196,7 @@ const RenderChat = () => {
         handleClose={() => setShowChatOffcanvas(false)}
         chatRoomId={chatRoomId}
         addMemberToGroupChat={addMemberToGroupChat}
-        userId = {session?.user?.id}
+        userId={session?.user?.id}
       />
       <RenderUserOffcanvas
         show={showSingleChatOffcanvas}
