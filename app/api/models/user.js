@@ -26,6 +26,10 @@ const userSchema = new Schema(
       type: Boolean,
       default: false
     },
+    chat_status: {
+      type: Boolean,
+      default: false
+    },
     email: { type: String, unique: true, lowercase: true },
     otp: {
       type: String,

@@ -13,7 +13,8 @@ const RenderUserOffcanvas = ({
   userData,
   handleSaveUser,
   handleEditUser,
-  userValidator
+  userValidator,
+  handleSignUp
 }) => {
   const [errorMessages, setErrorMessages] = useState({});
 
@@ -47,6 +48,14 @@ const RenderUserOffcanvas = ({
       handleEditUser(fields, userData?._id).then((result) => {});
     } else {
       handleSaveUser(fields).then((result) => {});
+    }
+
+    if (fields?.chat_status) {
+      try {
+        await handleSignUp(fields.email, fields.email, '12345!');
+      } catch (chatError) {
+        console.error('Chat sign-in failed:', chatError);
+      }
     }
   };
 
@@ -164,6 +173,17 @@ const RenderUserOffcanvas = ({
               label="Active Status"
               name="user_status"
               checked={fields.user_status}
+              onChange={handleChange}
+              className="text-dark border-dark"
+            />
+          </Form.Group>
+
+          <Form.Group controlId="formChatStatus" className="mb-3">
+            <Form.Check
+              type="checkbox"
+              label="Chat Status"
+              name="chat_status"
+              checked={fields.chat_status}
               onChange={handleChange}
               className="text-dark border-dark"
             />

@@ -41,12 +41,21 @@ const useUserChat = () => {
 
   const handleSignUp = async (name, email, password) => {
     try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        throw new Error('A user with this email already exists');
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       await setDoc(doc(db, 'users', user.uid), {
         name,
-        email
+        email,
+        createdAt: Timestamp.now()
       });
 
       setState((pre) => {
@@ -56,6 +65,7 @@ const useUserChat = () => {
       return true;
     } catch (error) {
       handleError(error.message);
+      return false;
     }
   };
 
@@ -165,9 +175,9 @@ const useChatRoom = (user_id) => {
     }
   };
 
-  const handleAddMember = async (chatRoomId, newUserEmail) => {
+  const handleAddMember = async (chatRoomId, newUserEmail, userId) => {
     let newUserId;
-    const newUserPassword = '123456!';
+    const newUserPassword = '12345!';
     try {
       // Step 1: Attempt to Sign In
       const userCredential = await signInWithEmailAndPassword(auth, newUserEmail, newUserPassword);
@@ -196,14 +206,16 @@ const useChatRoom = (user_id) => {
     }
 
     // Step 4: Add user to the chat room
+
+    console.log(".........................", {userId, chatRoomId, newUserEmail})
     try {
       const chatRoomRef = doc(db, 'chats', chatRoomId);
       await updateDoc(chatRoomRef, {
-        users: arrayUnion(newUserId),
+        users: arrayUnion(userId),
         lastUpdated: Timestamp.now()
       });
 
-      console.log(`User ${newUserId} added to chat room ${chatRoomId}`);
+      console.log(`User ${userId} added to chat room ${chatRoomId}`);
     } catch (chatRoomError) {
       console.error('Error adding user to chat room:', chatRoomError.message);
     }
@@ -290,7 +302,6 @@ const useChatRoom = (user_id) => {
 
   const handleOneToOneChat = async (currentUserId, targetUserId, chatName) => {
     try {
-     
       const chatsRef = collection(db, 'chats');
       const q = query(chatsRef, where('users', 'array-contains', currentUserId));
 
@@ -307,14 +318,12 @@ const useChatRoom = (user_id) => {
 
       if (chatAlreadyExists) return;
 
-      const chatDocRef = await addDoc(collection(db, 'chats'), {
+      await addDoc(collection(db, 'chats'), {
         name: chatName,
         users: [currentUserId, targetUserId],
         lastMessage: '',
         lastUpdated: Timestamp.now()
       });
-
-      console.log(`One-to-one chat created with ID: ${chatDocRef.id}`);
 
       setState((prev) => ({
         ...prev,

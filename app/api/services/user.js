@@ -6,7 +6,7 @@ import { mongoConnect } from '@/utils/connectDb';
 const { generatePassword } = require('../utils/helps');
 const { logger } = require('../utils/logger');
 
-mongoConnect()
+mongoConnect();
 
 async function getUsers({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
   if (!isValidObjectId(suid)) {
@@ -38,7 +38,7 @@ async function getUsers({ suid, page = 1, limit = 10, sortField, sortOrder, sear
     };
 
     const [users, totalCount] = await Promise.all([
-      User.find(query).sort(sortOptions).skip(skip).select("-password").limit(limit).exec(),
+      User.find(query).sort(sortOptions).skip(skip).select('-password').limit(limit).exec(),
       User.countDocuments({ integrator: suid })
     ]);
 

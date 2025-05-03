@@ -8,16 +8,15 @@ export const ChatContextProvider = ({ children }) => {
   const [state, setState] = useState({
     currentChatUser: null,
     chatRoomId: null,
-    chatRoom: null  
+    chatRoom: null
   });
 
   useEffect(() => {
-
     if (!auth) {
-      console.error("Firebase Auth is not initialized.");
+      console.error('Firebase Auth is not initialized.');
       return;
     }
-    
+
     const storedUser = window.localStorage.getItem('chatUser');
     if (storedUser && storedUser !== 'undefined') {
       setState((prevState) => ({
@@ -48,18 +47,18 @@ export const ChatContextProvider = ({ children }) => {
   const changeChatRoom = (chatRoom) => {
     setState((prevState) => {
       return {
-        ...prevState,       
+        ...prevState,
         chatRoomId: chatRoom.id,
-        chatRoom: chatRoom,
+        chatRoom: chatRoom
       };
     });
-  };  
+  };
 
   return (
     <ChatContext.Provider
       value={{
         ...state,
-        changeChatRoom      
+        changeChatRoom
       }}
     >
       {children}

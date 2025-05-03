@@ -2,18 +2,23 @@ import React from 'react';
 import { Offcanvas, ListGroup, Form, Alert, InputGroup, Button } from 'react-bootstrap';
 import { useUser } from '../../../../hooks/useUser';
 import { MdAddCircleOutline } from 'react-icons/md';
+import { MdCancel } from 'react-icons/md';
 import { FaSearch } from 'react-icons/fa';
 import Tooltip from '@mui/material/Tooltip';
 
-const RenderChatOffcanvas = ({ show, handleClose, chatRoomId, handleAddMember  }) => {
-  const { searchResults, error, searchTerm, handleSearchUser, handleChange } =
-    useUser();
+const RenderChatOffcanvas = ({ show, handleClose, chatRoomId, addMemberToGroupChat, userId }) => {
+  const { searchResults, error, searchTerm, handleSearchUser, handleChange } = useUser();
 
-    return (
+  return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
-      <Offcanvas.Header closeButton>
-        <Offcanvas.Title>Users</Offcanvas.Title>
-      </Offcanvas.Header>
+      <div className="d-flex flex-row justify-content-between align-items-center p-7">
+        <div className="d-flex flex-column justify-content-start align-items-start">
+          <p className="text-dark fw-normal fs-18">Add user to Chat group</p>
+        </div>
+        <div>
+          <MdCancel size={48} color="black" onClick={handleClose} className="pointer" />
+        </div>
+      </div>
       <Offcanvas.Body>
         {error && (
           <div className="row">
@@ -26,7 +31,7 @@ const RenderChatOffcanvas = ({ show, handleClose, chatRoomId, handleAddMember  }
           <div className="row">
             <div className="col-md-12">
               <Form.Group controlId="formName" className="mb-1">
-                <InputGroup className="mb-3" >
+                <InputGroup className="mb-3">
                   <Form.Control
                     placeholder="Search users by name or email"
                     value={searchTerm}
@@ -40,7 +45,7 @@ const RenderChatOffcanvas = ({ show, handleClose, chatRoomId, handleAddMember  }
                   <Button variant="outline-secondary" onClick={() => handleSearchUser(searchTerm)}>
                     <FaSearch />
                   </Button>
-                </InputGroup>               
+                </InputGroup>
               </Form.Group>
             </div>
           </div>
@@ -70,7 +75,7 @@ const RenderChatOffcanvas = ({ show, handleClose, chatRoomId, handleAddMember  }
                         ) : (
                           <img
                             src={'http://'}
-                              alt={user.name}
+                            alt={user.name}
                             className="rounded-circle me-2"
                             width="60"
                             height="60"
@@ -81,16 +86,22 @@ const RenderChatOffcanvas = ({ show, handleClose, chatRoomId, handleAddMember  }
                           />
                         )}
                         <div className="d-flex flex-column justify-content-start align-items-start">
-                          <span> {user.first_name} {user.last_name}</span>                
+                          <span>
+                            {user.first_name} {user.last_name}
+                          </span>
                           <span className="badge bg-pale-leaf text-leaf rounded-pill">{user.role}</span>
                         </div>
                       </div>
 
                       <Tooltip title="Add to chat" arrow>
-                        <span className="p-0">                        
-                          <MdAddCircleOutline size={48} className="pointer" onClick={async () => handleAddMember(chatRoomId, user?.email)} />
+                        <span className="p-0">
+                          <MdAddCircleOutline
+                            size={48}
+                            className="pointer"
+                            onClick={async () => addMemberToGroupChat(chatRoomId, user?.email, userId)}
+                          />
                         </span>
-                      </Tooltip>                            
+                      </Tooltip>
                     </ListGroup.Item>
                   );
                 })}

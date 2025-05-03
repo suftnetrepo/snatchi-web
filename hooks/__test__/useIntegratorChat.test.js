@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { act } from 'react';
-import { useIntegratorChat } from '../useChat';
+import { useIntegratorChat } from '../useUserChat';
 import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
 
 // Mock Firebase Firestore methods
