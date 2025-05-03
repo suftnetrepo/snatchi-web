@@ -4,8 +4,6 @@ import {
   query,
   orderBy,
   collection,
-  getDocs,
-  where
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
