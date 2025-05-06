@@ -350,7 +350,11 @@ function getTimeFromDate(dateString) {
   return date.toISOString().split('T')[1].split('.')[0];
 }
 
+const truncate = (str, max = 100) =>
+  str?.length > max ? str.slice(0, max) + '…' : str;
+
 export {
+  truncate,
   getTimeFromDate,
   getHourAndMinutes,
   ppeOptions,
