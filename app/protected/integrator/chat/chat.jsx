@@ -10,7 +10,7 @@ import { useUserChat } from '../../../../hooks/useUserChat';
 import { useChatContext } from '../../../../hooks/ChatContext';
 import { FaSearch } from 'react-icons/fa';
 import SimpleBar from 'simplebar-react';
-import { formatTimeForObject } from '../../../../utils/helpers';
+import { convertTimestampToTime } from '../../../../utils/helpers';
 import { RenderChatOffcanvas } from './renderChatOffcanvas';
 import { RenderUserOffcanvas } from './renderUserOffcanvas';
 import { useSession } from 'next-auth/react';
@@ -87,7 +87,8 @@ const RenderChat = () => {
               <SimpleBar>
                 <ListGroup>
                   {chats.map((chat, index) => {
-                    const formattedTime = formatTimeForObject(chat.lastUpdated);
+                    const formattedTime = convertTimestampToTime(chat.lastMessageTimestamp);
+                    const unreadCount =chat?.unreadCount ?chat?.unreadCount[currentChatUser?.uid]  :0
                     return (
                       <ListGroup.Item
                         key={chat.id || index}
@@ -111,21 +112,28 @@ const RenderChat = () => {
                             </div>
                           </Col>
 
-                          <Col xs={8} className="ps-3">
+                          <Col xs={10} className="ps-3">
                             <div className="d-flex flex-column">
                               <div className="d-flex flex-row justify-content-between align-items-center">
+                              <div className="d-flex flex-column justify-content-start align-items-start">
                                 <p className=" text-dark mb-0">{chat?.name || 'Unknown'}</p>
+                                {chat?.lastMessage && <p className="text-muted mb-0 small">{chat?.lastMessage}</p>}
+                                </div>
+                                <div className="d-flex flex-column justify-content-center align-items-center">
                                 <p className="text-dark mb-0 small">{formattedTime}</p>
+                                {unreadCount > 0 && (
+                                  <span className="badge rounded-pill bg-yellow">
+                                    {unreadCount}
+                                  </span>
+                                )}
+                                </div>
+                                
                               </div>
-                              <p className="text-muted mb-0 small">{chat?.lastMessage}</p>
+                             
                             </div>
                           </Col>
 
-                          <Col xs={2} className="text-end">
-                            {chat?.unreadCount > 0 && (
-                              <span className="badge rounded-pill bg-green">{chat.unreadCount}</span>
-                            )}
-                          </Col>
+                         
                         </Row>
                       </ListGroup.Item>
                     );
@@ -184,7 +192,7 @@ const RenderChat = () => {
               <ChatWindow
                 messages={messages}
                 onMessageSent={(message) => handleSendMessage(message)}
-                sender_Id={session?.user?.id}
+                sender_Id={currentChatUser?.uid}
               />
             </div>
             <div ref={ref}> </div>

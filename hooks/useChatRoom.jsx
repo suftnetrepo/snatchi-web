@@ -31,6 +31,7 @@ const useChatRoom = (userId) => {
   });
 
   const handleError = (error) => {
+    console.log("..............................error", error)
     setState((pre) => {
       return { ...pre, error: error, loading: false };
     });
@@ -62,7 +63,6 @@ const useChatRoom = (userId) => {
       const chatRoomsQuery = query(
         chatRoomsRef,
         where('users', 'array-contains', userId || 0)
-        // orderBy('lastUpdated', 'desc')
       );
 
       const unsubscribe = onSnapshot(chatRoomsQuery, (snapshot) => {
@@ -83,35 +83,6 @@ const useChatRoom = (userId) => {
       handleError(error.message);
     }
   }
-
-  const getIntegratorRooms = async (id) => {
-    try {
-      const chatRoomsRef = collection(db, 'chats');
-      const chatRoomsQuery = query(
-        chatRoomsRef,
-        where('users', 'array-contains', id || 0)
-        // orderBy('lastUpdated', 'desc')
-      );
-
-      const unsubscribe = onSnapshot(chatRoomsQuery, (snapshot) => {
-        const chatRooms = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        setState((prev) => ({
-          ...prev,
-          chats: chatRooms,
-          error: null
-        }));
-      });
-
-      return unsubscribe;
-    } catch (error) {
-      handleError(error.message);
-    }
-  }
-
 
   const getUserRoomsSortedByActivity = async (userId) => {
     const rooms = await getUserRooms(userId);
@@ -199,6 +170,9 @@ const useChatRoom = (userId) => {
         createdBy: userId,
         admins: [],
         image: '',
+        unreadCount: {
+          [userId]: 0
+        },
         isEncrypted: false
       });
 
@@ -340,7 +314,6 @@ const useChatRoom = (userId) => {
 
   return {
     ...state,
-    getIntegratorRooms,
     getUserRoomsSortedByActivity,
     getUserRoomsWithUnreadMessages,
     listenToUserRooms,
