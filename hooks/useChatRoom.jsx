@@ -1,15 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
 import {
-  arrayUnion,
   doc,
   onSnapshot,
-  deleteDoc,
-  getDoc,
-  serverTimestamp,
   query,
   orderBy,
-  updateDoc,
   collection,
   setDoc,
   addDoc,
@@ -31,7 +26,6 @@ const useChatRoom = (userId) => {
   });
 
   const handleError = (error) => {
-    console.log("..............................error", error)
     setState((pre) => {
       return { ...pre, error: error, loading: false };
     });
