@@ -70,8 +70,8 @@ const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
                             src={team.id.secure_url}
                             alt={`${team?.id.first_name} ${team?.id.last_name}`}
                             className="rounded-circle me-2"
-                            width="40"
-                            height="40"
+                            width="60"
+                            height="60"
                             onError={(e) => {
                               e.target.onerror = null;
                               e.target.src = '/img/blank.png';
