@@ -4,7 +4,7 @@ import HeaderProfileNav from './HeaderProfileNav';
 import HeaderSearch from './HeaderSearch';
 import { useRouter } from 'next/navigation';
 
-export default function Header() {
+export default function Header({ showSearch = true }) {
   const router = useRouter();
   const handleSearch = (searchTerm) => {
     if (searchTerm) {
@@ -19,14 +19,18 @@ export default function Header() {
           <div className="col-md-3 col-lg-3 d-flex align-items-center justify-content-start">
             <HeaderSidebarToggler />
           </div>
-          <div className="col-md-6 col-lg-6">
-            <HeaderSearch onSearch={(searchTerm) => handleSearch(searchTerm)} />
-          </div>
+          {showSearch ? (
+            <div className="col-md-6 col-lg-6">
+              <HeaderSearch onSearch={(searchTerm) => handleSearch(searchTerm)} />
+            </div>
+          ) : (
+            <div className="col-md-6 col-lg-6"> </div>
+          )}
+
           <div className="col-md-3 col-lg-3 d-flex align-items-center justify-content-end">
             <HeaderProfileNav />
           </div>
         </div>
-       
       </Container>
     </header>
   );

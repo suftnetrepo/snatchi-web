@@ -125,6 +125,50 @@ const useProject = (searchQuery) => {
     }
   }
 
+  async function handleFetchSingle(id) {
+    setState((prev) => ({ ...prev, loading: true }));
+    const { success, data, errorMessage } = await zat(PROJECT.fetchOne, null, VERBS.GET, {
+      action: 'single',
+      id: id
+    });
+
+    const assignedToOptions =
+      data?.assignedTo.map((item) => {
+        return {
+          label: `${item.id.first_name} ${item.id.last_name}`,
+          value: item.id._id
+        };
+      }) || [];
+
+    if (success) {
+      setState((prevState) => ({
+        ...prevState,
+        options: assignedToOptions,
+        loading: false
+      }));
+    } else {
+      handleError(errorMessage || 'Failed to fetch the project.');
+    }
+  }
+
+  async function handleFetchUserProjects(id) {
+    setState((prev) => ({ ...prev, loading: true }));
+    const { success, data, errorMessage } = await zat(PROJECT.fetchOne, null, VERBS.GET, {
+      action: 'userProjects',
+      id: id
+    });
+
+    if (success) {
+      setState((prevState) => ({
+        ...prevState,
+        data: data,
+        loading: false
+      }));
+    } else {
+      handleError(errorMessage || 'Failed to fetch the project.');
+    }
+  }
+
   useEffect(() => {
     handleFetch({ searchQuery });
   }, [searchQuery, handleFetch]);
@@ -136,7 +180,8 @@ const useProject = (searchQuery) => {
     handleReset,
     handleSelectedAddress,
     handleFetchSingle,
-    customStyles
+    customStyles,
+    handleFetchUserProjects
   };
 };
 

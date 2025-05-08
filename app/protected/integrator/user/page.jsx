@@ -15,7 +15,7 @@ import RenderDocumentOffcanvas from './renderDocumentOffcanvas';
 import Tooltip from '@mui/material/Tooltip';
 import { userValidator } from '../rules';
 import { useUserChat } from '@/hooks/useUserChat';
-
+import StyledImage from '@/components/reuseable/StyledImage';
 
 const User = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,7 +24,7 @@ const User = () => {
   const [showUserDocument, setShowUserDocument] = useState(false);
   const [fields, setFields] = useState(userValidator.fields);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const { handleSignUp } = useUserChat()
+  const { handleSignUp } = useUserChat();
   const {
     data,
     error,
@@ -43,12 +43,12 @@ const User = () => {
   const handleClose = () => {
     handleReset();
     setShow(false);
-    setFields(userValidator.reset())
+    setFields(userValidator.reset());
   };
   const handleShow = () => {
     handleReset();
     setShow(true);
-    setFields(userValidator.reset())
+    setFields(userValidator.reset());
   };
 
   const handleCloseUserDocument = () => {
@@ -57,6 +57,15 @@ const User = () => {
 
   const columns = useMemo(
     () => [
+      {
+        Header: 'Avater',
+        accessor: '',
+        Cell: ({ row }) => (
+          <div className="d-flex justify-content-start align-items-center">
+            <StyledImage url={row?.original?.secure_url} height="45" width="45" roundedCircle />
+          </div>
+        )
+      },
       { Header: 'Firstname', accessor: 'first_name', sortType: 'basic' },
       { Header: 'Lastname', accessor: 'last_name', sortType: 'basic' },
       { Header: 'Mobile', accessor: 'mobile', sortType: 'basic' },
@@ -121,7 +130,7 @@ const User = () => {
                   onConfirm={async (id) => {
                     handleDeleteUser(id);
                   }}
-                  onCancel={() => { }}
+                  onCancel={() => {}}
                   itemId={row.original._id}
                 >
                   <MdDelete size={30} className="pointer" />
@@ -175,7 +184,7 @@ const User = () => {
         </div>
       </div>
       {!loading && <span className="overlay__block" />}
-      {error && <ErrorDialogue showError={error} onClose={() => { }} />}
+      {error && <ErrorDialogue showError={error} onClose={() => {}} />}
       <RenderUserOffcanvas
         handleClose={handleClose}
         show={show}
@@ -188,11 +197,7 @@ const User = () => {
         userValidator={userValidator}
         handleSignUp={handleSignUp}
       />
-       <RenderDocumentOffcanvas
-        handleClose={handleCloseUserDocument}
-        show={showUserDocument}
-        userId={userId}
-      />
+      <RenderDocumentOffcanvas handleClose={handleCloseUserDocument} show={showUserDocument} userId={userId} />
     </>
   );
 };
