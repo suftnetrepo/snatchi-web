@@ -51,6 +51,22 @@ async function getProjects({ suid, page = 1, limit = 10, sortField, sortOrder, s
   }
 }
 
+const getUserProjects = async (userId) => {
+  try {
+    const projects = await Project.find({ 'assignedTo.id': userId })
+      .sort({ createdAt: -1 }) 
+      .populate('integrator')
+      .populate('assignedTo.id')
+      .exec();
+
+    return projects;
+  } catch (error) {
+    logger.error(error);
+    throw new Error('Error fetching projects for user.');
+  }
+};
+
+
 async function getProjectById(id) {
   if (!isValidObjectId(id)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
@@ -321,5 +337,6 @@ export {
   getProjectById,
   removeProject,
   updateProject,
-  createProject
+  createProject,
+  getUserProjects
 };

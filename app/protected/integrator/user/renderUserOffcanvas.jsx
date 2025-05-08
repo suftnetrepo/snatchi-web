@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Offcanvas, Button, Form } from 'react-bootstrap';
+import { Offcanvas, Button, Form, Container } from 'react-bootstrap';
 import { validate } from '../../../../validator/validator';
 import { MdCancel } from 'react-icons/md';
 import { ConfirmationDialogue, OkDialogue } from '../../../../src/components/elements/ConfirmDialogue';
+import StyledImage from '@/components/reuseable/StyledImage';
 
 const RenderUserOffcanvas = ({
   show,
@@ -70,6 +71,11 @@ const RenderUserOffcanvas = ({
         </div>
       </div>
       <Offcanvas.Body>
+        <Container className="text-center">
+          <div className="d-flex flex-column align-items-center justify-content-center mb-10">
+            {userData && <StyledImage url={userData?.secure_url} height="160" width="160" roundedCircle />}
+          </div>
+        </Container>
         <Form>
           <div className="row">
             <div className="col-md-6">

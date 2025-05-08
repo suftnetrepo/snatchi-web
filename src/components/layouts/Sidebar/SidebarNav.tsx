@@ -59,4 +59,17 @@ const IntegratorSidebarNav = () => {
   );
 };
 
-export { IntegratorSidebarNav };
+const GuestSidebarNav = () => {
+  return (
+    <ul className="list-unstyled mt-0">
+      <SidebarNavItem icon={faHome} href="/protected/guest/dashboard">
+        Dashboard
+      </SidebarNavItem>
+      <SidebarNavItem icon={faComment} href="/protected/guest/chat">
+        Chat
+      </SidebarNavItem>
+    </ul>
+  );
+};
+
+export { IntegratorSidebarNav, GuestSidebarNav };
