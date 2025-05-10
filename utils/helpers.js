@@ -1,3 +1,5 @@
+import { faFilePdf, faFileWord, faImage } from '@fortawesome/free-solid-svg-icons';
+
 const getAggregate = (data, status) => {
   {
     const result = (data || []).find((j) => j.status === status);
@@ -220,7 +222,7 @@ const formatDateTime = (isoString) => {
 
 const convertTimestampToDate = (timestamp) => {
   if (!timestamp) return;
-  const date = new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000)
+  const date = new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
   const day = String(date.getDate()).padStart(2, '0');
@@ -287,7 +289,6 @@ function formatReadableDate(isoDate) {
 }
 
 function haversineDistance(coords1, coords2) {
-  
   function toRad(x) {
     return (x * Math.PI) / 180;
   }
@@ -305,8 +306,8 @@ function haversineDistance(coords1, coords2) {
   const distance = R * c;
   const formattedDistance = distance > 1 ? `${distance.toFixed(2)} km` : `${Math.round(distance * 1000)} meters`;
   return {
-    formattedDistance ,
-    distance 
+    formattedDistance,
+    distance
   };
 }
 
@@ -335,7 +336,7 @@ const ppeOptions = [
   { value: 'anti_static_wristband', label: '🖐️ Anti-static Wristband' },
   { value: 'insulated_gloves', label: '🧤 Insulated Gloves' },
   { value: 'cut_resistant_gloves', label: '✂️ Cut-Resistant Gloves' },
-  { value: 'fall_arrest_kit', label: '🪢 Fall Arrest Kit' },
+  { value: 'fall_arrest_kit', label: '🪢 Fall Arrest Kit' }
 ];
 
 function getHourAndMinutes(dateString) {
@@ -350,10 +351,119 @@ function getTimeFromDate(dateString) {
   return date.toISOString().split('T')[1].split('.')[0];
 }
 
-const truncate = (str, max = 100) =>
-  str?.length > max ? str.slice(0, max) + '…' : str;
+const truncate = (str, max = 100) => (str?.length > max ? str.slice(0, max) + '…' : str);
+
+const getStatusColorCode = (status) => {
+  const colors = {
+    canceled: 'bg-danger',
+    unpaid: 'bg-warning',
+    inactive: 'bg-info',
+    active: 'bg-primary',
+    past_due: 'bg-secondary'
+  };
+  return colors[status] || 'bg-secondary';
+};
+
+const getRandomColor = () => {
+  const colors = ['primary', 'info', 'success', 'warning', 'danger', 'secondary'];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
+
+const getInitials = (name) => {
+  return name
+    .split(' ')
+    .map((word) => word[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
+};
+
+const getDaysLeftColor = (days) => {
+  if (days <= 2) return 'text-danger';
+  if (days <= 5) return 'text-warning';
+  return 'text-primary';
+};
+
+const avatar = ({ index }) => {
+  const colors = ['bg-primary', 'bg-success', 'bg-info', 'bg-warning', 'bg-danger'];
+  return (
+    <div
+      className={`rounded-circle ${colors[index % colors.length]} text-white d-flex align-items-center justify-content-center`}
+      style={{ width: '32px', height: '32px', fontSize: '14px' }}
+    >
+      {String.fromCharCode(65 + index)}
+    </div>
+  );
+};
+
+const daysLeft = (project) => {
+  const result = Math.ceil((new Date(project.endDate) - new Date()) / (1000 * 60 * 60 * 24));
+  return result;
+};
+
+const getStatusBadgeVariant = (status) => {
+  switch (status) {
+    case 'Completed':
+      return 'success';
+    case 'Pending':
+      return 'warning';
+    case 'In Progress':
+      return 'primary';
+    default:
+      return 'secondary';
+  }
+};
+
+const getPriorityBadgeVariant = (priority) => {
+  switch (priority) {
+    case 'High':
+      return 'danger';
+    case 'Medium':
+      return 'warning';
+    case 'Low':
+      return 'info';
+    default:
+      return 'secondary';
+  }
+};
+
+const getIcon = (type) => {
+  switch (type.toLowerCase()) {
+    case 'pdf':
+      return faFilePdf;
+    case 'word':
+      return faFileWord;
+    case 'image':
+      return faImage;
+    default:
+      return faFilePdf;
+  }
+};
+
+const getIconColor = (type) => {
+  switch (type.toLowerCase()) {
+    case 'pdf':
+      return '#ff6699';
+    case 'word':
+      return '#1a8cff';
+    case 'image':
+      return '#00b3b3';
+    default:
+      return faFilePdf;
+  }
+};
 
 export {
+  getIconColor,
+  getIcon,
+  getPriorityBadgeVariant,
+  getStatusBadgeVariant,
+  getRandomColor,
+  getInitials,
+  getDaysLeftColor,
+  avatar,
+  daysLeft,
+  getStatusColorCode,
   truncate,
   getTimeFromDate,
   getHourAndMinutes,

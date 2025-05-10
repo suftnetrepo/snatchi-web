@@ -53,16 +53,55 @@ async function getProjects({ suid, page = 1, limit = 10, sortField, sortOrder, s
 
 const getUserProjects = async (userId) => {
   try {
-    const projects = await Project.find({ 'assignedTo.id': userId })
-      .sort({ createdAt: -1 }) 
-      .populate('integrator')
-      .populate('assignedTo.id')
-      .exec();
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new Error('Invalid user ID');
+    }
 
-    return projects;
+    const summary = await Project.aggregate([
+      {
+        $match: {
+          'assignedTo.id': new mongoose.Types.ObjectId(userId)
+        }
+      },
+      {
+        $lookup: {
+          from: 'tasks',
+          localField: '_id',
+          foreignField: 'project',
+          as: 'tasks'
+        }
+      },
+      {
+        $addFields: {
+          totalTasks: { $size: '$tasks' },
+          completedTasks: {
+            $size: {
+              $filter: {
+                input: '$tasks',
+                as: 'task',
+                cond: { $eq: ['$$task.status', 'Completed'] }
+              }
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          progress: {
+            $cond: [
+              { $gt: ['$totalTasks', 0] },
+              { $round: [{ $multiply: [{ $divide: ['$completedTasks', '$totalTasks'] }, 100] }, 2] },
+              0
+            ]
+          }
+        }
+      }
+    ]);
+
+    return {data : summary};
   } catch (error) {
     logger.error(error);
-    throw new Error('Error fetching projects for user.');
+    throw new Error(`Error fetching project summary by assigned user: ${error.message}`);
   }
 };
 

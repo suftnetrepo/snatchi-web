@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Table } from 'react-bootstrap';
 import { useProjectDashboard } from '../../../hooks/useProjectDashboard';
-import { dateFormatted } from '../../../utils/helpers';
+import { dateFormatted, getStatusColorCode } from '../../../utils/helpers';
 import ProgressBar from '../../../src/components/common/ProgressBar';
 
 const RecentProjects = () => {
@@ -10,17 +10,6 @@ const RecentProjects = () => {
 	useEffect(() => {
 		handleRecent();
 	}, []);
-
-	const getStatusColorCode = (status) => {
-		const colors = {
-			canceled: 'bg-danger',
-			unpaid: 'bg-warning',
-			inactive: 'bg-info',
-			active: 'bg-primary',
-			past_due:'bg-secondary'
-		};
-		return colors[status] || 'bg-secondary'; 
-	};
 
 	return (
 		<div className="table-responsive">
@@ -44,7 +33,7 @@ const RecentProjects = () => {
 							<td>{item.tasks}</td>
 							<td>
 								<div className="d-flex row align-items-center">
-									<ProgressBar value={item.progress} max={100}  />
+									<ProgressBar value={70} max={100}  />
 								</div>
 							</td>
 							<td>

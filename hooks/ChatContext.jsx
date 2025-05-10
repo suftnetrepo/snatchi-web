@@ -54,11 +54,22 @@ export const ChatContextProvider = ({ children }) => {
     });
   };
 
+  const signOutChatRoom = () => {
+    auth.signOut().then(() => {
+      setState((prevState) => ({
+        ...prevState,
+        currentChatUser: null
+      }));
+      window.localStorage.removeItem('chatUser');
+    });
+  }
+
   return (
     <ChatContext.Provider
       value={{
         ...state,
-        changeChatRoom
+        changeChatRoom,
+        signOutChatRoom
       }}
     >
       {children}
