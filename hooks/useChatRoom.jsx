@@ -52,6 +52,8 @@ const useChatRoom = (userId) => {
   };
 
   const getUserRooms = async (userId) => {
+
+    console.log('Fetching user rooms for userId:', userId);
     try {
       const chatRoomsRef = collection(db, 'chats');
       const chatRoomsQuery = query(

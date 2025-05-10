@@ -53,7 +53,7 @@ const RenderUserOffcanvas = ({
 
     if (fields?.chat_status) {
       try {
-        await handleSignUp(fields.email, fields.email, '12345!');
+        await handleSignUp(fields.email, '12345!');
       } catch (chatError) {
         console.error('Chat sign-in failed:', chatError);
       }

@@ -14,7 +14,7 @@ const LoginForm = () => {
   const [validationError, setValidationError] = useState({});
   const [fields, setFields] = useState({ email: '', password: '' });
   const [visiblePassword, setVisiblePassword] = useState(false);
-  const [csrfToken, setCsrfToken] = useState("")
+  const [csrfToken, setCsrfToken] = useState('');
   const { handleError, error } = useSecure();
   const router = useRouter();
 
@@ -48,22 +48,19 @@ const LoginForm = () => {
     } catch (chatError) {
       console.error('Chat sign-in failed:', chatError);
     }
-    
+
     const urlParams = new URLSearchParams(window.location.search);
     const returnUrl = urlParams.get('returnUrl');
 
     const updatedSession = await getSession();
-  
-    let redirectPath;
-    if (returnUrl) {
-      redirectPath = returnUrl;
-    } else {
-      redirectPath = updatedSession?.user?.role === 'integrator' 
-        ? '/protected/integrator/dashboard' 
-        : '/protected/admin/dashboard';
-    }
-    
-   router.push(redirectPath);
+
+    const redirectPath = returnUrl ?? {
+      admin: '/protected/admin/dashboard',
+      integrator: '/protected/integrator/dashboard',
+      guest: '/protected/guest/dashboard'
+    }[updatedSession?.user?.role]; 
+
+    router.push(redirectPath);
   };
 
   return (
@@ -116,7 +113,7 @@ const LoginForm = () => {
         <div className="d-flex align-items-center justify-content-between">
           <div className="row w-100">
             <div className="col-md-9 col-lg-9">
-              <LoadingButton  type="button" onClick={() => handleSubmit()}>
+              <LoadingButton type="button" onClick={() => handleSubmit()}>
                 Sign In
               </LoadingButton>
             </div>

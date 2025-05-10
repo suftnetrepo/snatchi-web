@@ -9,10 +9,12 @@ import { customStyles } from '../utils/helpers';
 const useProject = (searchQuery) => {
   const [state, setState] = useState({
     data: [],
+    copyData: [],
     options: [],
     loading: false,
     error: null,
-    totalCount: 0
+    totalCount: 0,
+    search_term:''
   });
 
   const handleError = (error) => {
@@ -162,6 +164,7 @@ const useProject = (searchQuery) => {
       setState((prevState) => ({
         ...prevState,
         data: data,
+        copyData: data,
         loading: false
       }));
     } else {
@@ -169,11 +172,23 @@ const useProject = (searchQuery) => {
     }
   }
 
+  async function handleFilterProjects(term) {
+    setState((prevState) => ({
+      ...prevState,
+      data: term.length > 0 
+        ? prevState.copyData.filter((j) => j.name.toLowerCase().includes(term.toLowerCase())) 
+        : prevState.copyData,
+      loading: false,
+      search_term : term
+    }));
+  }
+
   useEffect(() => {
     handleFetch({ searchQuery });
   }, [searchQuery, handleFetch]);
 
   return {
+    handleFilterProjects,
     ...state,
     handleFetch,
     handleDelete,

@@ -4,6 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPowerOff } from '@fortawesome/free-solid-svg-icons';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { ChatContextProvider, useChatContext } from '@/hooks/ChatContext';
+
 
 const ItemWithIcon = (props) => {
   const { icon, children } = props;
@@ -16,10 +18,12 @@ const ItemWithIcon = (props) => {
   );
 };
 
-export default function HeaderProfileNav() {
+ function Render() {
+  const { signOutChatRoom } = useChatContext();
   const router = useRouter();
   const handleSignOut = async () => {
     signOut({ redirect:false })
+    signOutChatRoom()
     router.push("/");
   };
 
@@ -45,3 +49,13 @@ export default function HeaderProfileNav() {
     </Nav>
   );
 }
+
+const HeaderProfileNav = () => {
+  return (
+    <ChatContextProvider>
+    <Render />
+  </ChatContextProvider>
+  );
+};
+
+export default HeaderProfileNav;
