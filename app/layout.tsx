@@ -2,8 +2,6 @@
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import ThemeProvider from '@/theme/ThemeProvider';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 // Bootstrap and custom scss
@@ -50,9 +48,7 @@ function RootLayout({ children }: { children: React.ReactNode }) {
       <body>
         <SessionProvider>
           <ThemeProvider>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <AppProvider>{children}</AppProvider>
-            </LocalizationProvider>
+          <AppProvider>{children}</AppProvider>
           </ThemeProvider>
         </SessionProvider>
       </body>
