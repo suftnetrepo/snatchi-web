@@ -2,24 +2,35 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
 import { USER } from '../utils/apiUrl';
+import { userValidator } from '@/protected/integrator/rules';
 
-const useUser = (searchQuery) => {
+const useUser = (searchQuery, flag= true) => {
   const [state, setState] = useState({
     data: [],
     editData: {},
     aggregateData: [],
-    searchResults :[],
+    searchResults: [],
     loading: false,
-    searchTerm : '',
+    searchTerm: '',
     error: null,
     totalCount: 0,
-    success : false
+    success: false,
+    fields: userValidator.fields,
+    error: null,
+    success: false,
+    rules: userValidator.rules
   });
 
-  const handleChange = (value) => {
+  const handleChange = (name, value) => {
+    console.log('name', name);
+    console.log('value', value);
+    
     setState((prevState) => ({
       ...prevState,
-      searchTerm: value,
+      fields: {
+        ...prevState.fields,
+        [name]: value
+      }
     }));
   };
 
@@ -31,7 +42,7 @@ const useUser = (searchQuery) => {
 
   const handleError = (error) => {
     setState((pre) => {
-      return { ...pre, error: error, success: false,loading: false };
+      return { ...pre, error: error, success: false, loading: false };
     });
   };
 
@@ -43,8 +54,11 @@ const useUser = (searchQuery) => {
 
   const handleSearchUser = async (searchTerm) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
-    const { data, success, errorMessage } = await zat(USER.search, null, VERBS.GET, { action: "search_user", searchQuery: searchTerm  });
-  
+    const { data, success, errorMessage } = await zat(USER.search, null, VERBS.GET, {
+      action: 'search_user',
+      searchQuery: searchTerm
+    });
+
     if (success) {
       setState((pre) => {
         return { ...pre, searchResults: data, loading: false };
@@ -55,10 +69,33 @@ const useUser = (searchQuery) => {
     }
   };
 
+  const handleFetchOneUser = async () => {
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    const { data, success, errorMessage } = await zat(USER.getById, null, VERBS.GET, {
+      action: 'oneUser'
+    });
+
+    if (success) {
+      setState((pre) => {
+        return {
+          ...pre,
+          fields: {
+            ...pre.fields,
+            ...data
+          },
+          loading: false
+        };
+      });
+      return true;
+    } else {
+      handleError(errorMessage);
+    }
+  };
+
   const handleFetchUser = async () => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     const { data, success, errorMessage } = await zat(USER.fetch, null, VERBS.GET, {
-      action:'integrator_user'
+      action: 'integrator_user'
     });
 
     if (success) {
@@ -88,7 +125,7 @@ const useUser = (searchQuery) => {
       return false;
     }
   };
- 
+
   async function handleSaveUser(body) {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     const { success, errorMessage, data } = await zat(USER.createOne, body, VERBS.POST);
@@ -98,7 +135,7 @@ const useUser = (searchQuery) => {
         ...prevState,
         data: [data, ...prevState.data],
         loading: false,
-        success : true
+        success: true
       }));
       return true;
     } else {
@@ -113,7 +150,7 @@ const useUser = (searchQuery) => {
 
     try {
       const { data, success, errorMessage, totalCount } = await zat(USER.fetch, null, VERBS.GET, {
-        action : "users", 
+        action: 'users',
         page: pageIndex === 0 ? 1 : pageIndex,
         limit: pageSize,
         ...(sortField && { sortField }),
@@ -141,14 +178,17 @@ const useUser = (searchQuery) => {
 
   async function handleEditUser(body, id) {
     setState((prev) => ({ ...prev, loading: true, error: null }));
-    const { success, errorMessage, data } = await zat(USER.updateOne, body, VERBS.PUT, { id: id, action: 'update_user' });
+    const { success, errorMessage, data } = await zat(USER.updateOne, body, VERBS.PUT, {
+      id: id,
+      action: 'update_user'
+    });
 
     if (success) {
       setState((prevState) => ({
         ...prevState,
         data: prevState.data.map((user) => (user._id === id ? body : user)),
         loading: false,
-        success : true
+        success: true
       }));
       return true;
     } else {
@@ -175,11 +215,12 @@ const useUser = (searchQuery) => {
   }
 
   useEffect(() => {
-    handleFetchUsers({ searchQuery });
-  }, [searchQuery, handleFetchUsers]);
+    flag && handleFetchUsers({ searchQuery });
+  }, [searchQuery,flag, handleFetchUsers]);
 
   return {
     ...state,
+    handleFetchOneUser,
     handleFetchUser,
     handleFetchUsers,
     handleDeleteUser,

@@ -1,11 +1,13 @@
 import { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 
-interface User {
-  // Define the User type properties here
-}
+interface User {}
+interface Task {}
 
 interface State {
   currentUser: User | null;
+  currentTask: User | null;
+  showUserOffCanvas: boolean;
+  taskOffCanvas: boolean;
 }
 
 interface Action {
@@ -13,23 +15,25 @@ interface Action {
   signUp: (params: { user: User }) => void;
   signOut: () => void;
   updateCurrentUser: (currentUser: User) => void;
+  showOffCanvas: (show: boolean) => void;
+  showTaskOffCanvas: (show: boolean, currentTask: Task) => void;
 }
 
-// Combine state and action types for the context
 type AppContextType = State & Action;
-
 const defaultContextValue: AppContextType = {
   currentUser: null,
-  login: () => {}, 
-  signUp: () => {}, 
+  currentTask: null,
+  showUserOffCanvas: false,
+  taskOffCanvas: false,
+  login: () => {},
+  signUp: () => {},
   signOut: () => {},
-  updateCurrentUser: () => {}
+  updateCurrentUser: () => {},
+  showOffCanvas: () => {},
+  showTaskOffCanvas: () => {}
 };
 
-// Initialize the context with a default state
 export const AppContext = createContext<AppContextType>(defaultContextValue);
-
-// Custom hook for using the context
 export const useAppContext = () => {
   const context = useContext(AppContext);
   return context;
@@ -41,7 +45,11 @@ interface AppProviderProps {
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const initialState: State = {
-    currentUser: null
+    currentUser: null,
+    currentTask: null,
+    // @ts-ignore
+    showUserOffCanvas: false,
+    taskOffCanvas: false
   };
 
   const [state, setState] = useState<State>(initialState);
@@ -52,7 +60,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       const user = storedUser && storedUser !== 'undefined' ? JSON.parse(storedUser) : null;
 
       if (user) {
-        setState({ currentUser: user });
+        setState((pre) => ({ ...pre, currentUser: user }));
       }
     } catch (error) {
       console.error('Failed to load state from local storage:', error);
@@ -65,7 +73,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       try {
         window.localStorage.setItem('user', JSON.stringify(user));
-        setState({ currentUser: user });
+        setState((pre) => ({ ...pre, currentUser: user }));
       } catch (error) {
         console.error('Failed to save state to local storage:', error);
       }
@@ -76,7 +84,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       try {
         window.localStorage.setItem('user', JSON.stringify(user));
-        setState({ currentUser: user });
+        setState((pre) => ({ ...pre, currentUser: user }));
       } catch (error) {
         console.error('Failed to save state to local storage:', error);
       }
@@ -86,6 +94,30 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       try {
         window.localStorage.removeItem('user');
         setState(initialState);
+      } catch (error) {
+        console.error('Failed to remove state from local storage:', error);
+      }
+    },
+
+    showOffCanvas: (show) => {
+      try {
+        setState((prevState) => ({
+          ...prevState,
+          showUserOffCanvas: show
+        }));
+      } catch (error) {
+        console.error('Failed to remove state from local storage:', error);
+      }
+    },
+
+    showTaskOffCanvas: (show, currentTask) => {
+      try {
+        setState((prevState) => ({
+          ...prevState,
+          taskOffCanvas: show,
+          showUserOffCanvas: false,
+          currentTask
+        }));
       } catch (error) {
         console.error('Failed to remove state from local storage:', error);
       }

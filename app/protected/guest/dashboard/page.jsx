@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useProject } from '@/hooks/useProject';
-import { Container, Row, Col, Card, Image, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Image } from 'react-bootstrap';
 import { Clock } from 'lucide-react';
 import ProgressBar from '../../../../src/components/common/ProgressBar';
 import {
@@ -34,8 +34,6 @@ const Page = () => {
     setShow(true);
     setProject(project);
   };
-
-  console.log('.........................project', project);
 
   return (
     <Container fluid className="py-8 px-8">
@@ -101,10 +99,10 @@ const Page = () => {
                     </div>
 
                     <div className="d-flex">
-                      {project.assignedTo?.slice(0, 3).map((person, index) => (
+                      {project.assignedTo?.slice(0, 3).map((_, index) => (
                         <Image
                           key={index}
-                          src={`https://i.pravatar.cc/150?img=${index + 10}`}
+                          src={`/img/faces/9.jpg`}
                           roundedCircle
                           width={28}
                           height={28}

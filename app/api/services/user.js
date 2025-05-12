@@ -59,7 +59,7 @@ async function getUserById(id) {
 
   try {
     try {
-      const results = await User.find({ _id: id }).exec();
+      const results = await User.findOne({ _id: id }).exec();
       return results;
     } catch (error) {
       throw error;
