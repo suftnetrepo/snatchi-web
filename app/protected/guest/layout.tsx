@@ -9,24 +9,34 @@ import Header from '../../../src/components/layouts/Header/Header';
 import Footer from '../../../src/components/layouts/Footer/Footer';
 import { config } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
+import RenderUserUserOffcanvas from '../guest/user/renderUserOffcanvas'
+import RenderTaskOffcanvas from '../guest/dashboard/renderTaskOffcanvas'
+import { useAppContext } from '@/Store/AppContext';
 
 config.autoAddCss = false;
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const { showUserOffCanvas, taskOffCanvas, currentTask } = useAppContext();
+
   return (
-    <SidebarProvider>
-      <SidebarOverlay />
-      <Sidebar>
-        <GuestSidebarNav />
-      </Sidebar>
-      <div className="wrapper d-flex flex-column min-vh-100">
-        <Header showSearch={false} />
-        <div className="body flex-grow-1 px-sm-2 mb-4">
-          <div className="ms-0 me-0">{children}</div>
+    <>
+      <SidebarProvider>
+        <SidebarOverlay />
+        <Sidebar>
+          <GuestSidebarNav />
+        </Sidebar>
+        <div className="wrapper d-flex flex-column min-vh-100">
+          <Header showSearch={false} />
+          <div className="body flex-grow-1 px-sm-2 mb-4">
+            <div className="ms-0 me-0">{children}</div>
+          </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
-      <SidebarOverlay />
-    </SidebarProvider>
+        <SidebarOverlay />
+      </SidebarProvider>
+      { showUserOffCanvas && <RenderUserUserOffcanvas show={showUserOffCanvas} /> }
+      { taskOffCanvas && <RenderTaskOffcanvas show={taskOffCanvas} task={currentTask} /> }
+      
+    </>
   );
 }

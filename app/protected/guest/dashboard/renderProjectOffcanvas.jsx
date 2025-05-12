@@ -16,8 +16,10 @@ import {
 import { Card, Container, Row, Col, Badge, Table, ListGroup, Tab, Tabs } from 'react-bootstrap';
 import { getStatusBadgeVariant, getPriorityBadgeVariant, getIcon, getIconColor } from '@/utils/helpers';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useAppContext } from '@/Store/AppContext';
 
 const RenderProjectOffcanvas = ({ show, handleClose, project }) => {
+  const { showTaskOffCanvas } = useAppContext();
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
@@ -154,7 +156,7 @@ const RenderProjectOffcanvas = ({ show, handleClose, project }) => {
                 <Tab eventKey="tasks" title="Tasks">
                   <ListGroup>
                     {project?.tasks?.map((task) => (
-                      <ListGroup.Item key={task._id} className="border mb-2">
+                      <ListGroup.Item key={task._id} className="border mb-2" onClick={() => showTaskOffCanvas(true, task)}>
                         <div className="d-flex justify-content-between align-items-center mb-2">
                           <h5 className="mb-0">{task.name}</h5>
                           <div>

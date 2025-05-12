@@ -49,8 +49,8 @@ export const GET = async (req) => {
       return NextResponse.json({ data, success, totalCount });
     }
 
-    if (action === 'integrator_user') {
-      const results = await getUserById(user?.integrator);
+    if (action === 'oneUser') {
+      const results = await getUserById(user?.id);
       return NextResponse.json({ data: results });
     }
 
