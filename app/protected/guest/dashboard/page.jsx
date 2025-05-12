@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useProject } from '@/hooks/useProject';
 import { Container, Row, Col, Card, Image } from 'react-bootstrap';
-import { Clock } from 'lucide-react';
+import { FaClock } from 'react-icons/fa';
 import ProgressBar from '../../../../src/components/common/ProgressBar';
 import {
   getStatusColorCode,
@@ -94,7 +94,7 @@ const Page = () => {
 
                   <div className="d-flex justify-content-between align-items-center">
                     <div className={`d-flex align-items-center ${getDaysLeftColor(daysleft)}`}>
-                      <Clock size={16} className="me-1" />
+                      <FaClock size={16} className="me-1" />
                       <small>{daysleft} days left</small>
                     </div>
 
