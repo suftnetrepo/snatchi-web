@@ -80,6 +80,8 @@ const LoginForm = () => {
         <div className="form-floating mb-4">
           <input
             type="email"
+            aria-details='Email address'
+            aria-label='Email'
             value={fields.email}
             id="email"
             placeholder="Email"
@@ -93,6 +95,8 @@ const LoginForm = () => {
         <div className="form-floating password-field mb-4">
           <input
             value={fields.password}
+            aria-label='Password'
+            aria-live='polite'
             id="loginPassword"
             placeholder="Password"
             className={`form-control ${validationError.password ? 'is-invalid' : ''}`}
@@ -106,7 +110,7 @@ const LoginForm = () => {
           >
             <i className={`uil ${visiblePassword ? 'uil-eye-slash' : 'uil-eye'}`} />
           </span>
-          <label htmlFor="password">Password</label>
+          <label aria-describedby='' htmlFor="password">Password</label>
           {validationError.password && <div className="invalid-feedback">{validationError.password.message}</div>}
         </div>
 
@@ -118,7 +122,7 @@ const LoginForm = () => {
               </LoadingButton>
             </div>
             <div className="col-md-3 col-lg-3 mt-2 mt-md-0">
-              <Button variant="outline-secondary" className="rounded-pill" onClick={() => router.push('/')}>
+              <Button aria-description='' aria-label='' variant="outline-secondary" className="rounded-pill" onClick={() => router.push('/')}>
                 Go Back
               </Button>
             </div>

@@ -9,7 +9,7 @@ import { validate } from '../../../validator/validator';
 import { useSubscriber } from '../../../hooks/useSubscriber';
 import { useRouter, useParams } from 'next/navigation';
 import ErrorDialogue from '@/components/elements/errorDialogue';
-import { useUserChat, useChatRoom } from '../../../hooks/useUserChat';
+import { useUserChat } from '../../../hooks/useUserChat';
 import { signIn, getCsrfToken } from 'next-auth/react';
 
 const CheckOut = () => {
@@ -17,7 +17,6 @@ const CheckOut = () => {
   const params = useParams();
   const [csrfToken, setCsrfToken] = useState('');
   const { handleSignUp } = useUserChat();
-  const { handleNewRoom } = useChatRoom();
   const [validationError, setValidationError] = useState({});
   const [fields, setFields] = useState(checkoutValidator.fields);
   const { priceId } = params;
@@ -49,7 +48,7 @@ const CheckOut = () => {
       });
 
       handleSignUp(`${fields.first_name} ${fields.last_name}`, fields.email, '12345!').then(() => {
-        handleNewRoom([data?.user_id], fields.name).then(() => {});
+     
       });
 
       router.push('/protected/integrator/dashboard');
