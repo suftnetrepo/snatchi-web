@@ -69,6 +69,31 @@ async function get({ suid, page = 1, limit = 10, sortField, sortOrder, searchQue
   }
 }
 
+async function getByMonthYear(month, year, suid) {
+  if (!isValidObjectId(suid)) {
+    throw new Error(JSON.stringify([{ field: 'suid', message: 'Invalid MongoDB ObjectId' }]));
+  }
+
+  // Create start and end dates for the month
+  const startDate = new Date(year, month - 1, 1); // First day of month
+  const endDate = new Date(year, month, 1); // First day of next month
+
+  try {
+    const result = await UserStatus.find({
+      integrator: suid,
+      date: {
+        $gte: startDate,
+        $lt: endDate
+      }
+    }).populate('user', 'first_name last_name email');
+
+    return result;
+  } catch (error) {
+    logger.error(error);
+    throw new Error('An unexpected error occurred. Please try again.');
+  }
+}
+
 // GET BY DATE - Retrieve user statuses for a specific date
 async function getByDate(dateString, suid) {
   if (!isValidObjectId(suid)) {
@@ -325,4 +350,5 @@ export {
   update, 
   updateByUserAndDate, 
   removeByUserAndDate, 
+  getByMonthYear
 };
