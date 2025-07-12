@@ -1,4 +1,13 @@
-import { removeByUserAndDate, remove, update, add, get, getByUser, getByDate } from '../../services/userStatus';
+import {
+  removeByUserAndDate,
+  remove,
+  update,
+  add,
+  get,
+  getByUser,
+  getByDate,
+  getByMonthYear
+} from '../../services/userStatus';
 import { logger } from '../../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
@@ -43,6 +52,13 @@ export const GET = async (req) => {
     if (action === 'getByDate') {
       const date = url.searchParams.get('date');
       const results = await getByDate(date, user?.integrator);
+      return NextResponse.json({ success: true, data: results });
+    }
+
+    if (action === 'getByMonthYear') {
+      const month = url.searchParams.get('month');
+      const year = url.searchParams.get('year');
+      const results = await getByMonthYear(month, year, user?.integrator);
       return NextResponse.json({ success: true, data: results });
     }
 
