@@ -46,6 +46,15 @@ function userEditValidator(data) {
   return validator.validate(data, schema);
 }
 
+function userStatusValidator(data) {
+  const validator = new Validator();
+  const schema = {
+    status: { type: 'string', empty: false, max: 50 },
+    data: { type: 'string', empty: false, max: 20 },
+  };
+  return validator.validate(data, schema);
+}
+
 function documentValidator(data) {
   const validator = new Validator();
   const schema = {
@@ -206,5 +215,6 @@ export {
   loginValidator,
   userValidator,
   codeValidator,
-  attendanceValidator
+  attendanceValidator,
+  userStatusValidator
 };
