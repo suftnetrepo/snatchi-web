@@ -16,6 +16,7 @@ const projectSchema = new mongoose.Schema(
     },
     stakeholder: {
       type: String,
+      required: false,
       trim: true
     },
     first_name: {
