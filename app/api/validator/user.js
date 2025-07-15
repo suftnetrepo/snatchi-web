@@ -75,8 +75,6 @@ function projectValidator(data) {
   const validator = new Validator();
   const schema = {
     name: { type: 'string', empty: false, max: 250 },
-    manager: { type: 'string', empty: false, max: 50 },
-    stakeholder: { type: 'string', empty: false, max: 50 },
     status: { type: 'string', empty: false, max: 50 },
     priority: { type: 'string', empty: false, max: 50 },
     description: { type: 'string', empty: true, max: 5000 }
