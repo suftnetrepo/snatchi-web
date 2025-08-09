@@ -49,6 +49,9 @@ const IntegratorSidebarNav = () => {
       <SidebarNavItem icon={faStickyNote} href="/protected/integrator/attendance">
         Attendance
       </SidebarNavItem>
+       <SidebarNavItem icon={faStickyNote} href="/protected/integrator/scheduler">
+        Scheduler
+      </SidebarNavItem>
       <SidebarNavItem icon={faBuildingUser} href="/protected/integrator/user">
         Users
       </SidebarNavItem>

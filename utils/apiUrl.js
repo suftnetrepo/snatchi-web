@@ -8,6 +8,16 @@ export const ACCOUNT = {
   reset: `${HOST}auth/reset`
 };
 
+export const SCHEDULER = {
+  createOne: `${HOST}scheduler`,
+  updateOne: `${HOST}scheduler`,
+  updatestatus: `${HOST}scheduler`,
+  removeOne: `${HOST}user/`,
+  getAll: `${HOST}user?action=getAll`,
+  getByUser: `${HOST}user?action=getByUser`,
+  getByDates: `${HOST}user?action=getByDates`
+};
+
 export const USER = {
   createOne: `${HOST}user`,
   updateOne: `${HOST}user`,
@@ -18,6 +28,7 @@ export const USER = {
   aggregate: `${HOST}user?action=aggregate`,
   search: `${HOST}user/`
 };
+
 export const INVOICE = {
   createOne: `${HOST}invoice`,
   updateOne: `${HOST}invoice`,
@@ -117,5 +128,3 @@ export const ATTENDANCE = {
   fetch: `${HOST}attendance`,
   removeOne: `${HOST}attendance/`
 };
-
-

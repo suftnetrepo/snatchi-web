@@ -4,9 +4,10 @@ import { VERBS } from '../config';
 import { USER } from '../utils/apiUrl';
 import { userValidator } from '@/protected/integrator/rules';
 
-const useUser = (searchQuery, flag= true) => {
+const useUser = (searchQuery, flag = true) => {
   const [state, setState] = useState({
     data: [],
+    resources :[],
     editData: {},
     aggregateData: [],
     searchResults: [],
@@ -24,7 +25,7 @@ const useUser = (searchQuery, flag= true) => {
   const handleChange = (name, value) => {
     console.log('name', name);
     console.log('value', value);
-    
+
     setState((prevState) => ({
       ...prevState,
       fields: {
@@ -159,9 +160,16 @@ const useUser = (searchQuery, flag= true) => {
       });
 
       if (success) {
+        const resources = data.map((item, id) => {
+          return {
+            name: `${item?.first_name} ${item.last_name}`,
+            id: item._id
+          };
+        });
         setState((pre) => ({
           ...pre,
           data: data,
+          resources,
           totalCount: totalCount,
           loading: false
         }));
@@ -216,7 +224,7 @@ const useUser = (searchQuery, flag= true) => {
 
   useEffect(() => {
     flag && handleFetchUsers({ searchQuery });
-  }, [searchQuery,flag, handleFetchUsers]);
+  }, [searchQuery, flag, handleFetchUsers]);
 
   return {
     ...state,

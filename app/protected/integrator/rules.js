@@ -245,11 +245,59 @@ const taskCommentValidator = {
     text: [
       { pattern: /^.+$/, message: 'Comment is required' },
       { pattern: /^.{0,250}$/, message: 'Comment must not exceed 250 characters' }
-    ],
+    ]
   },
   fields: {
     text: ''
   }
 };
 
-export { taskCommentValidator, integratorValidator, taskValidator, projectValidator, fileValidator, userValidator, teamValidator };
+const schedulerValidator = {
+  rules: {
+    title: [
+      { pattern: /^.+$/, message: 'Title is required' },
+      { pattern: /^.{0,250}$/, message: 'Title must not exceed 100 characters' }
+    ],
+    status: [{ pattern: /^.+$/, message: 'Status is required' }],
+    startDate: [
+      { pattern: /^.+$/, message: 'Start date is required' },
+      {
+        validate: (value, fields) => {
+          if (fields?.endDate && new Date(value) > new Date(fields?.endDate)) {
+            return 'Start date cannot be after end date';
+          }
+          return undefined;
+        }
+      }
+    ],
+    endDate: [
+      { pattern: /^.+$/, message: 'End date is required' },
+      {
+        validate: (value, fields) => {
+          if (fields.startDate && new Date(value) < new Date(fields.startDate)) {
+            return 'End date cannot be before start date';
+          }
+          return undefined;
+        }
+      }
+    ]
+  },
+  fields: {
+    description: '',
+    status: 'Pending',
+    startDate: '',
+    endDate: '',
+    title : ''
+  }
+};
+
+export {
+  taskCommentValidator,
+  integratorValidator,
+  taskValidator,
+  projectValidator,
+  fileValidator,
+  userValidator,
+  teamValidator,
+  schedulerValidator
+};
