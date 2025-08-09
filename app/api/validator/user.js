@@ -50,7 +50,18 @@ function userStatusValidator(data) {
   const validator = new Validator();
   const schema = {
     status: { type: 'string', empty: false, max: 50 },
-    data: { type: 'string', empty: false, max: 20 },
+    data: { type: 'string', empty: false, max: 20 }
+  };
+  return validator.validate(data, schema);
+}
+
+function schedulerValidator(data) {
+  const validator = new Validator();
+  const schema = {
+    status: { type: 'string', empty: false, max: 50 },
+    startDate: { type: 'string', empty: false, max: 50 },
+    endDate: { type: 'string', empty: false, max: 50 },
+    title: { type: 'string', empty: false, max: 100 }
   };
   return validator.validate(data, schema);
 }
@@ -214,5 +225,6 @@ export {
   userValidator,
   codeValidator,
   attendanceValidator,
-  userStatusValidator
+  userStatusValidator,
+  schedulerValidator
 };
