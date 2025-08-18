@@ -34,7 +34,6 @@ export const GET = async (req) => {
       return NextResponse.json({ data: results });
     }
 
-
     return NextResponse.json({ success: false, message: 'Invalid action parameter' }, { status: 400 });
   } catch (error) {
     logger.error(error);
@@ -51,16 +50,11 @@ export const DELETE = async (req) => {
     }
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
-    const action = url.searchParams.get('action');
 
-    if (action === 'remove') {
-      const results = await remove(user?.integratorid, id);
-      return NextResponse.json({ data: results });
-    }
-
-    return NextResponse.json({ success: false, message: 'Invalid action parameter' }, { status: 400 });
+    const results = await remove(user?.integrator, id);
+    return NextResponse.json({ data: results });
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -74,24 +68,21 @@ export const PUT = async (req) => {
     }
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
-
     const action = url.searchParams.get('action');
 
     if (action === 'status') {
       const body = await req.json();
-
       const result = await updateByStatus(id, user?.id, body);
       return NextResponse.json({ success: true, data: result }, { status: 200 });
     }
 
     if (action === 'update') {
       const body = await req.json();
-
       const result = await update(user?.integrator, id, body);
       return NextResponse.json({ success: true, data: result }, { status: 200 });
     }
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -105,10 +96,10 @@ export const POST = async (req) => {
     }
     const body = await req.json();
 
-    const result = await add({ ...body, integrator: user?.integrator, user: user.id });
+    const result = await add({ ...body, integrator: user?.integrator });
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };

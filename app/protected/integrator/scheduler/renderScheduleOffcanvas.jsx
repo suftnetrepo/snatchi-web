@@ -1,34 +1,22 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Offcanvas, Button, Form, Alert } from 'react-bootstrap';
-import { validate } from '@/validator/validator';
-import { useScheduler } from '../../../../hooks/useScheduler';
 import { MdCancel } from 'react-icons/md';
-import { useAppContext } from '@/Store/AppContext';
+import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
+import { OkDialogue } from '../../../../src/components/elements/ConfirmDialogue';
 
-const RenderTeamOffcanvas = ({ show, handleClose }) => {
-    const [errorMessages, setErrorMessages] = useState({});
-  const { startDate, endDate, user_id } = useAppContext();
-  const { fields, rules, error, handleChange, handleSelection } = useScheduler(false);
-
-  useEffect(() => {
-    handleSelection(startDate, endDate, user_id);
-  }, [startDate, endDate, user_id]);
-
-   const handleSubmit = async () => {
-    setErrorMessages({});
-    const validationResult = validate(fields, rules);
-
-    if (validationResult.hasError) {
-      setErrorMessages(validationResult.errors);
-      return;
-    }
-   
-  };
-
-  console.log('.......................', fields);
-
+const RenderScheduleOffcanvas = ({
+  errorMessages,
+  show,
+  handleClose,
+  handleSubmit,
+  fields,
+  error,
+  handleChange,
+  handleDelete,
+  success
+}) => {
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
       <div className="d-flex flex-row justify-content-between align-items-center p-7">
@@ -132,6 +120,7 @@ const RenderTeamOffcanvas = ({ show, handleClose }) => {
                 <option value="Accepted">Accepted</option>
                 <option value="Declined">Declined</option>
                 <option value="Pending">Pending</option>
+                <option value="Block">Block</option>
               </Form.Select>
               {errorMessages?.status?.message && (
                 <span className="text-danger fs-13">{errorMessages?.status?.message}</span>
@@ -139,17 +128,39 @@ const RenderTeamOffcanvas = ({ show, handleClose }) => {
             </Form.Group>
           </div>
           <div className="d-flex justify-content-start">
-            <Button type="button" variant="primary" onClick={()=> handleSubmit()}>
+            <Button type="button" variant="primary" onClick={() => handleSubmit()}>
               Save Changes
             </Button>
+            <DeleteConfirmation
+              onConfirm={async (id) => {
+                handleDelete(id);
+                handleClose();
+              }}
+              onCancel={() => {}}
+              itemId={fields._id}
+            >
+              <Button type="button" variant="outline-danger" className="ms-2" onClick={handleClose}>
+                Delete
+              </Button>
+            </DeleteConfirmation>
+
             <Button type="button" variant="secondary" className="ms-2" onClick={handleClose}>
               Close
             </Button>
           </div>
         </Form>
       </Offcanvas.Body>
+      {success && (
+        <OkDialogue
+          show={success}
+          message="Your changes was save successfully"
+          onConfirm={() => {
+            handleClose();
+          }}
+        />
+      )}
     </Offcanvas>
   );
 };
 
-export { RenderTeamOffcanvas };
+export { RenderScheduleOffcanvas };

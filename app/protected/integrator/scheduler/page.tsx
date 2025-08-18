@@ -2,66 +2,84 @@
 
 import React, { useEffect, useState } from 'react';
 import { DayPilot, DayPilotScheduler } from 'daypilot-pro-react';
+import { validate } from '@/validator/validator';
 import { useScheduler } from '../../../../hooks/useScheduler';
-import { RenderTeamOffcanvas } from './renderTeamOffcanvas';
-import { useAppContext } from '@/Store/AppContext';
+import { RenderScheduleOffcanvas } from './renderScheduleOffcanvas';
+import { chose } from '../../../../utils/utils';
+
+const initialConfig: DayPilot.SchedulerConfig = {
+  startDate: new Date().toISOString().split('T')[0],
+  days: 366,
+  scale: 'Day',
+  timeHeaders: [{ groupBy: 'Month' }, { groupBy: 'Day', format: 'd' }],
+  rowHeaderColumns: [{ text: 'Engineers', width: 100 }]
+};
 
 export default function Scheduler() {
-  const { updateSelectedDate } = useAppContext();
+  const [config, setConfig] = useState(initialConfig);
   const [scheduler, setScheduler] = useState<DayPilot.Scheduler>();
-  const { data, resources, error, handleSelection } = useScheduler();
-  const [showTeamOffcanvas, setShowTeamOffcanvas] = useState(false);
+  const [errorMessages, setErrorMessages] = useState({});
+  const {
+    handleSelectedUpdate,
+    events,
+    resources,
+    error,
+    fields,
+    rules,
+    handleSave,
+    handleChange,
+    handleSelection,
+    handleDelete,
+    handleReset,
+    handleEdit,
+    handleResizeUpdate,
+    success
+  } = useScheduler();
+  const [show, setShow] = useState(false);
 
-  const handleCloseTeamOffcanvas = () => {
-    setShowTeamOffcanvas(false);
-  };
-  const handleShowTeamOffcanvas = () => {
-    setShowTeamOffcanvas(true);
-  };
-
-  console.log('........................data', data);
+  console.log('...............fields', fields);
+  console.log('........................events', events);
   console.log('...............resources', resources);
 
-  const initialConfig: DayPilot.SchedulerConfig = {
-    startDate: new Date().toISOString().split('T')[0],
-    days: 366,
-    scale: 'Day',
-    timeHeaders: [{ groupBy: 'Month' }, { groupBy: 'Day', format: 'd' }],
-    rowHeaderColumns: [{ text: 'Engineers', width: 100 }]
+  const handleClose = () => {
+    setShow(false);
+    handleReset();
   };
 
-  const [config, setConfig] = useState(initialConfig);
+  const handleSubmit = async () => {
+    setErrorMessages({});
+
+    const validationResult = validate(fields, rules);
+
+    if (validationResult.hasError) {
+      setErrorMessages(validationResult.errors);
+      return;
+    }
+
+    const body = chose(fields, ['_id', 'title', 'startDate', 'endDate', 'status', 'user', 'description']);
+
+    if (fields._id) {
+      await handleEdit(body, fields._id);
+    } else {
+      delete body._id;
+      await handleSave(body);
+    }
+  };
 
   useEffect(() => {
     if (!scheduler || scheduler?.disposed()) {
       return;
     }
 
-    const events = [
-      {
-        id: 1,
-        text: 'Delivery 1',
-        start: '2024-01-03T00:00:00',
-        end: '2024-01-13T00:00:00',
-        resource: 'B',
-        barColor: '#5bbe2d'
-      },
-      {
-        id: 2,
-        text: 'Delivery 2',
-        start: '2024-01-05T00:00:00',
-        end: '2024-01-10T00:00:00',
-        resource: 'D',
-        barColor: '#f1c232'
-      }
-    ];
     scheduler.update({ resources, events });
-  }, [scheduler, data, resources]);
+  }, [scheduler, events, resources]);
 
   const onTimeRangeSelected = async (args: DayPilot.SchedulerTimeRangeSelectedArgs) => {
-    setShowTeamOffcanvas(true);
+    setShow(true);
     scheduler?.clearSelection();
-    updateSelectedDate(args.start.toDate(), args.end.toDate(), DayPilot.guid());
+
+    console.log('onTimeRangeSelected', args.resource);
+    handleSelection(args.start.toDate(), args.end.toDate(), args.resource.toString());
   };
 
   const onBeforeEventRender = (args: DayPilot.SchedulerBeforeEventRenderArgs) => {
@@ -71,21 +89,49 @@ export default function Scheduler() {
         top: 'calc(50% - 7px)',
         width: 18,
         height: 18,
-        symbol: '/daypilot.svg#checkmark-2',
-        backColor: '#999999',
+        symbol: `${args.data.locked ? '/daypilot.svg#padlock' : '/daypilot.svg#checkmark-2'}`,
+        backColor: '#4d4d4d',
         fontColor: '#ffffff',
-        padding: 2,
+        padding: 1,
         style: 'border-radius: 50%'
       }
     ];
+
+    console.log('onBeforeEventRender', args.data);
+
+    if (args.data.locked) {
+      args.data.areas.push({
+        right: 26,
+        top: 6,
+        width: 24,
+        height: 24,
+        padding: 4,
+        style: 'border-radius: 50%'
+      });
+
+      args.data.backColor = '#ffffff';
+      args.data.borderColor = '#e6ccff';
+      args.data.fontColor = '#000000';
+      args.data.moveDisabled = true;
+      args.data.resizeDisabled = true;
+      args.data.clickDisabled = true;
+      args.data.deleteDisabled = true;
+    }
   };
 
   const onBeforeRowHeaderRender = (args: DayPilot.SchedulerBeforeRowHeaderRenderArgs) => {
     // args.row.columns[1].horizontalAlignment = "center";
-    // if (args.row.data.status === "locked") {
-    //     args.row.columns[2].areas = [
-    //         {left: "calc(50% - 8px)", top: 10, width: 20, height: 20, symbol: "/daypilot.svg#padlock", fontColor: "#777777"}
-    //     ];
+    // if (args.row.data.status === 'Block') {
+    //   args.row.columns[2].areas = [
+    //     {
+    //       left: 'calc(50% - 8px)',
+    //       top: 10,
+    //       width: 20,
+    //       height: 20,
+    //       symbol: '/daypilot.svg#padlock',
+    //       fontColor: '#777777'
+    //     }
+    //   ];
     // }
   };
 
@@ -97,8 +143,34 @@ export default function Scheduler() {
         onBeforeEventRender={onBeforeEventRender}
         onBeforeRowHeaderRender={onBeforeRowHeaderRender}
         controlRef={setScheduler}
+        onEventClick={(args) => {
+          setShow(true);
+          handleSelectedUpdate(args.e.data);
+        }}
+        onEventResize={async (args) => {
+          let body = chose(args.e.data, ['_id', 'title', 'startDate', 'endDate', 'status', 'description']);
+          body.endDate = args.newEnd.toString();
+          body.startDate = args.newStart.toString();
+          await handleResizeUpdate(body, args.e.data._id);
+        }}
       />
-      <RenderTeamOffcanvas show={showTeamOffcanvas} handleClose={handleCloseTeamOffcanvas} />
+      <RenderScheduleOffcanvas
+        error={error}
+        fields={fields}
+        errorMessages={errorMessages}
+        handleChange={handleChange}
+        success={success}
+        handleSubmit={handleSubmit}
+        show={show}
+        handleClose={handleClose}
+        handleDelete={handleDelete}
+      />
     </div>
   );
+}
+function omit<T, U>(
+  fields: Record<string, any>,
+  arg1: string[]
+): Partial<import('../../../../hooks/useScheduler').Schedule> {
+  throw new Error('Function not implemented.');
 }

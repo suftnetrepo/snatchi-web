@@ -1,5 +1,4 @@
 import * as jose from 'jose';
-import { cookies } from 'next/headers';
 
 export interface TokenPayload {
   id: string;
@@ -56,27 +55,5 @@ export class AuthService {
     }
   }
 
-  static async setTokens(tokens: { accessToken: string; refreshToken: string }) {
-    const cookieStore = await cookies();
-
-    cookieStore.set('accessToken', tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== 'production',
-      sameSite: 'strict',
-      maxAge: 15 * 60 // 15 minutes
-    });
-
-    cookieStore.set('refreshToken', tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
-    });
-  }
-
-  static async clearTokens() {
-    const cookieStore = await cookies();
-    cookieStore.delete('accessToken');
-    cookieStore.delete('refreshToken');
-  }
+ 
 }

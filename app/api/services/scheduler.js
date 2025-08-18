@@ -92,18 +92,17 @@ async function add(body) {
     throw new Error(JSON.stringify([{ field: 'integrator', message: 'Invalid integrator MongoDB ObjectId' }]));
   }
 
+  const { startDate, endDate, ...rest } = body;
+  const schedulerData = {
+    ...rest,
+    startDate: new Date(startDate),
+    endDate: new Date(endDate)
+  };
+
   try {
-    const result = await Scheduler.create({
-      ...body,
-      startDate: new Date(body.startDate),
-      endDate: new Date(body.endDate)
-    });
-
-    if (!result) {
-      throw new Error('Create new user status failed');
-    }
-
-    return result;
+    const scheduler = await Scheduler.create(schedulerData);
+    await scheduler.populate('user', 'first_name last_name email');
+    return scheduler;
   } catch (error) {
     logger.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
@@ -125,7 +124,7 @@ async function update(suid, id, body) {
   }
 
   try {
-    const result = await UserStatus.findOneAndUpdate(
+    const result = await Scheduler.findOneAndUpdate(
       { _id: id, integrator: suid },
       {
         ...body,
@@ -138,7 +137,7 @@ async function update(suid, id, body) {
 
     return result;
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
@@ -179,11 +178,11 @@ async function remove(suid, id) {
   }
 
   try {
-    await UserStatus.findOneAndDelete({ _id: id, integrator: suid });
+    await Scheduler.findOneAndDelete({ _id: id, integrator: suid });
 
     return true;
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
