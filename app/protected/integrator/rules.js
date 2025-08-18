@@ -1,3 +1,4 @@
+
 const projectValidator = {
   rules: {
     name: [
@@ -282,12 +283,22 @@ const schedulerValidator = {
       }
     ]
   },
+  reset: () => {
+    return {
+      title: '',
+      status: 'Pending',
+      startDate: '',
+      endDate: '',
+      description: ''
+    };
+  },
   fields: {
     description: '',
     status: 'Pending',
     startDate: '',
     endDate: '',
-    title : ''
+    title : '',
+    user: '',
   }
 };
 

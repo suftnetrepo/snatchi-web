@@ -3,8 +3,6 @@
 import React from 'react';
 import { Offcanvas, ListGroup, Alert } from 'react-bootstrap';
 import { useUserDocument } from '../../../../hooks/useUserDocument';
-import { MdEditDocument } from 'react-icons/md';
-import { FaChevronCircleRight } from 'react-icons/fa';
 import { IoChevronForwardCircleOutline } from 'react-icons/io5';
 
 import Tooltip from '@mui/material/Tooltip';

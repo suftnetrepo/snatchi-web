@@ -30,6 +30,8 @@ export const GET = async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
+    console.log('action', action);
+
     if (action === 'users') {
       const sortField = url.searchParams.get('sortField');
       const sortOrder = url.searchParams.get('sortOrder');

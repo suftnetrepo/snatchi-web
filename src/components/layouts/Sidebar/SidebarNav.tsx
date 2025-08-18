@@ -6,7 +6,8 @@ import {
   faBuildingUser,
   faComment,
   faMoneyCheck,
-  faStickyNote, faHome
+  faStickyNote, faHome,
+  faCalendar
 } from '@fortawesome/free-solid-svg-icons';
 import {} from 'react-icons/ti';
 import React from 'react';
@@ -49,7 +50,7 @@ const IntegratorSidebarNav = () => {
       <SidebarNavItem icon={faStickyNote} href="/protected/integrator/attendance">
         Attendance
       </SidebarNavItem>
-       <SidebarNavItem icon={faStickyNote} href="/protected/integrator/scheduler">
+       <SidebarNavItem icon={faCalendar} href="/protected/integrator/scheduler">
         Scheduler
       </SidebarNavItem>
       <SidebarNavItem icon={faBuildingUser} href="/protected/integrator/user">

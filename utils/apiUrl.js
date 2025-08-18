@@ -12,8 +12,8 @@ export const SCHEDULER = {
   createOne: `${HOST}scheduler`,
   updateOne: `${HOST}scheduler`,
   updatestatus: `${HOST}scheduler`,
-  removeOne: `${HOST}user/`,
-  getAll: `${HOST}user?action=getAll`,
+  removeOne: `${HOST}scheduler/`,
+  getAll: `${HOST}scheduler/`,
   getByUser: `${HOST}user?action=getByUser`,
   getByDates: `${HOST}user?action=getByDates`
 };
