@@ -184,7 +184,7 @@ const useScheduler = (flag = true) => {
             start: response.data.startDate ? new Date(response.data.startDate).toISOString().slice(0, 16) + ':00' : '',
             end: response.data.endDate ? new Date(response.data.endDate).toISOString().slice(0, 16) + ':00' : '',
             resource: response.data.user._id,
-            locked: response.data.status === 'Accepted',
+            lock: response.data.status === 'Lock',
             barColor:
               response.data.status === 'Pending'
                 ? '#ffbb99'
@@ -301,12 +301,12 @@ const useScheduler = (flag = true) => {
         const events = response.data.map((item) => ({
           ...item,
           id: item._id,
-          text: item.title,
+          text: item.status === 'Lock' ? '' : item.title,
           start: item.startDate ? new Date(item.startDate).toISOString().slice(0, 16) + ':00' : '',
           end: item.endDate ? new Date(item.endDate).toISOString().slice(0, 16) + ':00' : '',
           resource: item.user._id,
-          barColor: item.status === 'Pending' ? '#ffbb99' : item.status === 'Accepted' ? '#ff66a3' : '#ff66a3',
-          locked: item.status === 'Accepted',
+          barColor: item.status === 'Pending' ? '#ffbb99' : item.status === 'Accepted' ? '#009999' : '#ff66a3',
+          lock: item.status === 'Lock',
         }));
 
         updateState({ events, loading: false });
@@ -381,12 +381,12 @@ const useScheduler = (flag = true) => {
             start: response.data.startDate ? new Date(response.data.startDate).toISOString().slice(0, 16) + ':00' : '',
             end: response.data.endDate ? new Date(response.data.endDate).toISOString().slice(0, 16) + ':00' : '',
             resource: response.data.user._id,
-            locked: response.data.status === 'Accepted',
+            lock: response.data.status === 'Lock',
             barColor:
               response.data.status === 'Pending'
                 ? '#ffbb99'
                 : response.data.status === 'Accepted'
-                  ? '#00cc99'
+                  ? '#009999'
                   : '#ff66a3'
           };
         

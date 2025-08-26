@@ -20,7 +20,7 @@ const schedulerSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Pending', 'Declined', 'Accepted', 'Block'],
+      enum: ['Pending', 'Declined', 'Accepted', 'Lock'],
       required: true
     },
      description: {

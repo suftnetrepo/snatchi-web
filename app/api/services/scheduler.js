@@ -104,7 +104,7 @@ async function add(body) {
     await scheduler.populate('user', 'first_name last_name email');
     return scheduler;
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }

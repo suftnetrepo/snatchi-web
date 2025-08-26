@@ -87,10 +87,8 @@ export default function Scheduler() {
       {
         right: 10,
         top: 'calc(50% - 7px)',
-        width: 18,
-        height: 18,
-        symbol: `${args.data.locked ? '/daypilot.svg#padlock' : '/daypilot.svg#checkmark-2'}`,
-        backColor: '#4d4d4d',
+      
+        backColor: '#cccccc',
         fontColor: '#ffffff',
         padding: 1,
         style: 'border-radius: 50%'
@@ -99,7 +97,7 @@ export default function Scheduler() {
 
     console.log('onBeforeEventRender', args.data);
 
-    if (args.data.locked) {
+    if (args.data.lock) {
       args.data.areas.push({
         right: 26,
         top: 6,
@@ -109,8 +107,8 @@ export default function Scheduler() {
         style: 'border-radius: 50%'
       });
 
-      args.data.backColor = '#ffffff';
-      args.data.borderColor = '#e6ccff';
+      args.data.backColor = '#cccccc';
+      args.data.borderColor = '#cccccc';
       args.data.fontColor = '#000000';
       args.data.moveDisabled = true;
       args.data.resizeDisabled = true;
