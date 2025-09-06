@@ -95,8 +95,8 @@ async function add(body) {
   const { startDate, endDate, ...rest } = body;
   const schedulerData = {
     ...rest,
-    startDate: new Date(startDate),
-    endDate: new Date(endDate)
+      startDate: new Date(startDate).toISOString(),
+  endDate: new Date(endDate).toISOString(),
   };
 
   try {

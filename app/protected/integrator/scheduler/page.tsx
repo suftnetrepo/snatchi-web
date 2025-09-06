@@ -37,10 +37,6 @@ export default function Scheduler() {
   } = useScheduler();
   const [show, setShow] = useState(false);
 
-  console.log('...............fields', fields);
-  console.log('........................events', events);
-  console.log('...............resources', resources);
-
   const handleClose = () => {
     setShow(false);
     handleReset();
@@ -78,8 +74,7 @@ export default function Scheduler() {
     setShow(true);
     scheduler?.clearSelection();
 
-    console.log('onTimeRangeSelected', args.resource);
-    handleSelection(args.start.toDate(), args.end.toDate(), args.resource.toString());
+    handleSelection(args.start.addDays(1).toDate(), args.end.toDate(), args.resource.toString());
   };
 
   const onBeforeEventRender = (args: DayPilot.SchedulerBeforeEventRenderArgs) => {
@@ -87,7 +82,7 @@ export default function Scheduler() {
       {
         right: 10,
         top: 'calc(50% - 7px)',
-      
+
         backColor: '#cccccc',
         fontColor: '#ffffff',
         padding: 1,
@@ -95,7 +90,35 @@ export default function Scheduler() {
       }
     ];
 
-    console.log('onBeforeEventRender', args.data);
+    if (args.data.status === "Accepted") {
+      args.data.areas.push({
+        right: 26,
+        top: 6,
+        width: 24,
+        height: 24,
+        padding: 4,
+        style: 'border-radius: 50%'
+      });
+
+      args.data.backColor = '#33cc33';
+      args.data.borderColor = '#33cc33';
+      args.data.fontColor = '#ffffff';
+    }
+
+    if (args.data.status === "Declined") {
+      args.data.areas.push({
+        right: 26,
+        top: 6,
+        width: 24,
+        height: 24,
+        padding: 4,
+        style: 'border-radius: 50%'
+      });
+
+      args.data.backColor = '#f87171';
+      args.data.borderColor = '#f87171';
+      args.data.fontColor = '#ffffff';
+    }
 
     if (args.data.lock) {
       args.data.areas.push({
@@ -107,8 +130,8 @@ export default function Scheduler() {
         style: 'border-radius: 50%'
       });
 
-      args.data.backColor = '#cccccc';
-      args.data.borderColor = '#cccccc';
+      args.data.backColor = '#a1a1aa';
+      args.data.borderColor = '#a1a1aa';
       args.data.fontColor = '#000000';
       args.data.moveDisabled = true;
       args.data.resizeDisabled = true;
