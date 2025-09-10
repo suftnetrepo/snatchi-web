@@ -27,6 +27,7 @@ async function getInvoices({ suid, page = 1, limit = 10, sortField = 'status', s
 
     const query = {
       integrator: suid,
+      invoice_type: { $in: ['Quote', 'Save'] },
       ...searchFilter
     };
 

@@ -70,8 +70,9 @@ const RenderInvoiceOffcanvas = ({ show, success, handleClose, invoice, handleEdi
             <thead className="thead-light">
               <tr>
                 <th>Date</th>
-                <th>Item</th>
-                <th className="text-end">Hour</th>
+                <th>Description</th>
+                <th>Unit</th>
+                <th className="text-end">Time</th>
                 <th className="text-end">Rate</th>
               </tr>
             </thead>
@@ -80,7 +81,8 @@ const RenderInvoiceOffcanvas = ({ show, success, handleClose, invoice, handleEdi
                 <tr key={item._id}>
                   <td className="text-dark">{item.date}</td>
                   <td className="text-dark">{item.description}</td>
-                  <td className="text-end text-dark">{item.hour}</td>
+                  <td className="text-dark">{item.unit}</td>
+                  <td className="text-end text-dark">{item.duration}</td>
                   <td className="text-end text-dark">{formatCurrency('£', item.rate || 0)}</td>
                 </tr>
               ))}
@@ -125,7 +127,7 @@ const RenderInvoiceOffcanvas = ({ show, success, handleClose, invoice, handleEdi
               <button
                 className="btn btn-primary"
                 onClick={() => {
-                  handleEditInvoice && handleEditInvoice({ status: status }, invoice._id).then(() => {});
+                  handleEditInvoice && handleEditInvoice({ status: status }, invoice._id).then(() => { });
                 }}
               >
                 Save Changes

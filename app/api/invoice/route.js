@@ -67,8 +67,11 @@ export const GET = async (req) => {
 
 export const DELETE = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
+    const user = await getUserSession(req);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
 
@@ -96,10 +99,13 @@ export const PUT = async (req) => {
 
 export const POST = async (req) => {
   try {
-    const userData = req.headers.get('x-user-data');
-    const user = userData ? JSON.parse(userData) : null;
-    const body = await req.json();
+    const user = await getUserSession(req);
 
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const body = await req.json();
+  
     const result = await createInvoice(user?.integrator, user?.id, body);
     return NextResponse.json({ success: true, data: result });
   } catch (error) {

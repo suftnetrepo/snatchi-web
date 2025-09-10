@@ -17,6 +17,8 @@ const Invoice = () => {
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const { data, error, loading, totalCount, handleFetch, handleEditInvoice, success,handleReset } = useInvoice(debouncedSearchQuery);
 
+  console.log('Invoice data:', data);
+
   const handleClose = () => {
     setShow(false);
     handleReset()
@@ -46,9 +48,9 @@ const Invoice = () => {
         Cell: ({ value }) => <div className="d-flex align-items-center">{value?.toString().slice(-8)}</div>
       },
       {
-        Header: 'Group',
+        Header: 'Type',
         accessor: 'invoice_type',
-        Cell: ({ value }) => <div className="d-flex align-items-center">{value ? "Quote" : "Invoice"}</div>
+        Cell: ({ value }) => <div className="d-flex align-items-center">{value}</div>
       },
       {
         Header: 'Engineer',

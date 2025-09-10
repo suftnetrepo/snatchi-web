@@ -29,9 +29,9 @@ const invoiceSchema = new mongoose.Schema(
       required: true
     },
     invoice_type: {
-      type: Boolean,
-      default: false,
-      required: false
+      type: String,
+      enum: ['Quote', 'Save', 'Draft'],
+      required: true
     },
     invoice_description: {
       type: String,
@@ -45,7 +45,12 @@ const invoiceSchema = new mongoose.Schema(
           required: false,
           trim: true
         },
-        hour: {
+        unit: {
+          type: String,
+          enum: ['day', 'hour'],
+          required: true
+        },
+        duration: {
           type: Number,
           required: true,
           default: 1
@@ -59,7 +64,7 @@ const invoiceSchema = new mongoose.Schema(
           type: String,
           required: false,
           trim: true
-        },
+        }
       }
     ],
     subtotal: {
