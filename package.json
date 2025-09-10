@@ -50,7 +50,7 @@
     "crypto-browserify": "^3.12.1",
     "date-fns": "2.29.3",
     "dayjs": "^1.11.4",
-    "daypilot-pro-react": "https://npm.daypilot.org/daypilot-pro-react/trial/2023.4.5795.tar.gz",
+    "daypilot-pro-react": "file:./lib/2023.4.5795.tar.gz",
     "dotenv": "^6.2.0",
     "fastest-validator": "^1.15.0",
     "fcm-push": "^1.1.3",
