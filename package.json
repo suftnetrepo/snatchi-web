@@ -13,6 +13,7 @@
   "dependencies": {
     "@aldabil/react-scheduler": "^3.1.2",
     "@auth/mongodb-adapter": "^3.8.0",
+    "@daypilot/daypilot-lite-react": "^4.4.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@faker-js/faker": "^9.2.0",
@@ -50,7 +51,6 @@
     "crypto-browserify": "^3.12.1",
     "date-fns": "2.29.3",
     "dayjs": "^1.11.4",
-    "daypilot-pro-react": "file:lib/daypilot-pro-react",
     "dotenv": "^6.2.0",
     "fastest-validator": "^1.15.0",
     "fcm-push": "^1.1.3",

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { DayPilot, DayPilotScheduler } from '@daypilot/daypilot-lite-react';
+import { DayPilot, DayPilotScheduler } from 'daypilot-pro-react';
 import { validate } from '@/validator/validator';
 import { useScheduler } from '../../../../hooks/useScheduler';
 import { RenderScheduleOffcanvas } from './renderScheduleOffcanvas';
@@ -9,23 +9,11 @@ import { chose } from '../../../../utils/utils';
 
 const initialConfig: DayPilot.SchedulerConfig = {
   startDate: new Date().toISOString().split('T')[0],
-  days: 60,
+  days: 366,
   scale: 'Day',
   timeHeaders: [{ groupBy: 'Month' }, { groupBy: 'Day', format: 'd' }],
-  eventHeight: 30,
-  cellWidth: 40,
-  durationBarVisible: false,
-  rowHeaderWidth: 160,
+  rowHeaderColumns: [{ text: 'Engineers', width: 100 }]
 };
-
-interface MyEventData extends DayPilot.EventData {
-  status?: 'Accepted' | 'Declined' | 'Neutral';
-  lock?: boolean;
-  moveDisabled?: boolean;
-  resizeDisabled?: boolean;
-  clickDisabled?: boolean;
-  deleteDisabled?: boolean;
-}
 
 export default function Scheduler() {
   const [config, setConfig] = useState(initialConfig);
@@ -89,14 +77,12 @@ export default function Scheduler() {
     handleSelection(args.start.addDays(1).toDate(), args.end.toDate(), args.resource.toString());
   };
 
-  const onBeforeEventRender = (args: { data: MyEventData }) => {
-    args.data.cssClass = 'rounded-event'; // custom class
-    args.data.borderColor = '#ff66cc';
-
+  const onBeforeEventRender = (args: DayPilot.SchedulerBeforeEventRenderArgs) => {
     args.data.areas = [
       {
         right: 10,
         top: 'calc(50% - 7px)',
+
         backColor: '#cccccc',
         fontColor: '#ffffff',
         padding: 1,
@@ -104,16 +90,30 @@ export default function Scheduler() {
       }
     ];
 
-    if (args.data.status === 'Accepted') {
-      args.data.areas.push({ right: 26, top: 6, width: 24, height: 24, padding: 4, style: 'border-radius: 50%' });
+    if (args.data.status === "Accepted") {
+      args.data.areas.push({
+        right: 26,
+        top: 6,
+        width: 24,
+        height: 24,
+        padding: 4,
+        style: 'border-radius: 50%'
+      });
 
       args.data.backColor = '#33cc33';
       args.data.borderColor = '#33cc33';
       args.data.fontColor = '#ffffff';
     }
 
-    if (args.data.status === 'Declined') {
-      args.data.areas.push({ right: 26, top: 6, width: 24, height: 24, padding: 4, style: 'border-radius: 50%' });
+    if (args.data.status === "Declined") {
+      args.data.areas.push({
+        right: 26,
+        top: 6,
+        width: 24,
+        height: 24,
+        padding: 4,
+        style: 'border-radius: 50%'
+      });
 
       args.data.backColor = '#f87171';
       args.data.borderColor = '#f87171';
@@ -121,7 +121,14 @@ export default function Scheduler() {
     }
 
     if (args.data.lock) {
-      args.data.areas.push({ right: 26, top: 6, width: 24, height: 24, padding: 4, style: 'border-radius: 50%' });
+      args.data.areas.push({
+        right: 26,
+        top: 6,
+        width: 24,
+        height: 24,
+        padding: 4,
+        style: 'border-radius: 50%'
+      });
 
       args.data.backColor = '#a1a1aa';
       args.data.borderColor = '#a1a1aa';
@@ -134,21 +141,23 @@ export default function Scheduler() {
   };
 
   const onBeforeRowHeaderRender = (args: DayPilot.SchedulerBeforeRowHeaderRenderArgs) => {
-    args.row.backColor = '#ffffff';
-    args.row.html = `
-    <table style="width:100%; border-collapse:collapse;">
-      <tr>
-    
-        <td style="padding:4px 6px; font-size:14px; font-weight:600; color:#333;">
-          ${args.row.name}
-        </td>
-      </tr>
-    </table>
-  `;
+    // args.row.columns[1].horizontalAlignment = "center";
+    // if (args.row.data.status === 'Block') {
+    //   args.row.columns[2].areas = [
+    //     {
+    //       left: 'calc(50% - 8px)',
+    //       top: 10,
+    //       width: 20,
+    //       height: 20,
+    //       symbol: '/daypilot.svg#padlock',
+    //       fontColor: '#777777'
+    //     }
+    //   ];
+    // }
   };
 
   return (
-<div style={{ width: "100%", height: "100vh" }}>
+    <div>
       <DayPilotScheduler
         {...config}
         onTimeRangeSelected={onTimeRangeSelected}
@@ -179,4 +188,10 @@ export default function Scheduler() {
       />
     </div>
   );
+}
+function omit<T, U>(
+  fields: Record<string, any>,
+  arg1: string[]
+): Partial<import('../../../../hooks/useScheduler').Schedule> {
+  throw new Error('Function not implemented.');
 }
