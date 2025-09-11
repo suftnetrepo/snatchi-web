@@ -30,7 +30,7 @@ export const GET = async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
-    console.log('action', action);
+    console.log('action', user);
 
     if (action === 'users') {
       const sortField = url.searchParams.get('sortField');
@@ -69,12 +69,7 @@ export const GET = async (req) => {
 
     return NextResponse.json({ success: false, message: 'Invalid action parameter' }, { status: 400 });
   } catch (error) {
-    logger.error(error);
-
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
+    console.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -92,12 +87,7 @@ export const DELETE = async (req) => {
     const deleted = await removeUser(user?.integrator, id);
     return NextResponse.json({ success: true, data: deleted });
   } catch (error) {
-    logger.error(error);
-
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
+    console.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -193,11 +183,6 @@ export const POST = async (req) => {
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     logger.error(error);
-
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };

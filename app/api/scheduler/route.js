@@ -96,13 +96,7 @@ export const POST = async (req) => {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const body = await req.json();
-
-    console.log('Request body:', body);
-
     const result = await add({ ...body, integrator: user?.integrator });
-
-      console.log('Request result:', result);
-
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     console.error(error);
