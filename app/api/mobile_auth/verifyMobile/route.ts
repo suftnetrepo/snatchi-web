@@ -35,6 +35,8 @@ export async function POST(req: Request) {
       integrator: matchUser.integrator
     });
 
+
+
     const user = {
       user_id: matchUser._id,
       first_name: matchUser.first_name,
@@ -45,6 +47,8 @@ export async function POST(req: Request) {
       fcm : matchUser.fcm,
       secure_url : matchUser.secure_url
     };
+
+        console.log('Generated Access fcm:', fcm);
 
     return NextResponse.json({ data: { user, token: accessToken } }, { status: 200 });
   } catch (err) {

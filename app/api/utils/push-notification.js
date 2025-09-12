@@ -1,12 +1,12 @@
 const { GoogleAuth } = require('google-auth-library');
 const axios = require('axios');
-const serviceAccountKeyPath = require('../data/snatchichat-firebase-adminsdk-1vpcs-e84d03fd83.json');
 const { logger } = require('../utils/logger');
 
 class FCMNotificationService {
   constructor() {
+    const serviceAccount = require('../data/snatchichat-firebase-adminsdk-1vpcs-d06f6114f0.json');
     this.auth = new GoogleAuth({
-      credentials: serviceAccountKeyPath,
+      credentials: serviceAccount,
       scopes: ['https://www.googleapis.com/auth/firebase.messaging']
     });
 
@@ -21,9 +21,7 @@ class FCMNotificationService {
   async sendNotification(fcmToken, title, body, data = {}) {
     try {
       const accessToken = await this.getAccessToken();
-
-      console.log('........................fcmToken', fcmToken);
-
+     
       const message = {
         message: {
           token: fcmToken,
@@ -33,8 +31,8 @@ class FCMNotificationService {
           },
           data: {
             ...data,
-            screen: data.screen || '', 
-            screenParams: JSON.stringify(data.screenParams || {}) 
+            screen: data.screen || '',
+            screenParams: JSON.stringify(data.screenParams || {})
           },
           apns: {
             payload: {

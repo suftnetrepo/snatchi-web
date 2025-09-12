@@ -2,7 +2,7 @@ import { remove, update, add, get, updateByStatus, getByUser, getUsersByDates } 
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
-import {sendUserNotification} from '../services/notify';
+import { sendUserNotification } from '../services/notify';
 
 export const GET = async (req) => {
   try {
@@ -55,7 +55,7 @@ export const DELETE = async (req) => {
     const results = await remove(user?.integrator, id);
     return NextResponse.json({ data: results });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -83,7 +83,7 @@ export const PUT = async (req) => {
       return NextResponse.json({ success: true, data: result }, { status: 200 });
     }
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -97,22 +97,22 @@ export const POST = async (req) => {
     }
     const body = await req.json();
 
-    console.log('Body received in POST /scheduler:', body);
-
     const result = await add({ ...body, integrator: user?.integrator });
-    if(result){
-      const { title, description } = body;
-      await sendUserNotification({
-        userId: body.user,
-        title,         
-        body: description,
-        screen: 'CalendarListScreen',
-        screenParams: { scheduleId: result._id }
-      });
+    if (result) {
+      const { title, description, status } = body;
+      if (status === 'Pending') {
+        await sendUserNotification({
+          userId: body.user,
+          title,
+          body: description,
+          screen: 'CalendarListScreen',
+          screenParams: { scheduleId: result._id }
+        });
+      }
     }
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };

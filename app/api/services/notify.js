@@ -12,13 +12,12 @@ const { logger } = require('../utils/logger');
  * @param {Object} params.screenParams - Params to pass to the screen.
  */
 export async function sendUserNotification({ userId, title, body, screen, screenParams = {} }) {
-
     try {
         const user = await User.findById(userId);
-        if (user && user.fcmToken) {
+        if (user && user.fcm) {
             const notificationService = new FCMNotificationService();
-            await notificationService.sendNotification(
-                user.fcmToken,
+            const result = await notificationService.sendNotification(
+                user.fcm,
                 title,
                 body,
                 {
@@ -26,6 +25,13 @@ export async function sendUserNotification({ userId, title, body, screen, screen
                     screenParams
                 }
             );
+
+            if (result) {
+                const { response, success } = result;
+                console.log('Notification sent:', { response, success });
+            } else {
+                console.warn('Notification service returned undefined.');
+            }
         } else {
             logger.warn({
                 success: false,
