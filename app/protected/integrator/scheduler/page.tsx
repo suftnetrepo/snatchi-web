@@ -19,7 +19,7 @@ const initialConfig: DayPilot.SchedulerConfig = {
 };
 
 interface MyEventData extends DayPilot.EventData {
-  status?: 'Accepted' | 'Declined' | 'Neutral';
+  status?: 'Accepted' | 'Declined' | 'Neutral' | 'Pending';
   lock?: boolean;
   moveDisabled?: boolean;
   resizeDisabled?: boolean;
@@ -117,6 +117,14 @@ export default function Scheduler() {
 
       args.data.backColor = '#f87171';
       args.data.borderColor = '#f87171';
+      args.data.fontColor = '#ffffff';
+    }
+
+    if (args.data.status === 'Pending') {
+      args.data.areas.push({ right: 26, top: 6, width: 24, height: 24, padding: 4, style: 'border-radius: 50%' });
+
+      args.data.backColor = '#d97706';
+      args.data.borderColor = '#d97706';
       args.data.fontColor = '#ffffff';
     }
 

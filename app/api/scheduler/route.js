@@ -2,6 +2,7 @@ import { remove, update, add, get, updateByStatus, getByUser, getUsersByDates } 
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
+import {sendUserNotification} from '../services/notify';
 
 export const GET = async (req) => {
   try {
@@ -96,7 +97,20 @@ export const POST = async (req) => {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const body = await req.json();
+
+    console.log('Body received in POST /scheduler:', body);
+
     const result = await add({ ...body, integrator: user?.integrator });
+    if(result){
+      const { title, description } = body;
+      await sendUserNotification({
+        userId: body.user,
+        title,
+        body: description,
+        screen: 'CalendarListScreen',
+        screenParams: { scheduleId: result._id }
+      });
+    }
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     console.error(error);

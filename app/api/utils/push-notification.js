@@ -21,8 +21,8 @@ class FCMNotificationService {
   async sendNotification(fcmToken, title, body, data = {}) {
     try {
       const accessToken = await this.getAccessToken();
-  
-      console.log("........................fcmToken", fcmToken)
+
+      console.log('........................fcmToken', fcmToken);
 
       const message = {
         message: {
@@ -32,7 +32,9 @@ class FCMNotificationService {
             body
           },
           data: {
-            ...data
+            ...data,
+            screen: data.screen || '', 
+            screenParams: JSON.stringify(data.screenParams || {}) 
           },
           apns: {
             payload: {
@@ -43,19 +45,18 @@ class FCMNotificationService {
             }
           },
           android: {
-            priority: "high"
+            priority: 'high'
           }
         }
       };
-      
-  
+
       const response = await axios.post(this.baseURL, message, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
         }
       });
-  
+
       return {
         success: true,
         response: response.data
@@ -65,7 +66,6 @@ class FCMNotificationService {
         success: false,
         error: error.response?.data || error.message
       });
-    
     }
   }
 
