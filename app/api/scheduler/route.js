@@ -25,7 +25,6 @@ export const GET = async (req) => {
 
     if (action === 'getByUser') {
       const results = await getByUser(user?.id);
-      console.log('Results from getByUser:', results);
       return NextResponse.json({ data: results });
     }
 
@@ -105,7 +104,7 @@ export const POST = async (req) => {
       const { title, description } = body;
       await sendUserNotification({
         userId: body.user,
-        title,
+        title,         
         body: description,
         screen: 'CalendarListScreen',
         screenParams: { scheduleId: result._id }
