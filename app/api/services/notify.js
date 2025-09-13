@@ -33,7 +33,7 @@ export async function sendUserNotification({ userId, title, body, screen, screen
                 console.warn('Notification service returned undefined.');
             }
         } else {
-            console.warn({
+            logger.warn({
                 success: false,
                 message: !user
                     ? `User not found for userId: ${userId}`
@@ -41,7 +41,7 @@ export async function sendUserNotification({ userId, title, body, screen, screen
             });
         }
     } catch (error) {
-        console.error({
+        logger.error({
             success: false,
             error: error.response?.data || error.message
         });

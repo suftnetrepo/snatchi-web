@@ -65,7 +65,7 @@ class FCMNotificationService {
         response: response.data
       };
     } catch (error) {
-      console.error({
+      logger.error({
         success: false,
         error: error.response?.data || error.message
       });

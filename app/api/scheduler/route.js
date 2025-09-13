@@ -37,7 +37,7 @@ export const GET = async (req) => {
 
     return NextResponse.json({ success: false, message: 'Invalid action parameter' }, { status: 400 });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -55,7 +55,7 @@ export const DELETE = async (req) => {
     const results = await remove(user?.integrator, id);
     return NextResponse.json({ data: results });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -83,7 +83,7 @@ export const PUT = async (req) => {
       return NextResponse.json({ success: true, data: result }, { status: 200 });
     }
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -105,14 +105,14 @@ export const POST = async (req) => {
           userId: body.user,
           title,
           body: description,
-          screen: 'CalendarListScreen',
+          screen: 'calendar',
           screenParams: { scheduleId: result._id }
         });
       }
     }
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
