@@ -26,7 +26,7 @@ async function get({ suid }) {
       data: result
     };
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }

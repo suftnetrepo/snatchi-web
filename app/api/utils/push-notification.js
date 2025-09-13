@@ -2,9 +2,12 @@ const { GoogleAuth } = require('google-auth-library');
 const axios = require('axios');
 const { logger } = require('../utils/logger');
 
+const { getDecryptedServiceAccount } = require("../../api/data/decrypt-service-account");
+
+const serviceAccount = getDecryptedServiceAccount();
+
 class FCMNotificationService {
   constructor() {
-    const serviceAccount = require('../data/snatchichat-firebase-adminsdk-1vpcs-d06f6114f0.json');
     this.auth = new GoogleAuth({
       credentials: serviceAccount,
       scopes: ['https://www.googleapis.com/auth/firebase.messaging']
@@ -55,12 +58,14 @@ class FCMNotificationService {
         }
       });
 
+      console.log('FCM response:', response.data);
+
       return {
         success: true,
         response: response.data
       };
     } catch (error) {
-      logger.error({
+      console.error({
         success: false,
         error: error.response?.data || error.message
       });
