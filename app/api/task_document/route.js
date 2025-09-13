@@ -40,6 +40,8 @@ export const POST = async (req) => {
       });
     };
 
+    console.log('Uploading to Cloudinary...', documentType, documentName, projectId, taskId);
+
     const result = await uploadToCloudinary();
 
     const data = await createDocument(taskId, projectId, {
@@ -49,14 +51,9 @@ export const POST = async (req) => {
       secure_url: result.secure_url
     });
 
-    return NextResponse.json({ data }, { status: 200 });
+    return NextResponse.json({ data, success : true }, { status: 200 });
   } catch (error) {
-    logger.error(error);
-
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
+    console.error(error);
     return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 };
@@ -71,7 +68,7 @@ export const GET = async (req) => {
 
     return NextResponse.json({ data: results }, { status: 200 });
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };
@@ -87,7 +84,7 @@ export const DELETE = async (req) => {
 
     return NextResponse.json({ success: true, data: deleted }, { status: 200 });
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 };

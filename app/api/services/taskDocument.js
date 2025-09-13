@@ -38,11 +38,6 @@ async function createDocument(taskId, projectId, body) {
     throw new Error(JSON.stringify([{ field: 'projectId', message: 'Invalid MongoDB ObjectId' }]));
   }
 
-  const bodyErrors = documentValidator(body);
-  if (bodyErrors.length) {
-    throw new Error(bodyErrors.map((it) => it.message).join(','));
-  }
-
   try {
     const task = await Task.findOneAndUpdate(
       { _id: taskId, project: projectId },
