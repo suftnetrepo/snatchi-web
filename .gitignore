@@ -4,7 +4,7 @@
 /node_modules
 /.pnp
 .pnp.js
-
+/pub
 # testing
 /coverage
 
@@ -36,3 +36,19 @@ yarn-error.log*
 
 # Sentry Config File
 .env.sentry-build-plugin
+logs/error.log.1
+logs/error.log.2
+logs/error.log.3
+logs/error.log.5
+logs/error.log.6
+logs/info.log.1
+logs/info.log.2
+logs/trace.log.1
+logs/trace.log.2
+.env
+.env.production
+.gitignore
+stderr.log
+yarn.lock
+app/api/data/snatchichat-firebase-adminsdk-*.json
+app/api/data/snatchichat-firebase-adminsdk-*.json
