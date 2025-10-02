@@ -173,8 +173,14 @@ const converterTimeStampToDate = (timestamp) => {
   return formattedDate;
 };
 
+function getShortDescription(html, maxLength = 120) {
+  const text = html.replace(/<[^>]*>?/gm, ""); // remove HTML tags
+  return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+}
+
 export {
   getAggregate,
+  getShortDescription,
   dateFormatted,
   isValidObjectId,
   verifyToken,

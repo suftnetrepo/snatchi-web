@@ -123,8 +123,8 @@ export const USER_DOCUMENTS = {
   removeOne: `${HOST}user/document/`
 };
 
-export const ATTENDANCE = {
-  addOne: `${HOST}attendance`,
-  fetch: `${HOST}attendance`,
-  removeOne: `${HOST}attendance/`
+export const FENCE = {
+  addOne: `${HOST}fence`,
+  fetch: `${HOST}fence`,
+  removeOne: `${HOST}fence/`
 };

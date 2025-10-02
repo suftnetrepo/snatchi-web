@@ -144,7 +144,10 @@ async function createProject(id, body) {
     const newProject = await Project.create({
       integrator: id,
       ...body
-    });
+    }).populate({
+        path: 'assignedTo.id',
+        select: 'first_name last_name fcm secure_url role id'
+      });
 
     if (!newProject) {
       throw new Error('create new project failed');
@@ -171,11 +174,12 @@ async function updateProject(id, body) {
 
     const updatedProject = await Project.findByIdAndUpdate(id, body, {
       new: true
-    });
+    }).populate({
+        path: 'assignedTo.id',
+        select: 'first_name last_name fcm secure_url role id'
+      });
 
-    if (!updatedProject) {
-      throw new Error('Project not found or update failed');
-    }
+    console.log('Updated Project:', JSON.stringify(updatedProject));
 
     return updatedProject;
   } catch (error) {

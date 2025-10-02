@@ -136,80 +136,25 @@ function codeValidator(data) {
   return validator.validate(data, schema);
 }
 
-function attendanceValidator(data) {
+function fenceValidator(data) {
   const v = new Validator();
   const schema = {
-    first_name: { type: 'string', empty: false, max: 50 },
-    last_name: { type: 'string', empty: false, max: 50 },
-    integrator: {
-      type: 'string',
-      empty: false,
-      length: 24,
-      pattern: /^[a-f\d]{24}$/i
-    },
-    user: {
-      type: 'string',
-      empty: false,
-      length: 24,
-      pattern: /^[a-f\d]{24}$/i
-    },
-    date: {
-      type: 'date',
-      convert: true,
-      optional: true
-    },
-    status: {
-      type: 'enum',
-      values: ['checkin', 'checkout'],
-      empty: false
-    },
-    completeAddress: {
-      type: 'string',
-      max: 255,
-      optional: true
-    },
-    county: {
-      type: 'string',
-      max: 50,
-      optional: true
-    },
-    town: {
-      type: 'string',
-      max: 20,
-      optional: true
-    },
-    country: {
-      type: 'string',
-      max: 20,
-      optional: true
-    },
-    postcode: {
-      type: 'string',
-      max: 20,
-      optional: true
-    },
-    location: {
-      type: 'object',
-      optional: true,
-      strict: true,
-      props: {
-        type: {
-          type: 'string',
-          enum: ['Point'],
-          optional: true
-        },
-        coordinates: {
-          type: 'array',
-          items: 'number',
-          length: 2,
-          optional: true
-        }
-      }
-    }
+    integrator: { type: 'string', empty: false, length: 24, pattern: /^[a-f\d]{24}$/i },
+    user: { type: 'string', empty: false, length: 24, pattern: /^[a-f\d]{24}$/i },
+    project: { type: 'string', empty: false, length: 24, pattern: /^[a-f\d]{24}$/i },
+
+    date: { type: 'date', convert: true, optional: true },
+    time: { type: 'string', optional: true },
+
+    status: { type: 'enum', values: ['checkin', 'checkout'], empty: false },
+
+    completeAddress: { type: 'string', max: 255, optional: true },
+   
   };
 
   return v.validate(data, schema);
 }
+
 
 export {
   userEditValidator,
@@ -224,7 +169,7 @@ export {
   loginValidator,
   userValidator,
   codeValidator,
-  attendanceValidator,
+  fenceValidator,
   userStatusValidator,
   schedulerValidator
 };

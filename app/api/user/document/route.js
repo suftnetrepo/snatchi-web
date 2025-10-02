@@ -28,8 +28,6 @@ export const POST = async (req) => {
     const name = formData.get('name');
     const userId = formData.get('userId');
 
-    console.log("....................", { description, name, userId})
-
     const file = formData.get('file');
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -61,9 +59,9 @@ export const POST = async (req) => {
       secure_url: result.secure_url
     });
 
-    return NextResponse.json({ data }, { status: 200 });
+    return NextResponse.json({ data, success : true }, { status: 200 });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 };
