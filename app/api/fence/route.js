@@ -55,14 +55,10 @@ export const DELETE = async (req) => {
 
 export const POST = async (req) => {
   try {
-    const user = await getUserSession(req);
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+  
     const body = await req.json();
-    const result = await add({ integrator: user.integrator, ...body });
+    console.log('Fence body', body);
+    const result = await add(body);
 
     return NextResponse.json({ success: true, data: result }, { status: 200 });
   } catch (error) {

@@ -23,6 +23,26 @@ const fenceSchema = new mongoose.Schema(
       required: true,
       default: Date.now
     },
+    siteName: {
+      type: String,
+      required: true,
+      max: 100
+    },
+    radius: {
+      type: Number,
+      required: true,
+      default: 200
+    },
+    first_name: {
+      type: String,
+      required: true,
+      max: 100
+    },
+    last_name: {
+      type: String,
+      required: true,
+      max: 100
+    },
     time: {
       type: String,
       required: true,
@@ -31,7 +51,7 @@ const fenceSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ['Enter', 'Exist']
+      enum: ['ENTER', 'EXIT']
     },
     completeAddress: {
       type: String,

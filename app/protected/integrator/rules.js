@@ -57,6 +57,7 @@ const projectValidator = {
     town: '',
     country: '',
     postcode: '',
+    notify: false,
     completeAddress: '',
     location: {
       type: 'Point',

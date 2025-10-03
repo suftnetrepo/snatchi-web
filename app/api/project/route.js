@@ -108,8 +108,9 @@ export const PUT = async (req) => {
     const id = url.searchParams.get('id');
     const body = await req.json();
 
+    const { notify } = body;
     const result = await updateProject(id, body);
-    if (result) {
+    if (result && notify) {
       notifyAssignedUsers(result);
     }
 
@@ -129,9 +130,10 @@ export const POST = async (req) => {
     }
 
     const body = await req.json();
+    const { notify } = body;
     const result = await createProject(user?.integrator, body);
 
-    if (result) {
+    if (result && notify) {
       notifyAssignedUsers(result);
     }
 

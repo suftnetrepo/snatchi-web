@@ -70,7 +70,7 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
               </Form.Group>
             </div>
             <div className="col-md-6">
-              
+
             </div>
           </div>
         </div>
@@ -86,7 +86,7 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
                   type="datetime-local"
                   value={fields?.startDate}
                   onChange={(e) => handleChange('startDate', e.target.value)}
-                       className="border-dark"
+                  className="border-dark"
                 />
               </Form.Group>
               {errorMessages?.startDate?.message && (
@@ -100,7 +100,7 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
                   type="datetime-local"
                   value={fields?.endDate}
                   onChange={(e) => handleChange('endDate', e.target.value)}
-                       className="border-dark"
+                  className="border-dark"
                 />
               </Form.Group>
               {errorMessages?.endDate?.message && (
@@ -396,7 +396,25 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
           </div>
         </div>
       </div>
-
+      <div className="row">
+        <div className="col-md-6">
+          <Form.Group>
+            <div className="d-flex align-items-center justify-content-start mb-3">
+              <Form.Check
+                type="switch"
+                id="notify-switch"
+                checked={fields?.notify}
+                value={fields?.notify}
+                onChange={(e) => {
+                 handleChange('notify', e.target.checked)
+                }}
+                className="custom-switch"
+              />
+              <span className="text-dark ms-1">{'Notify Engineers'}</span>
+            </div>
+          </Form.Group>
+        </div>
+      </div>
       <div className="d-flex justify-content-start">
         <Button type="button" variant="primary" onClick={() => handleSubmit()}>
           Save Changes

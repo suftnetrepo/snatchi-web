@@ -2,7 +2,7 @@
 
 import React, { Fragment, useMemo, useState, useRef } from 'react';
 import { Table } from '@/components/elements/table/table';
-import { useAttendance } from '../../../../hooks/useAttendance';
+import { useAttendance } from '../../../../hooks/useFence';
 import { FaCalendar } from 'react-icons/fa';
 import { MdCancel } from 'react-icons/md';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';

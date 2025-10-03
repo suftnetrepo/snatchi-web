@@ -139,14 +139,14 @@ function codeValidator(data) {
 function fenceValidator(data) {
   const v = new Validator();
   const schema = {
-    integrator: { type: 'string', empty: false, length: 24, pattern: /^[a-f\d]{24}$/i },
-    user: { type: 'string', empty: false, length: 24, pattern: /^[a-f\d]{24}$/i },
-    project: { type: 'string', empty: false, length: 24, pattern: /^[a-f\d]{24}$/i },
+    integrator: { type: 'string', empty: false, },
+    user: { type: 'string', empty: false},
+    project: { type: 'string', empty: false },
 
     date: { type: 'date', convert: true, optional: true },
     time: { type: 'string', optional: true },
 
-    status: { type: 'enum', values: ['checkin', 'checkout'], empty: false },
+    status: { type: 'enum', values: ['Enter', 'Exit'], empty: false },
 
     completeAddress: { type: 'string', max: 255, optional: true },
    
