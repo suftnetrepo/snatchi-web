@@ -33,6 +33,26 @@ const useFence = () => {
     });
   }, []);
 
+  async function handleFetchByUser(userId, projectId) {
+    setState((prev) => ({ ...prev, loading: true }));
+    const { success, data, errorMessage } = await zat(FENCE.fetch, null, VERBS.GET, {
+      action: 'getByUserOnly',
+      userId: userId,
+      projectId: projectId
+    });
+
+    if (success) {
+      setState((prevState) => ({
+        ...prevState,
+        data: data,
+        loading: false,
+        success: data.length > 0,
+      }));
+    } else {
+      handleError(errorMessage || 'Failed to fetch the fence.');
+    }
+  }
+
   const handleSave = useCallback(async (body) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     const { success, errorMessage } = await zat(FENCE.addOne, body, VERBS.POST);
@@ -53,7 +73,8 @@ const useFence = () => {
   return {
     ...state,
     handleSave,
-    handleReset
+    handleReset,
+    handleFetchByUser
   };
 };
 

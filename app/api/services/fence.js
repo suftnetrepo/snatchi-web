@@ -56,6 +56,22 @@ async function getByUser(dateString, user) {
   }
 }
 
+async function getByUserOnly(user, project) {
+  try {
+    const result = await Fence.find({
+      user: user,
+      project: project
+    }).sort({ date: -1 });
+
+    console.log('Fence result', result);
+
+    return result;
+  } catch (error) {
+    logger.error(error);
+    throw new Error('An unexpected error occurred. Please try again.');
+  }
+}
+
 async function add(body) {
   const bodyErrors = fenceValidator(body);
   if (bodyErrors.length) {
@@ -96,4 +112,4 @@ async function remove(suid, id) {
   }
 }
 
-export { remove, add, getByUser, getBydate };
+export { remove, add, getByUser, getBydate, getByUserOnly };

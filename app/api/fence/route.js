@@ -1,4 +1,4 @@
-import { add, remove, getBydate, getByUser } from '../services/fence';
+import { add, remove, getBydate, getByUser, getByUserOnly } from '../services/fence';
 import { logger } from '../utils/logger';
 const { NextResponse } = require('next/server');
 import { getUserSession } from '@/utils/generateToken';
@@ -14,17 +14,24 @@ export const GET = async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
+    if (action === 'getByUserOnly') {
+      const userId = url.searchParams.get('userId');
+      const projectId = url.searchParams.get('projectId'); 
+      const result = await getByUserOnly(userId, projectId);
+      return NextResponse.json({ data: result, success: true }, { status: 200 });
+    }
+
     if (action === 'getBydate') {
       const date = url.searchParams.get('date');
-      const tasks = await getBydate(date, user.integrator);
-      return NextResponse.json({ data: tasks, success: true }, { status: 200 });
+      const result = await getBydate(date, user.integrator);
+      return NextResponse.json({ data: result, success: true }, { status: 200 });
     }
 
     if (action === 'getByUser') {
       const date = url.searchParams.get('date');
       const userId = url.searchParams.get('userId');
-      const tasks = await getByUser(date, userId);
-      return NextResponse.json({ data: tasks, success: true }, { status: 200 });
+      const result = await getByUser(date, userId);
+      return NextResponse.json({ data: result, success: true }, { status: 200 });
     }
 
     return NextResponse.json({ success: false, message: 'Invalid action parameter' }, { status: 400 });
@@ -55,7 +62,7 @@ export const DELETE = async (req) => {
 
 export const POST = async (req) => {
   try {
-  
+
     const body = await req.json();
     console.log('Fence body', body);
     const result = await add(body);
