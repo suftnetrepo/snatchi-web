@@ -42,16 +42,13 @@ const IntegratorSidebarNav = () => {
         Projects
       </SidebarNavItem>
       <SidebarNavItem icon={faComment} href="/protected/integrator/chat">
-        Chat
+        Chats
       </SidebarNavItem>
       <SidebarNavItem icon={faMoneyCheck} href="/protected/integrator/invoice">
         Invoices
       </SidebarNavItem>
-      <SidebarNavItem icon={faStickyNote} href="/protected/integrator/attendance">
-        Attendance
-      </SidebarNavItem>
        <SidebarNavItem icon={faCalendar} href="/protected/integrator/scheduler">
-        Scheduler
+        Schedulers
       </SidebarNavItem>
       <SidebarNavItem icon={faBuildingUser} href="/protected/integrator/user">
         Users
