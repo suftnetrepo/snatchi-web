@@ -51,7 +51,7 @@ const fenceSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ['ENTER', 'EXIT']
+      enum: ['Enter', 'Exit']
     },
     completeAddress: {
       type: String,

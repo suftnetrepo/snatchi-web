@@ -11,7 +11,7 @@ import Select from 'react-select';
 import Tooltip from '@mui/material/Tooltip';
 
 const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
-  const { data: fenceData, error: fenceError, loading, success,handleReset, handleFetchByUser } = useFence();
+  const { data: fenceData, error: fenceError, loading, success, handleReset, handleFetchByUser } = useFence();
   const { data, error, customStyles, teamData, handleSelect, fields, handleChange, handleDelete, handleFetchUsers } =
     useTeam(id);
 
@@ -23,11 +23,11 @@ const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
   }, []);
 
   const onClose = () => {
-   if (success) {
+    if (success) {
       handleReset();
-   }else{
+    } else {
       handleClose();
-   }
+    }
   };
 
   const onChange = (id) => {
@@ -42,7 +42,7 @@ const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
           <p className="text-dark fw-bold fs-18"> Teams</p>
         </div>
         <div>
-          <MdCancel size={48} color="black" onClick={()=>onClose()} className="pointer" />
+          <MdCancel size={48} color="black" onClick={() => onClose()} className="pointer" />
         </div>
       </div>
       <Offcanvas.Body>
@@ -142,8 +142,8 @@ const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
           </Form>
         ) : (
           <div class="table-responsive-md">
-            <table class="table border-white">
-            <thead class="table-light border-dark">
+            <table class="table table-bordered">
+              <thead class="table-light">
                 <tr>
                   <th scope="col">Date</th>
                   <th scope="col">Time</th>
@@ -156,12 +156,12 @@ const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
                 {
                   fenceData?.map((fence, index) => {
                     return (
-                      <tr key={`${index}-${fence._id}`} className={`${fence.status === "Enter" ? "bg-success" : "bg-danger"} `}>
-                        <td className='text-white'>{new Date(fence.date).toDateString()}</td>
-                        <td className='text-white'>{fence.time}</td>
-                        <td className='text-white'>{fence.status}</td>
-                        <td className='text-white'>{fence.latitude}</td>
-                        <td className='text-white'>{fence.longitude}</td>
+                      <tr key={`${index}-${fence._id}`} >
+                        <td className='text-dark'>{new Date(fence.date).toDateString()}</td>
+                        <td className='text-dark'>{fence.time}</td>
+                        <td className='text-dark'>{fence.status}</td>
+                        <td className='text-dark'>{fence.latitude}</td>
+                        <td className='text-dark'>{fence.longitude}</td>
                       </tr>
                     );
                   }
