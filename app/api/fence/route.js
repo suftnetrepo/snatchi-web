@@ -17,7 +17,9 @@ export const GET = async (req) => {
     if (action === 'getByUserOnly') {
       const userId = url.searchParams.get('userId');
       const projectId = url.searchParams.get('projectId'); 
-      const result = await getByUserOnly(userId, projectId);
+      const date = url.searchParams.get('date');
+  
+      const result = await getByUserOnly(userId, projectId, date);
       return NextResponse.json({ data: result, success: true }, { status: 200 });
     }
 

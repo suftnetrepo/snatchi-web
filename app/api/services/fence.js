@@ -56,19 +56,37 @@ async function getByUser(dateString, user) {
   }
 }
 
-async function getByUserOnly(user, project) {
+async function getByUserOnly(user, project, dateString) {
   try {
+
+    if (!dateString) {
+      throw new Error('Date is required');
+    }
+
+    const [year, month, day] = dateString.split('-').map(Number);
+    if (
+      !year || !month || !day ||
+      isNaN(year) || isNaN(month) || isNaN(day)
+    ) {
+      throw new Error(`Invalid date format: ${dateString}. Expected YYYY-MM-DD`);
+    }
+
+    const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+
     const result = await Fence.find({
       user: user,
-      project: project
+      project: project,
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay
+      }
     }).sort({ date: -1 });
-
-    console.log('Fence result', result);
-
     return result;
+
   } catch (error) {
-    logger.error(error);
-    throw new Error('An unexpected error occurred. Please try again.');
+    logger.error('Fence query error:', error);
+    throw error;
   }
 }
 

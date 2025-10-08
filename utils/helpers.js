@@ -198,6 +198,34 @@ const formatTimeForObject = (lastUpdated) => {
   return null;
 };
 
+const formattedTime = (time) => {
+  if (!time) return null;
+
+  try {
+    let date;
+    // Handle string time format (HH:mm)
+    if (typeof time === 'string' && time.includes(':')) {
+      date = new Date(`2000-01-01T${time}`);
+    } else {
+      // Handle full date string or timestamp
+      date = new Date(time);
+    }
+
+    if (isNaN(date.getTime())) {
+      return time; 
+    }
+
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch (error) {
+
+    return time;
+  }
+};
+
 function convertTimestampToTime(timestamp) {
   if (!timestamp) return;
   const date = new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
@@ -241,7 +269,7 @@ const reverseGeocode = async (latitude, longitude) => {
     const json = await response.json();
 
     return formatAddressParts(json.address);
-  } catch (error) {}
+  } catch (error) { }
 };
 
 function formatCurrency(currencySymbol, amount) {
@@ -505,5 +533,6 @@ export {
   getSortedCounts,
   formatDateTime,
   capitalizeFirstLetter,
-  convertTimestampToDate
+  convertTimestampToDate,
+  formattedTime
 };

@@ -9,7 +9,8 @@ const useFence = () => {
     loading: false,
     error: null,
     success: false,
-    totalCount: 0
+    totalCount: 0,
+        userId: ""
   });
 
   const handleError = useCallback((error) => {
@@ -33,12 +34,12 @@ const useFence = () => {
     });
   }, []);
 
-  async function handleFetchByUser(userId, projectId) {
+  async function handleFetchByUser(userId, projectId, date ) {
     setState((prev) => ({ ...prev, loading: true }));
     const { success, data, errorMessage } = await zat(FENCE.fetch, null, VERBS.GET, {
       action: 'getByUserOnly',
       userId: userId,
-      projectId: projectId
+      projectId: projectId, date :date
     });
 
     if (success) {
@@ -46,13 +47,13 @@ const useFence = () => {
         ...prevState,
         data: data,
         loading: false,
-        success: data.length > 0,
+        success: true,
+        userId
       }));
     } else {
       handleError(errorMessage || 'Failed to fetch the fence.');
     }
   }
-
   const handleSave = useCallback(async (body) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     const { success, errorMessage } = await zat(FENCE.addOne, body, VERBS.POST);

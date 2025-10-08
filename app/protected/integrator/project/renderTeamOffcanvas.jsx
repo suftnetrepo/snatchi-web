@@ -1,22 +1,25 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { Offcanvas, ListGroup, Form, Alert } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import { Offcanvas, ListGroup, Form, Alert, Button } from 'react-bootstrap';
 import { useTeam } from '../../../../hooks/useTeam';
 import { useFence } from '../../../../hooks/useFence';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
 import { MdMyLocation } from 'react-icons/md';
-import { MdDelete, MdCancel } from 'react-icons/md';
+import { MdDelete, MdCancel, MdFilterList } from 'react-icons/md';
 import Select from 'react-select';
 import Tooltip from '@mui/material/Tooltip';
+import { formattedTime } from '../../../../utils/helpers';
 
-const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
-  const { data: fenceData, error: fenceError, loading, success, handleReset, handleFetchByUser } = useFence();
+const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
+  const [selectedDate, setSelectedDate] = useState(new Date())
+  const { data: fenceData, error: fenceError, loading, success, userId, handleReset, handleFetchByUser } = useFence();
   const { data, error, customStyles, teamData, handleSelect, fields, handleChange, handleDelete, handleFetchUsers } =
     useTeam(id);
 
-  console.log('fenceData', fenceData);
-  console.log('data', data);
+  console.log('userId', userId);
+  // console.log('data', data);
+  // console.log('project', project);
 
   useEffect(() => {
     handleFetchUsers({ pageIndex: 1, pageSize: 100 });
@@ -39,7 +42,14 @@ const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '40%', backgroundColor: 'white' }}>
       <div className="d-flex flex-row justify-content-between align-items-center p-7">
         <div className="d-flex flex-column justify-content-start align-items-start">
-          <p className="text-dark fw-bold fs-18"> Teams</p>
+          {
+            !success ? (<p className="text-dark fw-bold fs-18"> Teams</p>) :
+              (<>
+                <span className="text-dark fw-bold fs-18">Tracking Location</span>
+                <span className="text-dark fw-normal fs-14">{project?.completeAddress}</span>
+              </>)
+          }
+
         </div>
         <div>
           <MdCancel size={48} color="black" onClick={() => onClose()} className="pointer" />
@@ -115,7 +125,11 @@ const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
                         <div className="d-flex flex-row justify-content-end align-items-end mx-3">
                           <Tooltip title="View Enigeer Site log" arrow className='me-2'>
                             <span className="p-0">
-                              <MdMyLocation size={30} className="pointer" onClick={() => handleFetchByUser(team.id._id, id)} />
+                              <MdMyLocation size={30} className="pointer" onClick={() => {
+                                const today = new Date();
+                                const formattedDate = today.toISOString().split('T')[0];
+                                handleFetchByUser(team.id._id, id, formattedDate)
+                              }} />
                             </span>
                           </Tooltip>
                           <Tooltip title="Remove from Project" arrow >
@@ -141,36 +155,51 @@ const RenderTeamOffcanvas = ({ show, handleClose, id }) => {
             </div>
           </Form>
         ) : (
-          <div class="table-responsive-md">
-            <table class="table table-bordered">
-              <thead class="table-light">
-                <tr>
-                  <th scope="col">Date</th>
-                  <th scope="col">Time</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Latitude</th>
-                  <th scope="col">Longitude</th>
-                </tr>
-              </thead>
-              <tbody>
-                {
-                  fenceData?.map((fence, index) => {
-                    return (
-                      <tr key={`${index}-${fence._id}`} >
-                        <td className='text-dark'>{new Date(fence.date).toDateString()}</td>
-                        <td className='text-dark'>{fence.time}</td>
-                        <td className='text-dark'>{fence.status}</td>
-                        <td className='text-dark'>{fence.latitude}</td>
-                        <td className='text-dark'>{fence.longitude}</td>
-                      </tr>
-                    );
+          <div className='d-flex flex-column justify-content-start align-items-start'>
+            <div className='d-flex flex-row justify-content-start align-items-start mb-2'>
+              <Form.Control
+                type="date"
+               value={selectedDate.split('T')[0]} 
+                className="form-control border border-secondary rounded-3 "
+                onChange={(e) => setSelectedDate(e.target.value)}
+              /> <Button disabled={!userId} type="button" className='p-3 ms-2' variant="primary" onClick={() => {
+              handleFetchByUser(userId, id, selectedDate);
+              }}>
+                <MdFilterList />
+              </Button>
+            </div>
+            <div className='w-100'>
+              <table class="table table-bordered">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Time</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Latitude</th>
+                    <th scope="col">Longitude</th>
+                    <th scope="col">Radius</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {
+                    fenceData?.map((fence, index) => {
+                      return (
+                        <tr key={`${index}-${fence._id}`} >
+                          <td className='text-dark'>{new Date(fence.date).toDateString()}</td>
+                          <td className='text-dark'>{formattedTime(fence.time)}</td>
+                          <td className='text-dark'>{fence.status}</td>
+                          <td className='text-dark'>{fence.latitude}</td>
+                          <td className='text-dark'>{fence.longitude}</td>
+                          <td className='text-dark'>{fence.radius}m</td>
+                        </tr>
+                      );
+                    }
+                    )
                   }
-                  )
-                }
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
-
         )}
 
       </Offcanvas.Body>
