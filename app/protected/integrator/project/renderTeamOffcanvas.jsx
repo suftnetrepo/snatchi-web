@@ -9,7 +9,7 @@ import { MdMyLocation } from 'react-icons/md';
 import { MdDelete, MdCancel, MdFilterList } from 'react-icons/md';
 import Select from 'react-select';
 import Tooltip from '@mui/material/Tooltip';
-import { formattedTime } from '../../../../utils/helpers';
+import { formattedTime, getFenceStatusColorCode } from '../../../../utils/helpers';
 
 const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -159,7 +159,7 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
             <div className='d-flex flex-row justify-content-start align-items-start mb-2'>
               <Form.Control
                 type="date"
-               value={selectedDate.split('T')[0]} 
+               value={selectedDate ?? selectedDate?.split('T')[0]} 
                 className="form-control border border-secondary rounded-3 "
                 onChange={(e) => setSelectedDate(e.target.value)}
               /> <Button disabled={!userId} type="button" className='p-3 ms-2' variant="primary" onClick={() => {
@@ -187,7 +187,7 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                         <tr key={`${index}-${fence._id}`} >
                           <td className='text-dark'>{new Date(fence.date).toDateString()}</td>
                           <td className='text-dark'>{formattedTime(fence.time)}</td>
-                          <td className='text-dark'>{fence.status}</td>
+                          <td className='text-dark'> <span className={`badge ${getFenceStatusColorCode(fence.status)}`}>{fence.status}</span></td>
                           <td className='text-dark'>{fence.latitude}</td>
                           <td className='text-dark'>{fence.longitude}</td>
                           <td className='text-dark'>{fence.radius}m</td>

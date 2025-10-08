@@ -481,6 +481,14 @@ const getIconColor = (type) => {
   }
 };
 
+ const getFenceStatusColorCode = (status) => {
+    const colors = {
+      Exit: 'bg-danger',
+      Enter: 'bg-success',
+    };
+    return colors[status] || 'bg-danger';
+  };
+
 const formatRelativeTime = (dateString) => {
   const date = new Date(dateString);
   const now = new Date();
@@ -534,5 +542,6 @@ export {
   formatDateTime,
   capitalizeFirstLetter,
   convertTimestampToDate,
-  formattedTime
+  formattedTime,
+  getFenceStatusColorCode
 };

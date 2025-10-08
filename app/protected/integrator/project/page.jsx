@@ -120,7 +120,7 @@ const Project = () => {
                   onConfirm={async (id) => {
                     handleDelete(id);
                   }}
-                  onCancel={() => {}}
+                  onCancel={() => { }}
                   itemId={row.original._id}
                 >
                   <MdDelete size={30} className="pointer" />
@@ -134,7 +134,7 @@ const Project = () => {
                   size={30}
                   className="pointer ms-2"
                   onClick={() => {
-                          setProject(prev => ({ ...prev, projectId: row.original._id }));
+                    setProject(prev => ({ ...prev, projectId: row.original._id }));
                     router.push(`/protected/integrator/task?projectId=${row.original._id}`);
                   }}
                 />
@@ -147,7 +147,7 @@ const Project = () => {
                   size={30}
                   className="pointer ms-2"
                   onClick={() => {
-             setProject(prev => ({ ...prev, projectId: row.original._id }));
+                    setProject(prev => ({ ...prev, projectId: row.original._id }));
                     handleShow();
                   }}
                 />
@@ -160,7 +160,7 @@ const Project = () => {
                   size={35}
                   className="pointer ms-2"
                   onClick={() => {
-                    setProject(prev => ({ ...prev, original:row.original, projectId: row.original._id }));
+                    setProject(prev => ({ ...prev, original: row.original, projectId: row.original._id }));
                     handleShowTeamOffcanvas();
                   }}
                 />
@@ -200,7 +200,7 @@ const Project = () => {
         </div>
       </div>
       {!loading && <span className="overlay__block" />}
-      {error && <ErrorDialogue showError={error} onClose={() => {}} />}
+      {error && <ErrorDialogue showError={error} onClose={() => { }} />}
       <RenderDocumentOffcanvas show={show} handleClose={handleClose} id={project.projectId} />
       <RenderTeamOffcanvas project={project.original} show={showTeamOffcanvas} handleClose={handleCloseTeamOffcanvas} id={project.projectId} />
     </>
