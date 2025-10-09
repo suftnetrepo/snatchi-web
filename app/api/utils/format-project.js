@@ -47,10 +47,9 @@ function buildProjectMessages(project) {
           lastName: user.last_name,
         }
       ]);
-
       return {
         message: {
-          token: 'egK4PvM8ZE6hnmDh_yJKd8:APA91bESfcxH4fdsOP1_q-GYBZx52VTCriWOnSyCAL8-doCkx0UaOdeZSRqAREy_tjSQvIgr3qVuyaLdPL-CJfR4wAD1hY3VbS5R1-6dE87W-ULyRJm_vhE',
+          token: user.fcm,
           data: { addProjects }
         }
       };
