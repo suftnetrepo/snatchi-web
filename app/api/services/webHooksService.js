@@ -3,7 +3,7 @@ const { findPrice } = require('../../../src/data/pricing');
 const { formatUnix } = require('../utils/date-format');
 const { updateIntegratorStatus } = require('./integrator');
 const { DATE_FORMAT_DD_MM_YYYY_HH_mm_ss_sz, DATE_FORMAT_dd_MMM_YYYY } = require('../utils/date-constants');
-const { sendEmail } = require('../../../lib/mail');
+const { sendBrevoEmail } = require('../../../lib/mail');
 const { compileEmailTemplate } = require('../templates/compile-email-template');
 const { logger } = require('../utils/logger');
 import { emailTemplates } from '../../email';
@@ -41,14 +41,14 @@ const invoicePaymentSuccess = async (event) => {
     await updateIntegratorStatus(stripeCustomerId, { status: 'active' });
 
     const mailOptions = {
-      from: process.env.USER_NAME,
-      to: email,
+      sender: { email: process.env.USER_NAME, name: 'Snatchi' },
+      to: [{ email: email }],
       subject: 'Invoice paid Successfully',
-      text: 'Invoice paid Successfully',
-      html
+      textContent: html,
+      htmlContent: html
     };
 
-    await sendEmail(mailOptions);
+    await sendBrevoEmail(mailOptions);
   } catch (error) {
     logger.error(error);
   }
@@ -93,14 +93,14 @@ const invoicePaymentFailed = async (event) => {
     await updateIntegratorStatus(stripeCustomerId, { status: 'suspended' });
 
     const mailOptions = {
-      from: process.env.USER_NAME,
-      to: `${email}`,
+      sender: { email: process.env.USER_NAME, name: 'Snatchi' },
+      to: [{ email: email }],
       subject: 'Invoice Payment Failed',
-      text: 'Invoice Payment Failed',
-      html
+      textContent: html,
+      htmlContent: html
     };
 
-    await sendEmail(mailOptions);
+    await sendBrevoEmail(mailOptions);
   } catch (error) {
     logger.error(error);
   }
@@ -120,14 +120,14 @@ const trialWillEnd = async (event) => {
     );
 
     const mailOptions = {
-      from: process.env.USER_NAME,
-      to: `${email}`,
+      sender: { email: process.env.USER_NAME, name: 'Snatchi' },
+      to: [{ email: email }],
       subject: 'Trial Will Soon End',
-      text: 'Trial Will Soon End',
-      html
+      textContent: html,
+      htmlContent: html
     };
 
-    await sendEmail(mailOptions);
+    await sendBrevoEmail(mailOptions);
   } catch (error) {
     logger.error(error);
   }
@@ -162,15 +162,15 @@ const updateSubscription = async (event) => {
     });
 
     const mailOptions = {
-      from: process.env.USER_NAME,
-      to: `${email}`,
+      sender: { email: process.env.USER_NAME, name: 'Snatchi' },
+      to: [{ email: email }],
       subject: 'Subscription Update',
-      text: 'Subscription Update',
-      html
+      textContent: html,
+      htmlContent: html
     };
 
     if (status === 'active') {
-      await sendEmail(mailOptions);
+      await sendBrevoEmail(mailOptions);
     }
   } catch (error) {
     logger.error(error);
@@ -199,14 +199,14 @@ const createSubscription = async (event) => {
     );
 
     const mailOptions = {
-      from: process.env.USER_NAME,
-      to: `${email}`,
+      sender: { email: process.env.USER_NAME, name: 'Snatchi' },
+      to: [{ email: email }],
       subject: 'Welcome to Snatchi',
-      text: 'Welcome to Snatchi',
-      html
+      textContent: html,
+      htmlContent: html
     };
 
-    await sendEmail(mailOptions);
+    await sendBrevoEmail(mailOptions);
   } catch (error) {
     logger.error(error);
   }
@@ -233,14 +233,14 @@ const cancelSubscription = async (event) => {
     });
 
     const mailOptions = {
-      from: process.env.USER_NAME,
-      to: `${email}`,
+      sender: { email: process.env.USER_NAME, name: 'Snatchi' },
+      to: [{ email: email }],
       subject: 'Subscription Cancelled',
-      text: 'Subscription Cancelled',
-      html
+      textContent: html,
+      htmlContent: html
     };
 
-    await sendEmail(mailOptions);
+    await sendBrevoEmail(mailOptions);
   } catch (error) {
     logger.error(error);
   }
@@ -266,14 +266,14 @@ const cancelTrial = async (event) => {
     });
 
     const mailOptions = {
-      from: process.env.USER_NAME,
-      to: `${email}`,
+      sender: { email: process.env.USER_NAME, name: 'Snatchi' },
+      to: [{ email: email }],
       subject: 'Trial Cancelled',
-      text: 'Trial Cancelled',
-      html
+      textContent: html,
+      htmlContent: html
     };
 
-    await sendEmail(mailOptions);
+    await sendBrevoEmail(mailOptions);
   } catch (error) {
     logger.error(error);
   }

@@ -1,7 +1,7 @@
 import { mongoConnect } from '../../../../utils/connectDb';
 import User from '../../models/user';
 import { errorHandler } from '../../../../utils/errors';
-import { sendEmail } from '../../../../lib/mail';
+import { sendBrevoEmail } from '../../../../lib/mail';
 import { emailTemplates } from '../../../email';
 import { compileEmailTemplate } from '../../templates/compile-email-template';
 import { NextResponse } from 'next/server';
@@ -41,15 +41,14 @@ export async function POST(req: Request) {
     );
 
     const mailOptions = {
-      from:process.env.USER_NAME || "kabelsus@gmail.com",
-      to: emailAddress,
+      sender:{email:process.env.USER_NAME, name: 'Snatchi'},
+      to: [{email :emailAddress}],
       subject: 'Instructions for changing your Snatchi account password',
-      text: template,
-      html :template
+      textContent: template,
+      htmlContent :template
     };
    
-    await sendEmail(mailOptions)
-
+    await sendBrevoEmail(mailOptions) 
     return NextResponse.json({ data: true }, { status: 200 });
   } catch (err) {     
     return NextResponse.json(
