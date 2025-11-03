@@ -21,9 +21,8 @@ function buildProjectMessages(project) {
     activeDays.add(day);
   }
 
-  // For each assigned user, build a personalized payload
   return project.assignedTo
-    .filter(a => a.id?.fcm) // only those with valid fcm
+    .filter(a => a.id?.fcm) 
     .map(a => {
       const user = a.id;
       const addProjects = JSON.stringify([
@@ -42,9 +41,12 @@ function buildProjectMessages(project) {
           activeDays: Array.from(activeDays).sort((x, y) => x - y),
           completeAddress: project.completeAddress,
           status: project.status,
+          priority: project.priority,
           userId: user._id,
           firstName: user.first_name,
           lastName: user.last_name,
+          description: getShortDescription(project.description),
+          action: true
         }
       ]);
       return {

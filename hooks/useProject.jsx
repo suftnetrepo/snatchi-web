@@ -3,7 +3,7 @@ import moment from 'moment';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
 import { PROJECT } from '../utils/apiUrl';
-import { projectValidator } from './../app/protected/integrator/rules';
+import { projectValidator } from '../app/protected/integrator/rules';
 import { customStyles } from '../utils/helpers';
 
 const useProject = (searchQuery) => {

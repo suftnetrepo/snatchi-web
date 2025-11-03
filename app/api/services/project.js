@@ -21,14 +21,14 @@ async function getProjects({ suid, page = 1, limit = 10, sortField, sortOrder, s
 
     const searchFilter = searchQuery
       ? {
-          $or: [
-            { name: { $regex: searchQuery, $options: 'i' } },
-            { stakeholder: { $regex: searchQuery, $options: 'i' } },
-            { priority: { $regex: searchQuery, $options: 'i' } },
-            { manager: { $regex: searchQuery, $options: 'i' } },
-            { status: { $regex: searchQuery, $options: 'i' } }
-          ]
-        }
+        $or: [
+          { name: { $regex: searchQuery, $options: 'i' } },
+          { stakeholder: { $regex: searchQuery, $options: 'i' } },
+          { priority: { $regex: searchQuery, $options: 'i' } },
+          { manager: { $regex: searchQuery, $options: 'i' } },
+          { status: { $regex: searchQuery, $options: 'i' } }
+        ]
+      }
       : {};
 
     const query = {
@@ -51,17 +51,23 @@ async function getProjects({ suid, page = 1, limit = 10, sortField, sortOrder, s
   }
 }
 
-const getUserProjects = async (userId) => {
+const getUserProjects = async (userId, excludeProjectStatuses = ['Completed', 'Cancelled']) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       throw new Error('Invalid user ID');
     }
 
-    const summary = await Project.aggregate([
+    const matchStage = {
+      'assignedTo.id': new mongoose.Types.ObjectId(userId)
+    };
+
+    if (excludeProjectStatuses.length > 0) {
+      matchStage.status = { $nin: excludeProjectStatuses };
+    }
+
+    const projects = await Project.aggregate([
       {
-        $match: {
-          'assignedTo.id': new mongoose.Types.ObjectId(userId)
-        }
+        $match: matchStage
       },
       {
         $lookup: {
@@ -72,39 +78,72 @@ const getUserProjects = async (userId) => {
         }
       },
       {
-        $addFields: {
-          totalTasks: { $size: '$tasks' },
-          completedTasks: {
-            $size: {
-              $filter: {
-                input: '$tasks',
-                as: 'task',
-                cond: { $eq: ['$$task.status', 'Completed'] }
-              }
-            }
-          }
-        }
-      },
-      {
-        $addFields: {
-          progress: {
-            $cond: [
-              { $gt: ['$totalTasks', 0] },
-              { $round: [{ $multiply: [{ $divide: ['$completedTasks', '$totalTasks'] }, 100] }, 2] },
-              0
-            ]
-          }
+        $project: {
+          __v: 0,
+          'tasks.__v': 0
         }
       }
     ]);
 
-    return {data : summary};
+    const today = new Date();
+
+    const result = projects.map(project => {
+      const activeTasks = project.tasks.filter(
+        t => !['Cancelled', 'Archived'].includes(t.status)
+      );
+
+      const totalTasks = activeTasks.length;
+      const completedTasks = activeTasks.filter(t => t.status === 'Completed').length;
+      const progress = totalTasks > 0
+        ? Math.round((completedTasks / totalTasks) * 10000) / 100
+        : 0;
+
+      const enhancedTasks = activeTasks.map(task => {
+        const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+        let dueInDays = null;
+        let overdue = false;
+        let statusLabel = task.status;
+
+        if (dueDate) {
+          const diffMs = dueDate - today;
+          dueInDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+          overdue = dueInDays < 0;
+        }
+
+        if (task.status === 'Completed') {
+          statusLabel = 'Completed';
+        } else if (overdue) {
+          statusLabel = 'Delayed';
+        } else {
+          statusLabel = 'On Track';
+        }
+
+        return {
+          ...task,
+          dueInDays,
+          overdue,
+          statusLabel,
+          totalTasks,
+          completedTasks,
+          progress
+        };
+      });
+
+      return {
+        ...project,
+        tasks: enhancedTasks,
+        totalTasks,
+        completedTasks,
+        progress
+      };
+    });
+
+    return { data: result };
   } catch (error) {
     logger.error(error);
     throw new Error(`Error fetching project summary by assigned user: ${error.message}`);
   }
 };
-
 
 async function getProjectById(id) {
   if (!isValidObjectId(id)) {
@@ -145,9 +184,9 @@ async function createProject(id, body) {
       integrator: id,
       ...body
     }).populate({
-        path: 'assignedTo.id',
-        select: 'first_name last_name fcm secure_url role id'
-      });
+      path: 'assignedTo.id',
+      select: 'first_name last_name fcm secure_url role id'
+    });
 
     if (!newProject) {
       throw new Error('create new project failed');
@@ -175,9 +214,9 @@ async function updateProject(id, body) {
     const updatedProject = await Project.findByIdAndUpdate(id, body, {
       new: true
     }).populate({
-        path: 'assignedTo.id',
-        select: 'first_name last_name fcm secure_url role id'
-      });
+      path: 'assignedTo.id',
+      select: 'first_name last_name fcm secure_url role id'
+    });
 
     console.log('Updated Project:', JSON.stringify(updatedProject));
 

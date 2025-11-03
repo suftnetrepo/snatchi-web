@@ -11,11 +11,16 @@ mongoConnect();
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+
+        console.log('Forgot password request for email:', body);
+
     if (!body.email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
     const emailAddress = body.email.toLowerCase();
+
+    console.log('Forgot password request for email:', emailAddress);
 
     const user = await User.findOne({ email: emailAddress });
     if (!user) {
@@ -50,12 +55,12 @@ export async function POST(req: Request) {
    
     await sendBrevoEmail(mailOptions) 
     return NextResponse.json({ data: true }, { status: 200 });
-  } catch (err) {     
+  } catch (err) {    
+    console.log('Error in forgot password route:', err);
+    
     return NextResponse.json(
       {
         error: errorHandler(err) || 'An unknown error occurred'
-      },
-      { status: 500 }
-    );
+      }), { status: 500 };
   }
 }

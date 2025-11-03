@@ -80,6 +80,20 @@ export const PUT = async (req) => {
     if (action === 'update') {
       const body = await req.json();
       const result = await update(user?.integrator, id, body);
+      console.log('Update result:', result);
+        console.log('Update body:', body);
+      if (result) {
+        const { title, description, status } = body;
+        if (status === 'Pending') {
+          await sendUserNotification({
+            userId: body.user._id,
+            title,
+            body: description,
+            screen: 'calendar',
+            screenParams: { scheduleId: id, startDate :body.startDate, endDate: body.endDate }
+          });
+        }
+      }
       return NextResponse.json({ success: true, data: result }, { status: 200 });
     }
   } catch (error) {

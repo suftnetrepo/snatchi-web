@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Offcanvas } from 'react-bootstrap';
 import { validate } from '../../../../validator/validator';
-import { taskValidator } from '../../../protected/integrator/rules';
+import { taskValidator } from '../rules';
 import { ConfirmationDialogue, OkDialogue } from '../../../../src/components/elements/ConfirmDialogue';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
 import { MdCancel } from 'react-icons/md';

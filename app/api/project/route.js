@@ -130,13 +130,7 @@ export const POST = async (req) => {
     }
 
     const body = await req.json();
-    const { notify } = body;
     const result = await createProject(user?.integrator, body);
-
-    if (result && notify) {
-      notifyAssignedUsers(result);
-    }
-
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     console.error(error);

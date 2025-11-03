@@ -3,7 +3,7 @@ import { zat } from '../utils/api';
 import { VERBS } from '../config';
 import { TASK } from '../utils/apiUrl';
 import moment from "moment";
-import { taskValidator } from './../app/protected/integrator/rules';
+import { taskValidator } from '../app/protected/integrator/rules';
 
 const useTask = (searchQuery, projectId) => {
   const [state, setState] = useState({

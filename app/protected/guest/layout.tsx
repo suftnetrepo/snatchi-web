@@ -9,8 +9,8 @@ import Header from '../../../src/components/layouts/Header/Header';
 import Footer from '../../../src/components/layouts/Footer/Footer';
 import { config } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
-import RenderUserUserOffcanvas from '../guest/user/renderUserOffcanvas'
-import RenderTaskOffcanvas from '../guest/dashboard/renderTaskOffcanvas'
+import RenderUserUserOffcanvas from './user/renderUserOffcanvas'
+import RenderTaskOffcanvas from './dashboard/renderTaskOffcanvas'
 import { useAppContext } from '@/Store/AppContext';
 
 config.autoAddCss = false;

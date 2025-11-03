@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
 import { PROJECT, TASK_TEAM } from '../utils/apiUrl';
-import { teamValidator } from './../app/protected/integrator/rules';
+import { teamValidator } from '../app/protected/integrator/rules';
 import { customStyles } from '../utils/helpers';
 
 const useTaskTeam = (projectId: string, taskId: string) => {
