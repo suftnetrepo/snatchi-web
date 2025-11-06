@@ -78,9 +78,66 @@ const getUserProjects = async (userId, excludeProjectStatuses = ['Completed', 'C
         }
       },
       {
+        $lookup: {
+          from: 'users',
+          let: { assignedIds: '$assignedTo.id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $in: ['$_id', '$$assignedIds'] }
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                public_id: 1,
+                secure_url: 1,
+                name: {
+                  $concat: [
+                    { $ifNull: ['$first_name', ''] },
+                    ' ',
+                    { $ifNull: ['$last_name', ''] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'assignedUsers'
+        }
+      },
+      // Merge assigned user details into each assignedTo entry
+      {
+        $addFields: {
+          assignedTo: {
+            $map: {
+              input: '$assignedTo',
+              as: 'assignee',
+              in: {
+                $mergeObjects: [
+                  '$$assignee',
+                  {
+                    $arrayElemAt: [
+                      {
+                        $filter: {
+                          input: '$assignedUsers',
+                          as: 'user',
+                          cond: { $eq: ['$$user._id', '$$assignee.id'] }
+                        }
+                      },
+                      0
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
         $project: {
           __v: 0,
-          'tasks.__v': 0
+          'tasks.__v': 0,
+          assignedUsers: 0
         }
       }
     ]);
@@ -137,6 +194,8 @@ const getUserProjects = async (userId, excludeProjectStatuses = ['Completed', 'C
         progress
       };
     });
+
+    console.log('Fetched projects for user:', userId, 'Count:', result.length);
 
     return { data: result };
   } catch (error) {
