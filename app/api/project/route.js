@@ -7,7 +7,7 @@ import {
   updateProject,
   createProject,
   getProjectStatusAggregates,
-  getUserProjects
+  getUserProjects, getUserProjectById
 } from '../services/project';
 import { logger } from '../utils/logger';
 const { NextResponse } = require('next/server');
@@ -52,6 +52,12 @@ export const GET = async (req) => {
     if (action === 'single') {
       const id = url.searchParams.get('id');
       const { data } = await getProjectById(id);
+      return NextResponse.json({ data, success: true });
+    }
+
+     if (action === 'getUserProjectById') {
+      const id = url.searchParams.get('id');
+      const { data } = await getUserProjectById(id);
       return NextResponse.json({ data, success: true });
     }
 

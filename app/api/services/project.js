@@ -204,6 +204,156 @@ const getUserProjects = async (userId, excludeProjectStatuses = ['Completed', 'C
   }
 };
 
+const getUserProjectById = async (userId, projectId) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new Error('Invalid user ID');
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+      throw new Error('Invalid project ID');
+    }
+
+    const matchStage = {
+      _id: new mongoose.Types.ObjectId(projectId),
+    };
+
+    const projectResult = await Project.aggregate([
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: 'tasks',
+          localField: '_id',
+          foreignField: 'project',
+          as: 'tasks',
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          let: { assignedIds: '$assignedTo.id' },
+          pipeline: [
+            { $match: { $expr: { $in: ['$_id', '$$assignedIds'] } } },
+            {
+              $project: {
+                _id: 1,
+                public_id: 1,
+                secure_url: 1,
+                name: {
+                  $concat: [
+                    { $ifNull: ['$first_name', ''] },
+                    ' ',
+                    { $ifNull: ['$last_name', ''] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'assignedUsers',
+        },
+      },
+      {
+        $addFields: {
+          assignedTo: {
+            $map: {
+              input: '$assignedTo',
+              as: 'assignee',
+              in: {
+                $mergeObjects: [
+                  '$$assignee',
+                  {
+                    $arrayElemAt: [
+                      {
+                        $filter: {
+                          input: '$assignedUsers',
+                          as: 'user',
+                          cond: { $eq: ['$$user._id', '$$assignee.id'] },
+                        },
+                      },
+                      0,
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          __v: 0,
+          'tasks.__v': 0,
+          assignedUsers: 0,
+        },
+      },
+    ]);
+
+    if (projectResult.length === 0) {
+      throw new Error('Project not found');
+    }
+
+    const today = new Date();
+    const project = projectResult[0];
+    const activeTasks = project.tasks.filter(
+      (t) => !['Cancelled', 'Archived'].includes(t.status)
+    );
+
+    const totalTasks = activeTasks.length;
+    const completedTasks = activeTasks.filter(
+      (t) => t.status === 'Completed'
+    ).length;
+    const progress =
+      totalTasks > 0
+        ? Math.round((completedTasks / totalTasks) * 10000) / 100
+        : 0;
+
+    const enhancedTasks = activeTasks.map((task) => {
+      const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+      let dueInDays = null;
+      let overdue = false;
+      let statusLabel = task.status;
+
+      if (dueDate) {
+        const diffMs = dueDate - today;
+        dueInDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        overdue = dueInDays < 0;
+      }
+
+      if (task.status === 'Completed') {
+        statusLabel = 'Completed';
+      } else if (overdue) {
+        statusLabel = 'Delayed';
+      } else {
+        statusLabel = 'On Track';
+      }
+
+      return {
+        ...task,
+        dueInDays,
+        overdue,
+        statusLabel,
+        totalTasks,
+        completedTasks,
+        progress,
+      };
+    });
+
+    return {
+      data: {
+        ...project,
+        tasks: enhancedTasks,
+        totalTasks,
+        completedTasks,
+        progress,
+      },
+    };
+  } catch (error) {
+    logger.error(error);
+    throw new Error(`Error fetching project by ID: ${error.message}`);
+  }
+};
+
+
 async function getProjectById(id) {
   if (!isValidObjectId(id)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
@@ -479,5 +629,6 @@ export {
   removeProject,
   updateProject,
   createProject,
-  getUserProjects
+  getUserProjects,
+  getUserProjectById
 };
