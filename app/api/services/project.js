@@ -51,6 +51,164 @@ async function getProjects({ suid, page = 1, limit = 10, sortField, sortOrder, s
   }
 }
 
+const getMyProjects = async (userId) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new Error('Invalid user ID');
+    }
+
+    // Always return all projects — no status filtering
+    const matchStage = {
+      'assignedTo.id': new mongoose.Types.ObjectId(userId)
+    };
+
+    const projects = await Project.aggregate([
+      { $match: matchStage },
+
+      // Lookup tasks
+      {
+        $lookup: {
+          from: 'tasks',
+          localField: '_id',
+          foreignField: 'project',
+          as: 'tasks'
+        }
+      },
+
+      // Lookup assigned user details
+      {
+        $lookup: {
+          from: 'users',
+          let: { assignedIds: '$assignedTo.id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $in: ['$_id', '$$assignedIds'] }
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                public_id: 1,
+                secure_url: 1,
+                name: {
+                  $concat: [
+                    { $ifNull: ['$first_name', ''] },
+                    ' ',
+                    { $ifNull: ['$last_name', ''] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'assignedUsers'
+        }
+      },
+
+      // Merge assigned users into assignedTo[]
+      {
+        $addFields: {
+          assignedTo: {
+            $map: {
+              input: '$assignedTo',
+              as: 'assignee',
+              in: {
+                $mergeObjects: [
+                  '$$assignee',
+                  {
+                    $arrayElemAt: [
+                      {
+                        $filter: {
+                          input: '$assignedUsers',
+                          as: 'user',
+                          cond: { $eq: ['$$user._id', '$$assignee.id'] }
+                        }
+                      },
+                      0
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+
+      // Cleanup
+      {
+        $project: {
+          __v: 0,
+          'tasks.__v': 0,
+          assignedUsers: 0
+        }
+      }
+    ]);
+
+    const today = new Date();
+
+    // Enhance tasks with defaults
+    const result = projects.map(project => {
+      const activeTasks = project.tasks; // keep all tasks
+
+      const totalTasks = activeTasks.length;
+      const completedTasks = activeTasks.filter(t => t.status === 'Completed').length;
+
+      const progress = totalTasks > 0
+        ? Math.round((completedTasks / totalTasks) * 10000) / 100
+        : 0;
+
+      const enhancedTasks = activeTasks.map(task => {
+        const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+
+        let dueInDays = null;
+        let overdue = false;
+        let statusLabel = task.status;
+
+        if (dueDate) {
+          const diffMs = dueDate - today;
+          dueInDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+          overdue = dueInDays < 0;
+        }
+
+        if (task.status === 'Completed') {
+          statusLabel = 'Completed';
+        } else if (overdue) {
+          statusLabel = 'Delayed';
+        } else {
+          statusLabel = 'On Track';
+        }
+
+        return {
+          ...task,
+          dueInDays,
+          overdue,
+          statusLabel,
+          totalTasks,
+          completedTasks,
+          progress
+        };
+      });
+
+      return {
+        ...project,
+        tasks: enhancedTasks,
+        totalTasks,
+        completedTasks,
+        progress
+      };
+    });
+
+    console.log('Fetched ALL projects for user:', userId, 'Count:', result.length);
+
+    return { data: result };
+
+  } catch (error) {
+    logger.error(error);
+    throw new Error(`Error fetching user projects: ${error.message}`);
+  }
+};
+
+
 const getUserProjects = async (userId, excludeProjectStatuses = ['Completed', 'Cancelled']) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -204,12 +362,9 @@ const getUserProjects = async (userId, excludeProjectStatuses = ['Completed', 'C
   }
 };
 
-const getUserProjectById = async (userId, projectId) => {
+const getUserProjectById = async (projectId) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      throw new Error('Invalid user ID');
-    }
-
+   
     if (!mongoose.Types.ObjectId.isValid(projectId)) {
       throw new Error('Invalid project ID');
     }
@@ -348,8 +503,54 @@ const getUserProjectById = async (userId, projectId) => {
       },
     };
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     throw new Error(`Error fetching project by ID: ${error.message}`);
+  }
+};
+
+const getMyProjectAggregates = async (userId) => {
+  console.log("Getting project aggregates for user:", userId);
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new Error('Invalid user ID');
+    }
+
+    const matchStage = {
+      'assignedTo.id': new mongoose.Types.ObjectId(userId)
+    };
+
+    const aggregates = await Project.aggregate([
+      { $match: matchStage },
+
+      // Group by project status
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      },
+
+      // Format output
+      {
+        $project: {
+          _id: 0,
+          status: '$_id',
+          count: 1
+        }
+      },
+
+      // Sort alphabetically (optional)
+      { $sort: { status: 1 } }
+    ]);
+
+    console.log("Aggregate results:", aggregates);
+
+    return { data: aggregates };
+
+  } catch (error) {
+    console.error(error);
+    throw new Error(`Error fetching project aggregates: ${error.message}`);
   }
 };
 
@@ -630,5 +831,7 @@ export {
   updateProject,
   createProject,
   getUserProjects,
-  getUserProjectById
+  getUserProjectById,
+  getMyProjects,
+  getMyProjectAggregates
 };

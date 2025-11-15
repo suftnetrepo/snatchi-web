@@ -7,7 +7,7 @@ import {
   updateProject,
   createProject,
   getProjectStatusAggregates,
-  getUserProjects, getUserProjectById
+  getUserProjects, getUserProjectById, getMyProjects, getMyProjectAggregates
 } from '../services/project';
 import { logger } from '../utils/logger';
 const { NextResponse } = require('next/server');
@@ -49,15 +49,28 @@ export const GET = async (req) => {
       return NextResponse.json({ data, success: true });
     }
 
+    if (action === 'getMyProjects') {
+      const id = url.searchParams.get('id');
+      console.log("Fetching my projects for user id:", id);
+      const { data } = await getMyProjects(id);
+      return NextResponse.json({ data, success: true });
+    }
+
     if (action === 'single') {
       const id = url.searchParams.get('id');
       const { data } = await getProjectById(id);
       return NextResponse.json({ data, success: true });
     }
 
-     if (action === 'getUserProjectById') {
+    if (action === 'getUserProjectById') {
       const id = url.searchParams.get('id');
       const { data } = await getUserProjectById(id);
+      return NextResponse.json({ data, success: true });
+    }
+
+    if (action === 'getMyProjectAggregates') {
+      const id = url.searchParams.get('id');
+      const { data } = await getMyProjectAggregates(id);
       return NextResponse.json({ data, success: true });
     }
 
