@@ -509,7 +509,6 @@ const getUserProjectById = async (projectId) => {
 };
 
 const getMyProjectAggregates = async (userId) => {
-  console.log("Getting project aggregates for user:", userId);
 
   try {
     if (!mongoose.Types.ObjectId.isValid(userId)) {

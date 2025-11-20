@@ -74,6 +74,28 @@ async function getTaskById(projectId, id) {
   }
 }
 
+async function getMyTasksById(project_id) {
+  if (!isValidObjectId(project_id)) {
+    throw new Error(JSON.stringify([{ field: 'project_id', message: 'Invalid MongoDB ObjectId' }]));
+  }
+
+  try {
+    const tasks = await Task.find({
+      project: project_id
+    })
+      .populate({
+        path: 'project',
+        select: 'name addressLine1 completeAddress county town country postcode location attachments'
+      })
+      .sort({ createdAt: -1 });
+
+    return tasks;
+  } catch (error) {
+    logger.error(error);
+    throw new Error('An unexpected error occurred. Please try again.');
+  }
+}
+
 async function getMyTasks(user_id, date) {
   if (!isValidObjectId(user_id)) {
     throw new Error(JSON.stringify([{ field: 'user_id', message: 'Invalid MongoDB ObjectId' }]));
@@ -255,4 +277,4 @@ async function getTaskStatusAggregates(user_id) {
   }
 }
 
-export { updateOneTask, getTaskStatusAggregates, getMyTasks, getTasks, getTaskById, removeTask, updateTask, createTask, getMyRecentTasks };
+export { getMyTasksById, updateOneTask, getTaskStatusAggregates, getMyTasks, getTasks, getTaskById, removeTask, updateTask, createTask, getMyRecentTasks };

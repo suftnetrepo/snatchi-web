@@ -7,7 +7,8 @@ import {
   createTask,
   updateOneTask,
   getMyRecentTasks,
-  getTaskStatusAggregates
+  getTaskStatusAggregates,
+  getMyTasksById
 } from '../services/task';
 import { logger } from '../utils/logger';
 const { NextResponse } = require('next/server');
@@ -48,13 +49,18 @@ export const GET = async (req) => {
       const id = url.searchParams.get('id');
       const projectId = url.searchParams.get('projectId');
       const { data } = await getTaskById(projectId, id);
-
       return NextResponse.json({ data, success: true }, { status: 200 });
     }
 
     if (action === 'myTasks') {
       const date = url.searchParams.get('date');
       const tasks = await getMyTasks(user.id, date);
+      return NextResponse.json({ data: tasks, success: true }, { status: 200 });
+    }
+
+    if (action === 'getMyTasksById') {
+      const id = url.searchParams.get('id');
+      const tasks = await getMyTasksById(id);
       return NextResponse.json({ data: tasks, success: true }, { status: 200 });
     }
 
