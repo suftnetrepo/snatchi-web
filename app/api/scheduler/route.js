@@ -24,7 +24,9 @@ export const GET = async (req) => {
     }
 
     if (action === 'getByUser') {
-      const results = await getByUser(user?.id);
+      const startDate = url.searchParams.get('startDate');
+      const endDate = url.searchParams.get('endDate');
+      const results = await getByUser(user?.id, startDate, endDate);
       return NextResponse.json({ data: results });
     }
 
@@ -80,8 +82,6 @@ export const PUT = async (req) => {
     if (action === 'update') {
       const body = await req.json();
       const result = await update(user?.integrator, id, body);
-      console.log('Update result:', result);
-        console.log('Update body:', body);
       if (result) {
         const { title, description, status } = body;
         if (status === 'Pending') {
@@ -90,7 +90,7 @@ export const PUT = async (req) => {
             title,
             body: description,
             screen: 'calendar',
-            screenParams: { scheduleId: id, startDate :body.startDate, endDate: body.endDate }
+            screenParams: { scheduleId: id, startDate: body.startDate, endDate: body.endDate }
           });
         }
       }

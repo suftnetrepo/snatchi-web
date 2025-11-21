@@ -31,25 +31,36 @@ async function get({ suid }) {
   }
 }
 
-async function getByUser(user_id) {
+async function getByUser(user_id, startDate, endDate) {
   if (!isValidObjectId(user_id)) {
-    throw new Error(JSON.stringify([{ field: 'user_id', message: 'Invalid MongoDB ObjectId' }]));
+    throw new Error(JSON.stringify([
+      { field: 'user_id', message: 'Invalid MongoDB ObjectId' }
+    ]));
   }
 
-  const filter = new Date();
-  filter.setDate(-30);
-
   try {
-    const result = await Scheduler.find({
-      user: user_id
-    }).populate('user', 'first_name last_name email');
+    const query = { user: user_id };
 
-    return {
-      data: result
-    };
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      query.$or = [
+        {
+          startDate: { $lte: end },
+          endDate: { $gte: start }
+        }
+      ];
+    }
+
+    const result = await Scheduler.find(query)
+      .populate('user', 'first_name last_name email');
+    return { data: result };
+
   } catch (error) {
     logger.error(error);
-    throw new Error('An unexpected error occurred. Please try again.');
+    throw new Error("Unexpected server error");
   }
 }
 
@@ -95,8 +106,8 @@ async function add(body) {
   const { startDate, endDate, ...rest } = body;
   const schedulerData = {
     ...rest,
-      startDate: new Date(startDate).toISOString(),
-  endDate: new Date(endDate).toISOString(),
+    startDate: new Date(startDate).toISOString(),
+    endDate: new Date(endDate).toISOString(),
   };
 
   try {
