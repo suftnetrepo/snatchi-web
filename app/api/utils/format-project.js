@@ -9,22 +9,22 @@ function buildProjectMessages(project) {
   const end = new Date(project.endDate);
 
   const formatTime = (d) => d.toISOString().substring(11, 16); // HH:MM
-
   const startTime = formatTime(start);
   const endTime = formatTime(end);
 
   // Build activeDays set (UTC-safe)
   let activeDays = new Set();
   for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
-    let day = d.getUTCDay(); // 0–6
-    day = day === 0 ? 7 : day; // Convert Sunday=0 → 7
+    let day = d.getUTCDay();                // 0–6
+    day = day === 0 ? 7 : day;              // Convert Sun=0 → 7
     activeDays.add(day);
   }
 
   return project.assignedTo
-    .filter(a => a.id?.fcm) 
+    .filter(a => a.id && a.id.fcm)
     .map(a => {
       const user = a.id;
+
       const addProjects = JSON.stringify([
         {
           projectId: project._id,
@@ -49,6 +49,7 @@ function buildProjectMessages(project) {
           action: true
         }
       ]);
+
       return {
         message: {
           token: user.fcm,
@@ -61,6 +62,8 @@ function buildProjectMessages(project) {
 function notifyAssignedUsers(project) {
   if (!project || !project.assignedTo?.length) return;
 
+  console.log(`Preparing to notify assigned users for project ${project._id}`);
+
   (async () => {
     try {
       const title = project.name || "Project Update";
@@ -70,7 +73,7 @@ function notifyAssignedUsers(project) {
 
       await Promise.all(
         messages.map(m => {
-          // parse addProjects for personalized body
+       
           const payload = JSON.parse(m.message.data.addProjects)[0];
           const name = [payload.firstName, payload.lastName].filter(Boolean).join(" ");
           const body = `${name}, you’ve been assigned: ${shortDesc}`;
