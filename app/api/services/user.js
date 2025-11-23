@@ -137,7 +137,21 @@ async function changePassword(id, body) {
     await User.findByIdAndUpdate(id, newPassword);
     return true;
   } catch (error) {
-    console.error(error);
+    logger.error(error);
+    throw new Error('An unexpected error occurred. Please try again.');
+  }
+}
+
+async function updateFcmToken(id, token) {
+  if (!isValidObjectId(id)) {
+    throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
+  }
+
+  try {
+    await User.findByIdAndUpdate(id, {fcm :token});
+    return true;
+  } catch (error) {
+    logger.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
@@ -202,5 +216,6 @@ export {
   updateUser,
   getUserById,
   changePassword,
-  createUser
+  createUser,
+  updateFcmToken
 };

@@ -4,19 +4,22 @@ import { FCMNotificationService } from "./push-notification";
 const fcmService = new FCMNotificationService();
 
 function buildProjectMessages(project) {
-  // Extract start/end times from ISO dates
+  // Extract start/end times but use LOCAL HOURS not UTC
   const start = new Date(project.startDate);
   const end = new Date(project.endDate);
 
-  const formatTime = (d) => d.toISOString().substring(11, 16); // HH:MM
+  // FIXED LOCAL TIME FORMAT
+  const formatTime = (d) =>
+    `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+
   const startTime = formatTime(start);
   const endTime = formatTime(end);
 
-  // Build activeDays set (UTC-safe)
+  // Build activeDays correctly (UTC-safe day span)
   let activeDays = new Set();
   for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
-    let day = d.getUTCDay();                // 0–6
-    day = day === 0 ? 7 : day;              // Convert Sun=0 → 7
+    let day = d.getUTCDay();    // 0–6 (UTC)
+    day = day === 0 ? 7 : day;  // Convert Sunday → 7
     activeDays.add(day);
   }
 
