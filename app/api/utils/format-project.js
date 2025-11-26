@@ -49,7 +49,9 @@ function buildProjectMessages(project) {
           firstName: user.first_name,
           lastName: user.last_name,
           description: getShortDescription(project.description),
-          action: true
+          action: true,
+          read : false,
+          createdAt : new Date()
         }
       ]);
 

@@ -122,8 +122,6 @@ export const PUT = async (req) => {
         last_name: last_name,
         email: email,
         mobile: mobile,
-        public_id: '',
-        secure_url: ''
       };
 
       const file = formData.get('file');
@@ -148,7 +146,12 @@ export const PUT = async (req) => {
         const result = await uploadToCloudinary();
 
         if (result) {
-          (body.public_id = result?.public_id), (body.secure_url = result?.secure_url);
+          body = {
+            ...body,
+            public_id: '',
+            secure_url: ''
+          }
+            (body.public_id = result?.public_id), (body.secure_url = result?.secure_url);
         }
       }
 
