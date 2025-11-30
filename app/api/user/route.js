@@ -146,11 +146,6 @@ export const PUT = async (req) => {
         const result = await uploadToCloudinary();
 
         if (result) {
-          body = {
-            ...body,
-            public_id: '',
-            secure_url: ''
-          }
             (body.public_id = result?.public_id), (body.secure_url = result?.secure_url);
         }
       }
