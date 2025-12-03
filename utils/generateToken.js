@@ -18,7 +18,7 @@ export async function getUserSession(req) {
     });
     if (token?.email) return token;
   
-    const authHeader = req.headers.get('authorization');
+    const authHeader = req.headers.get('x-access-token');
     if (authHeader?.startsWith('Bearer ')) {
       const rawToken = authHeader.split(' ')[1];
       try {
