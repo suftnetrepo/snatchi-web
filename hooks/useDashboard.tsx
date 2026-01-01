@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
+import moment from 'moment';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
-import { DASHBOARD } from '../utils/apiUrl';
+import { DASHBOARD, PROJECT } from '../utils/apiUrl';
 
 interface Initialize {
-  data: [] | null;
+  data: any[] | null;
   loading: boolean;
   error: null | string;
+  recent?: any | null;
 }
 
 const useDashboard = () => {
   const [state, setState] = useState<Initialize>({
     data: null,
     loading: false,
-    error: null
+    error: null,
+    recent: null
   });
 
   const handleError = (error: string) => {
@@ -35,6 +38,29 @@ const useDashboard = () => {
     }
   };
 
+  async function handleSelect(id:string) {
+    setState((prev) => ({ ...prev, loading: true }));
+    const { success, data, errorMessage } = await zat(PROJECT.fetchOne, null, VERBS.GET, {
+      action: 'single',
+      id: id
+    } as any);
+
+    if (success) {
+      setState((prevState) => ({
+        ...prevState,
+        recent: {
+          ...prevState.recent,
+          ...data,
+          startDate: moment(data.startDate).format('YYYY-MM-DDTHH:mm'),
+          endDate: moment(data.endDate).format('YYYY-MM-DDTHH:mm')
+        },
+        loading: false
+      }));
+    } else {
+      handleError(errorMessage || 'Failed to fetch the project.');
+    }
+  }
+
   const handleAggregate = async () => {
     const { data, success, errorMessage } = await zat(DASHBOARD.aggregate, null, VERBS.GET);
 
@@ -52,11 +78,11 @@ const useDashboard = () => {
     const { data, success, errorMessage } = await zat(DASHBOARD.paginate, null, VERBS.GET, {
       limit: 10,
       page: currentPage
-    });
+    } as any);
 
     if (success) {
       setState((pre) => {
-        const newItems = currentPage === 1 ? data : [...data, ...state.data];
+        const newItems = currentPage === 1 ? (data || []) : ([...(pre.data || []), ...(data || [])]);
         return { ...pre, data: newItems, loading: false };
       });
       return { success, user: data };
@@ -65,20 +91,20 @@ const useDashboard = () => {
     }
   };
 
-   const handleChartAggregate = async () => {
-			const { data, success, errorMessage } = await zat(DASHBOARD.chart, null, VERBS.GET);
+  const handleChartAggregate = async () => {
+    const { data, success, errorMessage } = await zat(DASHBOARD.chart, null, VERBS.GET);
 
-			if (success) {
-				setState(pre => {
-					return { ...pre, data: data, loading: false };
-				});
-				return { success, user: data };
-			} else {
-				handleError(errorMessage);
-			}
-		};
+    if (success) {
+      setState(pre => {
+        return { ...pre, data: data, loading: false };
+      });
+      return { success, user: data };
+    } else {
+      handleError(errorMessage);
+    }
+  };
 
-  return { ...state, handleAggregate, handleRecent, handlePaginate, handleChartAggregate };
+  return { ...state, handleAggregate,handleSelect, handleRecent, handlePaginate, handleChartAggregate };
 };
 
 export { useDashboard };

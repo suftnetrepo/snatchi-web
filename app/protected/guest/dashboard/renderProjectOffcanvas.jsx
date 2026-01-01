@@ -14,7 +14,7 @@ import {
   MdInsertDriveFile
 } from 'react-icons/md';
 import { Card, Container, Row, Col, Badge, Table, ListGroup, Tab, Tabs } from 'react-bootstrap';
-import { getStatusBadgeVariant, getPriorityBadgeVariant, getIcon, getIconColor } from '@/utils/helpers';
+import { getStatusBadgeVariant, getPriorityBadgeVariant, getIcon, getIconColor, getPriorityStatusColorCode, getStatusColorCode } from '@/utils/helpers';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useAppContext } from '@/Store/AppContext';
 
@@ -39,21 +39,13 @@ const RenderProjectOffcanvas = ({ show, handleClose, project }) => {
             <Card.Header className=" text-white">
               <div className="d-flex justify-content-between align-items-center">
                 <h3 className="mb-0">{project?.name}</h3>
-                <Badge bg={getStatusBadgeVariant(project?.status)} className="fs-14">
-                  {project?.status}
-                </Badge>
+                 <span className={`badge ${getStatusColorCode(project?.status)}`}>{project?.status}</span>
               </div>
             </Card.Header>
             <Card.Body>
               <Row className="mb-4">
                 <Col md={12}>
-                  <div className="mb-3 mt-3">
-                    <h5 className="text-secondary">Project Description</h5>
-                    <div dangerouslySetInnerHTML={{ __html: project?.description }} className="text-gray-600" />
-                  </div>
-
-                  <div className="mb-3">
-                    <h5 className="text-secondary">Project Details</h5>
+                  <div>
                     <Row>
                       <Col md={6}>
                         <Table className="table-borderless">
@@ -79,7 +71,7 @@ const RenderProjectOffcanvas = ({ show, handleClose, project }) => {
                               </td>
                               <td className="fw-bold">Priority:</td>
                               <td>
-                                <Badge bg={getPriorityBadgeVariant(project?.priority)}>{project?.priority}</Badge>
+                                 <span className={`badge ${getPriorityStatusColorCode(project?.priority)} transparent`}>{project?.priority}</span>
                               </td>
                             </tr>
                           </tbody>
@@ -104,11 +96,7 @@ const RenderProjectOffcanvas = ({ show, handleClose, project }) => {
                               <td>{project?.ppe?.join(', ')}</td>
                             </tr>
                             <tr>
-                              <td>
-                                <MdCheckBox size={18} className="text-primary me-2" />
-                              </td>
-                              <td className="fw-bold">Progress:</td>
-                              <td>{project?.progress?.toFixed(2)}%</td>
+                              
                             </tr>
                           </tbody>
                         </Table>
@@ -152,34 +140,11 @@ const RenderProjectOffcanvas = ({ show, handleClose, project }) => {
                 </Col>
               </Row>
 
-              <Tabs defaultActiveKey="tasks" className="mb-3">
-                <Tab eventKey="tasks" title="Tasks">
-                  <ListGroup>
-                    {project?.tasks?.map((task) => (
-                      <ListGroup.Item key={task._id} className="border mb-2" onClick={() => showTaskOffCanvas(true, task)}>
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                          <h5 className="mb-0">{task.name}</h5>
-                          <div>
-                            <Badge bg={getStatusBadgeVariant(task.status)} className="me-2">
-                              {task.status}
-                            </Badge>
-                            <Badge bg={getPriorityBadgeVariant(task.priority)}>{task.priority}</Badge>
-                          </div>
-                        </div>
-                        <p className="mb-2">{task.description}</p>
-                        <div className="d-flex justify-content-between text-muted small">
-                          <div>
-                            <MdAccessTime size={14} className="me-1" />
-                            {formatDate(task.startDate)} - {formatDate(task.endDate)}
-                          </div>
-                          <div className="d-flex justify-content-start align-items-center">
-                            <MdInsertDriveFile size={14} className="me-1" />
-                            {task?.comments?.length} comments
-                          </div>
-                        </div>
-                      </ListGroup.Item>
-                    ))}
-                  </ListGroup>
+              <Tabs defaultActiveKey="description" className="mb-3">
+                <Tab eventKey="description" title="Description">
+                   <div className="mb-3 mt-3">
+                    <div dangerouslySetInnerHTML={{ __html: project?.description }} className="text-gray-600" />
+                  </div>
                 </Tab>
                 <Tab eventKey="attachments" title="Documents">
                   {project?.attachments?.length > 0 ? (

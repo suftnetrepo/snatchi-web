@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 
 const customStyles = {
   control: (provided, state) => ({
@@ -37,23 +37,47 @@ const MultiSelectDropdown = ({
   placeholder = "Choose...",
 }) => {
   const [selected, setSelected] = useState([]);
+  const [allOptions, setAllOptions] = useState(options || []);
 
   useEffect(() => {
-    const selectedOptions = options.filter((opt) => selectedValues.includes(opt.value));
+    setAllOptions(options || []);
+  }, [options]);
+
+  useEffect(() => {
+    // Build selected option objects from selectedValues; create option objects for values not present in options
+    const selectedOptions = (selectedValues || []).map((val) => {
+      const found = (allOptions || []).find((opt) => opt.value === val);
+      if (found) return found;
+      // create a label from the value (capitalize first letter)
+      const label = String(val)
+        .split('_')
+        .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+        .join(' ');
+      return { value: val, label };
+    });
     setSelected(selectedOptions);
-  }, [selectedValues, options]);
+  }, [selectedValues, allOptions]);
 
   const handleChange = (selectedOptions) => {
-    setSelected(selectedOptions);
-    const selectedValues = selectedOptions.map((opt) => opt.value);
-    onChange(selectedValues); 
+    setSelected(selectedOptions || []);
+    const selectedValues = (selectedOptions || []).map((opt) => opt.value);
+    onChange(selectedValues);
+  };
+
+  const handleCreate = (inputValue) => {
+    if (!inputValue) return;
+    const newOption = { value: inputValue, label: inputValue };
+    setAllOptions((prev) => [...prev, newOption]);
+    const newSelected = [...(selected || []), newOption];
+    setSelected(newSelected);
+    onChange(newSelected.map((o) => o.value));
   };
 
   return (
     <div className="mb-3">
       {label && <label className="form-label text-dark">{label}</label>}
-      <Select
-        options={options}
+      <CreatableSelect
+        options={allOptions}
         value={selected}
         isMulti
         styles={customStyles}
@@ -61,6 +85,7 @@ const MultiSelectDropdown = ({
         classNamePrefix="select"
         placeholder={placeholder}
         onChange={handleChange}
+        onCreateOption={handleCreate}
       />
     </div>
   );

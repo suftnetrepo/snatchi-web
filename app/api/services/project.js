@@ -743,6 +743,7 @@ const getProjectSummaryByIntegrator = async (integratorId) => {
       {
         $project: {
           _id: 0,
+          projectId: { $toString: '$_id' },
           name: '$name',
           assignedTo: { $size: '$assignedTo' },
           tasks: { $concat: [{ $toString: '$completedTasks' }, '/', { $toString: '$totalTasks' }] },

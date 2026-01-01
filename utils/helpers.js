@@ -212,7 +212,7 @@ const formattedTime = (time) => {
     }
 
     if (isNaN(date.getTime())) {
-      return time; 
+      return time;
     }
 
     return date.toLocaleTimeString('en-US', {
@@ -387,9 +387,13 @@ const getStatusColorCode = (status) => {
     unpaid: 'bg-warning',
     inactive: 'bg-info',
     active: 'bg-primary',
-    past_due: 'bg-secondary'
+    past_due: 'bg-secondary',
+    progress: 'bg-warning',
+    pending: 'bg-info',
+    completed: 'bg-secondary'
   };
-  return colors[status] || 'bg-secondary';
+
+  return colors[status?.toLowerCase()] || 'bg-secondary';
 };
 
 const getRandomColor = () => {
@@ -481,13 +485,13 @@ const getIconColor = (type) => {
   }
 };
 
- const getFenceStatusColorCode = (status) => {
-    const colors = {
-      Exit: 'bg-danger',
-      Enter: 'bg-success',
-    };
-    return colors[status] || 'bg-danger';
+const getFenceStatusColorCode = (status) => {
+  const colors = {
+    Exit: 'bg-danger',
+    Enter: 'bg-success',
   };
+  return colors[status] || 'bg-danger';
+};
 
 const formatRelativeTime = (dateString) => {
   const date = new Date(dateString);
@@ -500,6 +504,15 @@ const formatRelativeTime = (dateString) => {
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
 
   return date.toLocaleDateString();
+};
+
+const getPriorityStatusColorCode = (priority) => {
+  const colors = {
+    High: 'bg-success',
+    Low: 'bg-warning',
+    Medium: 'bg-info'
+  };
+  return colors[priority] || 'bg-secondary';
 };
 
 export {
@@ -543,5 +556,6 @@ export {
   capitalizeFirstLetter,
   convertTimestampToDate,
   formattedTime,
-  getFenceStatusColorCode
+  getFenceStatusColorCode,
+  getPriorityStatusColorCode
 };

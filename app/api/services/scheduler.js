@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 import { schedulerValidator } from '../validator/user';
 import Scheduler from '../models/scheduler';
 import { isValidObjectId } from '../utils/helps';
@@ -5,6 +6,95 @@ import { mongoConnect } from '@/utils/connectDb';
 import { logger } from '../utils/logger';
 
 mongoConnect();
+
+async function getSchedules({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
+  if (!isValidObjectId(suid)) {
+    throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
+  }
+
+  const skip = (page - 1) * limit;
+
+  try {
+    const sortOptions = sortField ? { [sortField]: sortOrder === 'desc' ? -1 : 1 } : { createdAt: -1 };
+
+    // Build match condition for search
+    const searchMatch = searchQuery
+      ? {
+          $or: [
+            { title: { $regex: searchQuery, $options: 'i' } },
+            { status: { $regex: searchQuery, $options: 'i' } },
+            { 'user.first_name': { $regex: searchQuery, $options: 'i' } },
+            { 'user.last_name': { $regex: searchQuery, $options: 'i' } },
+            { 'user.email': { $regex: searchQuery, $options: 'i' } }
+          ]
+        }
+      : {};
+
+    const pipeline = [
+      // Match by integrator first
+      { $match: { integrator: new mongoose.Types.ObjectId(suid) } },
+      
+      // Lookup (populate) user
+      {
+        $lookup: {
+          from: 'users', // Make sure this matches your User collection name
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      
+      // Unwind user array to object
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+      
+      // Apply search filter if exists
+      ...(searchQuery ? [{ $match: searchMatch }] : []),
+      
+      // Sort
+      { $sort: sortOptions },
+      
+      // Facet for both data and count
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $project: {
+                _id: 1,
+                status: 1,
+                createdAt: 1,
+                startDate:1,
+                endDate:1,
+                title : 1,
+                // Include other Scheduler fields you need
+                user: {
+                  _id: 1,
+                  first_name: 1,
+                  last_name: 1,
+                  email: 1
+                }
+              }
+            }
+          ],
+          totalCount: [{ $count: 'count' }]
+        }
+      }
+    ];
+
+    const [result] = await Scheduler.aggregate(pipeline);
+    
+    const schedulers = result.data;
+    const totalCount = result.totalCount[0]?.count || 0;
+    return {
+      data: schedulers,
+      totalCount
+    };
+  } catch (error) {
+    console.error(error);
+    throw new Error('An unexpected error occurred. Please try again.');
+  }
+}
 
 async function get({ suid }) {
   if (!isValidObjectId(suid)) {
@@ -198,4 +288,4 @@ async function remove(suid, id) {
   }
 }
 
-export { remove, add, get, getByUser, update, updateByStatus, getUsersByDates };
+export { getSchedules, remove, add, get, getByUser, update, updateByStatus, getUsersByDates };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import moment from 'moment';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
 import { PROJECT } from '../utils/apiUrl';
@@ -7,6 +8,7 @@ interface Initialize {
   data: [] | null | {};
   loading: boolean;
   error: null | string;
+    recent?: any | null;
 }
 
 const useProjectDashboard = () => {
@@ -35,6 +37,29 @@ const useProjectDashboard = () => {
     }
   };
 
+   async function handleSelect(id:string) {
+      setState((prev) => ({ ...prev, loading: true }));
+      const { success, data, errorMessage } = await zat(PROJECT.fetchOne, null, VERBS.GET, {
+        action: 'single',
+        id: id
+      } as any);
+  
+      if (success) {
+        setState((prevState) => ({
+          ...prevState,
+          recent: {
+            ...prevState.recent,
+            ...data,
+            startDate: moment(data.startDate).format('YYYY-MM-DDTHH:mm'),
+            endDate: moment(data.endDate).format('YYYY-MM-DDTHH:mm')
+          },
+          loading: false
+        }));
+      } else {
+        handleError(errorMessage || 'Failed to fetch the project.');
+      }
+    }
+
   const handleAggregate = async () => {
     const { data, success, errorMessage } = await zat(PROJECT.aggregate, null, VERBS.GET);
   
@@ -61,7 +86,7 @@ const useProjectDashboard = () => {
     }
   };
 
-  return { ...state, handleAggregate, handleRecent, handleChartAggregate };
+  return { ...state, handleSelect, handleAggregate, handleRecent, handleChartAggregate };
 };
 
 export { useProjectDashboard };

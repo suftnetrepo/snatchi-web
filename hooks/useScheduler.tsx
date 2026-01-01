@@ -71,7 +71,7 @@ interface ApiResponse<T = any> {
   totalCount?: number;
 }
 
-const useScheduler = (flag = true) => {
+const useScheduler = (searchQuery) => {
   const [state, setState] = useState<SchedulerState>({
     data: [],
     resources: [],
@@ -242,6 +242,38 @@ const useScheduler = (flag = true) => {
     },
     [handleError, updateState]
   );
+
+  const handleFetchAll = useCallback(async ({ pageIndex = 1, pageSize = 10, sortBy = [], searchQuery = '' }: { pageIndex?: number; pageSize?: number; sortBy?: Array<{ id: string; desc: boolean }>; searchQuery?: string } = {}) => {
+    const sortField = (sortBy && sortBy.length > 0) ? sortBy[0].id : null;
+    const sortOrder = (sortBy && sortBy.length > 0) ? (sortBy[0].desc ? 'desc' : 'asc') : null;
+  
+      try {
+        const { data, success, errorMessage, totalCount } = await zat(SCHEDULER.fetchAll, null, VERBS.GET, {
+          action: 'paginate',
+          page: pageIndex === 0 ? 1 : pageIndex,
+          limit: pageSize,
+          ...(sortField && { sortField }),
+          ...(sortOrder && { sortOrder }),
+          searchQuery
+        } as any);
+  
+        if (success) {
+          setState((pre) => ({
+            ...pre,
+            data: data,
+            totalCount: totalCount,
+            loading: false
+          }));
+          return true;
+        } else {
+          handleError(errorMessage);
+          return false;
+        }
+      } catch (error) {
+        handleError('An unexpected error occurred while fetching projects.');
+        return false;
+      }
+  }, [handleError]);
 
   const handleFetchUsers = useCallback(
     async ({
@@ -415,15 +447,14 @@ const useScheduler = (flag = true) => {
 
   useEffect(() => {
     const load = async () => {
-      await Promise.all([handleFetchUsers({ pageIndex: 1, pageSize: 100 }), handleFetch()]);
+      await Promise.all([handleFetchUsers({ pageIndex: 1, pageSize: 100 }), handleFetchAll({ searchQuery })]);
     };
 
     load();
-  }, [flag, handleFetchUsers, handleFetch]);
+  }, [searchQuery, handleFetchUsers, handleFetch]);
 
   return {
     ...state,
-
     handleChange,
     handleReset,
     handleFetchUsers,
@@ -437,7 +468,8 @@ const useScheduler = (flag = true) => {
     handleSave,
     clearMessages,
     handleSelectedUpdate,
-    handleResizeUpdate
+    handleResizeUpdate,
+    handleFetchAll
   };
 };
 

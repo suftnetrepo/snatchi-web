@@ -1,15 +1,26 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Table } from 'react-bootstrap';
+import { useRouter } from 'next/navigation';
 import { useProjectDashboard } from '../../../hooks/useProjectDashboard';
 import { dateFormatted, getStatusColorCode } from '../../../utils/helpers';
 import ProgressBar from '../../../src/components/common/ProgressBar';
+import RenderProjectOffcanvas from '../../protected/guest/dashboard/renderProjectOffcanvas';
 
 const RecentProjects = () => {
-	const { handleRecent, data } = useProjectDashboard();
-	
+	const router = useRouter();
+	const [showProjectOffcanvas, setShowProjectOffcanvas] = useState(false);
+	const [project, setProject] = useState({});
+	const { handleRecent, handleSelect, recent, data } = useProjectDashboard();
+
+	console.log("........data", data)
+
 	useEffect(() => {
 		handleRecent();
 	}, []);
+
+	const handleCloseProjectOffcanvas = () => {
+		setShowProjectOffcanvas(false);
+	};
 
 	return (
 		<div className="table-responsive">
@@ -26,14 +37,24 @@ const RecentProjects = () => {
 				</thead>
 				<tbody>
 					{data?.map((item, index) => (
-						<tr key={index}>	
-							<td>{item.name}</td>						
+						<tr key={item.projectId || index}>
+							<td>
+								<a
+									className="pointer"
+									onClick={() => {
+										handleSelect(item?.projectId )
+										setShowProjectOffcanvas(true);
+									}}
+								>
+									{item?.name}
+								</a>
+							</td>
 							<td>{dateFormatted(item.startDate)}</td>
 							<td>{dateFormatted(item.endDate)}</td>
 							<td>{item.tasks}</td>
 							<td>
 								<div className="d-flex row align-items-center">
-									<ProgressBar value={70} max={100}  />
+									<ProgressBar value={item.progress ?? item.percentage ?? 0} max={100} />
 								</div>
 							</td>
 							<td>
@@ -41,12 +62,11 @@ const RecentProjects = () => {
 									{item.status}
 								</span>
 							</td>
-					
 						</tr>
 					))}
 				</tbody>
 			</Table>
-			
+			<RenderProjectOffcanvas project={recent} show={showProjectOffcanvas} handleClose={handleCloseProjectOffcanvas} />
 		</div>
 	);
 };

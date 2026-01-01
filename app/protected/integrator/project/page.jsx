@@ -10,11 +10,12 @@ import { FaTasks } from 'react-icons/fa';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
 import useDebounce from '../../../../hooks/useDebounce';
-import { dateFormatted } from '../../../../utils/helpers';
+import { dateFormatted, getPriorityStatusColorCode, getStatusColorCode } from '../../../../utils/helpers';
 import { useRouter } from 'next/navigation';
 import { RenderTeamOffcanvas } from './renderTeamOffcanvas';
 import Tooltip from '@mui/material/Tooltip';
 import dynamic from 'next/dynamic';
+import RenderProjectOffcanvas from '../../..//protected/guest/dashboard/renderProjectOffcanvas';
 const RenderDocumentOffcanvas = dynamic(() => import('./renderDocumentOffcanvas'), { ssr: false });
 
 const Project = () => {
@@ -22,12 +23,10 @@ const Project = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [show, setShow] = useState(false);
   const [showTeamOffcanvas, setShowTeamOffcanvas] = useState(false);
-  const [projectId, setProjectId] = useState('');
+  const [showProjectOffcanvas, setShowProjectOffcanvas] = useState(false);
   const [project, setProject] = useState({});
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const { data, error, loading, totalCount, handleDelete, handleFetch } = useProject(debouncedSearchQuery);
-
-  console.log('project', project);
 
   const handleClose = () => {
     setShow(false);
@@ -42,33 +41,34 @@ const Project = () => {
   const handleShowTeamOffcanvas = () => {
     setShowTeamOffcanvas(true);
   };
-
-  const getStatusColorCode = (status) => {
-    const colors = {
-      Canceled: 'bg-danger',
-      Progress: 'bg-warning',
-      Pending: 'bg-info',
-      Completed: 'bg-secondary'
-    };
-    return colors[status] || 'bg-secondary';
+  const handleCloseProjectOffcanvas = () => {
+    setShowProjectOffcanvas(false);
   };
 
-  const getPriorityStatusColorCode = (priority) => {
-    const colors = {
-      High: 'bg-success',
-      Low: 'bg-warning',
-      Medium: 'bg-info'
-    };
-    return colors[priority] || 'bg-secondary';
-  };
 
   const columns = useMemo(
     () => [
-      { Header: 'Name', accessor: 'name', sortType: 'basic' },
+      { Header: 'Name', accessor: 'name', sortType: 'basic', Cell: ({ value, row }) => (
+          <div className="d-flex align-items-center">
+            <a
+              className="pointer"
+              onClick={() => {
+                setProject((prev) => ({ ...prev, original: row.original, projectId: row.original._id }));
+                setShowProjectOffcanvas(true);
+              }}
+            >
+              {value}
+            </a>
+          </div>
+        ) },
       {
         Header: 'Start Date',
         accessor: 'startDate',
-        Cell: ({ value }) => <div className="d-flex align-items-center">{dateFormatted(value)}</div>
+        Cell: ({ value, row }) => (
+          <div className="d-flex align-items-center">
+            {dateFormatted(value)}
+          </div>
+        )
       },
       {
         Header: 'End Date',
@@ -203,6 +203,7 @@ const Project = () => {
       {error && <ErrorDialogue showError={error} onClose={() => { }} />}
       <RenderDocumentOffcanvas show={show} handleClose={handleClose} id={project.projectId} />
       <RenderTeamOffcanvas project={project.original} show={showTeamOffcanvas} handleClose={handleCloseTeamOffcanvas} id={project.projectId} />
+      <RenderProjectOffcanvas project={project.original} show={showProjectOffcanvas} handleClose={handleCloseProjectOffcanvas} />
     </>
   );
 };

@@ -36,7 +36,7 @@ function buildProjectMessages(project) {
           siteName: project.name,
           latitude: project.location?.coordinates[0],
           longitude: project.location?.coordinates[1],
-          radius: 200,
+          radius: 100,
           startDate: project.startDate,
           endDate: project.endDate,
           startTime,
