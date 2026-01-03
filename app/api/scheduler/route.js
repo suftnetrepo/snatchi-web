@@ -55,6 +55,14 @@ export const GET = async (req) => {
       return NextResponse.json({ data: results });
     }
 
+    if (action === 'getScheduleBySearch') {
+      const startDate = url.searchParams.get('startDate');
+      const endDate = url.searchParams.get('endDate');
+      const id = url.searchParams.get('id');
+      const results = await getByUser(id, startDate, endDate);
+      return NextResponse.json({ data: results });
+    }
+
     return NextResponse.json({ success: false, message: 'Invalid action parameter' }, { status: 400 });
   } catch (error) {
     logger.error(error);

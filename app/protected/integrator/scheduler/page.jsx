@@ -2,10 +2,8 @@
 
 import React, { useMemo, useState } from 'react';
 import { Table } from '@/components/elements/table/table';
-import { Button } from 'react-bootstrap';
-import { MdDelete } from 'react-icons/md';
+import { Form, Button } from 'react-bootstrap';
 import { TiEdit } from 'react-icons/ti';
-import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
 import useDebounce from '../../../../hooks/useDebounce';
 import { dateFormatted, getStatusColorCode } from '../../../../utils/helpers';
@@ -28,16 +26,20 @@ const Scheduler = () => {
     fields,
     rules,
     success,
+    resources,
+    model,
+    modelRules,
     handleSave,
     handleChange,
     handleDelete,
     handleReset,
     handleEdit,
-    handleFetchAll
+    handleFetchAll,
+    handleSearchChange
   } = useScheduler(debouncedSearchQuery);
   const [show, setShow] = useState(false);
 
-  console.log("...............data", data)
+  console.log("...............resources", resources)
 
   const handleClose = () => {
     setShow(false);
@@ -62,6 +64,19 @@ const Scheduler = () => {
       delete body._id;
       await handleSave(body);
     }
+  };
+
+  const handleSearch = async () => {
+    setErrorMessages({});
+
+    const validationResult = validate(model, modelRules);
+
+    if (validationResult.hasError) {
+      setErrorMessages(validationResult.errors);
+      return;
+    }
+
+
   };
 
 
@@ -114,8 +129,8 @@ const Scheduler = () => {
                   size={30}
                   className="pointer me-2"
                   onClick={() => {
-                  handleSelectedUpdate(row.original)
-                  setShow(true)
+                    handleSelectedUpdate(row.original)
+                    setShow(true)
                   }}
                 />
               </span>
@@ -133,19 +148,96 @@ const Scheduler = () => {
         <div className="card-body">
           <h3 className="card-title ms-2 mb-2">Schedules</h3>
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <input
-              type="text"
-              className="form-control w-25"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <div className="d-flex justify-content-start align-items-center mb-3">
+              <div className="row d-flex justify-content-between align-items-center ">
+                <div className="col-md-4">
+                  <Form.Group controlId="formStartDate">
+                    <Form.Label className="text-light">Start Date</Form.Label>
+                    <input
+                      type="text"
+                      className="form-control w-25"
+                      placeholder="Search title, status, user ..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </Form.Group>
+                </div>
+
+                <div className="col-md-4 ms-6">
+                  <Form.Group controlId="formLastName" >
+                    <Form.Label className="text-light">.</Form.Label>
+                    <Form.Select
+                      className="border-dark"
+                      aria-label="Select Engineer"
+                      value={model?.user}
+                      onChange={(e) => handleSearchChange('user', e.target.value)}
+                    >
+                      <option>Select Engineer</option>
+                      {
+                        resources.map((user, index) => (
+                          <option key={index} value={user.id}>{user.name}</option>
+                        ))
+                      }
+
+                    </Form.Select>
+                    {errorMessages?.status?.message && (
+                      <span className="text-danger fs-13">{errorMessages?.status?.message}</span>
+                    )}
+                  </Form.Group>
+                </div>
+              </div>
+
+              <div className="row ms-2 ">
+                <div className="col-md-5">
+                  <Form.Group controlId="formStartDate">
+                    <Form.Label className="text-dark">Start Date</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={model?.startDate}
+                      onChange={(e) => handleSearchChange('startDate', e.target.value)}
+                      className="border-dark"
+                    />
+                  </Form.Group>
+                  {errorMessages?.startDate?.message && (
+                    <span className="text-danger fs-13">{errorMessages?.startDate?.message}</span>
+                  )}
+                </div>
+                <div className="col-md-5">
+                  <Form.Group controlId="formEndDate">
+                    <Form.Label className="text-dark">End Date</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={model?.endDate}
+                      onChange={(e) => handleSearchChange('endDate', e.target.value)}
+                      className="border-dark"
+                    />
+                  </Form.Group>
+                  {errorMessages?.endDate?.message && (
+                    <span className="text-danger fs-13">{errorMessages?.endDate?.message}</span>
+                  )}
+                </div>
+                <div className="col-md-2">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    onClick={() => {
+                      handleSearch()
+                    }}
+                    className='mt-8'
+                  >
+                    Filter
+                  </Button>
+                </div>
+              </div>
+            </div>
+
             <Button
               type="submit"
               size="sm"
               onClick={() => {
-               setShow(true)
+                setShow(true)
               }}
+              className='mt-8'
             >
               + Add Schedule
             </Button>

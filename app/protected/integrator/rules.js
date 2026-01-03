@@ -303,6 +303,45 @@ const schedulerValidator = {
   }
 };
 
+const schedulerSearchValidator = {
+  rules: {
+    startDate: [
+      { pattern: /^.+$/, message: 'Start date is required' },
+      {
+        validate: (value, model) => {
+          if (model?.endDate && new Date(value) > new Date(model?.endDate)) {
+            return 'Start date cannot be after end date';
+          }
+          return undefined;
+        }
+      }
+    ],
+    endDate: [
+      { pattern: /^.+$/, message: 'End date is required' },
+      {
+        validate: (value, model) => {
+          if (model.startDate && new Date(value) < new Date(model.startDate)) {
+            return 'End date cannot be before start date';
+          }
+          return undefined;
+        }
+      }
+    ]
+  },
+  reset: () => {
+    return {
+      user: '',
+      startDate: '',
+      endDate: '',
+    };
+  },
+  model: {
+    user: '',
+    startDate: '',
+    endDate: '',
+  }
+};
+
 export {
   taskCommentValidator,
   integratorValidator,
@@ -311,5 +350,6 @@ export {
   fileValidator,
   userValidator,
   teamValidator,
-  schedulerValidator
+  schedulerValidator,
+  schedulerSearchValidator
 };

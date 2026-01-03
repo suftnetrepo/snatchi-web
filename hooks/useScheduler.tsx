@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
 import { SCHEDULER, USER } from '../utils/apiUrl';
-import { schedulerValidator } from '../app/protected/integrator/rules';
+import { schedulerValidator, schedulerSearchValidator } from '../app/protected/integrator/rules';
 
 interface Calendar {
   id: string;
@@ -50,6 +50,8 @@ interface SchedulerState {
   success: boolean;
   rules: any;
   totalCount?: number;
+  model?: Record<string, any>;
+  modelRules: any;
 }
 
 interface FetchUsersParams {
@@ -80,7 +82,9 @@ const useScheduler = (searchQuery) => {
     fields: schedulerValidator.fields,
     error: null,
     success: false,
-    rules: schedulerValidator.rules
+    rules: schedulerValidator.rules,
+    model : schedulerSearchValidator.model,
+    modelRules :schedulerSearchValidator.rules,
   });
 
   const updateState = useCallback((updates: Partial<SchedulerState>) => {
@@ -96,6 +100,16 @@ const useScheduler = (searchQuery) => {
       ...prevState,
       fields: {
         ...prevState.fields,
+        [name]: value
+      }
+    }));
+  }, []);
+
+   const handleSearchChange = useCallback((name: string, value: string) => {
+    setState((prevState) => ({
+      ...prevState,
+      model: {
+        ...prevState.model,
         [name]: value
       }
     }));
@@ -469,7 +483,8 @@ const useScheduler = (searchQuery) => {
     clearMessages,
     handleSelectedUpdate,
     handleResizeUpdate,
-    handleFetchAll
+    handleFetchAll,
+    handleSearchChange
   };
 };
 
