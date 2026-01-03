@@ -15,7 +15,8 @@ const RenderScheduleOffcanvas = ({
   error,
   handleChange,
   handleDelete,
-  success
+  success,
+  resources
 }) => {
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
@@ -38,22 +39,46 @@ const RenderScheduleOffcanvas = ({
         <Form>
           <div className="row">
             <div className="col-md-12">
-              <Form.Group controlId="formTitle" className="mb-3">
-                <Form.Label className="text-dark"> Title</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter job title"
-                  name="title"
-                  value={fields?.title}
-                  onChange={(e) => handleChange('title', e.target.value)}
-                  className="border-dark"
-                />
-                {errorMessages?.title?.message && (
-                  <span className="text-danger fs-13 ms-2">{errorMessages?.title?.message}</span>
-                )}
-              </Form.Group>
+              <div className="row">
+                <div className="col-md-6">
+                  <Form.Group controlId="formTitle" className="mb-3">
+                    <Form.Label className="text-dark"> Title</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Enter job title"
+                      name="title"
+                      value={fields?.title}
+                      onChange={(e) => handleChange('title', e.target.value)}
+                      className="border-dark"
+                    />
+                    {errorMessages?.title?.message && (
+                      <span className="text-danger fs-13 ms-2">{errorMessages?.title?.message}</span>
+                    )}
+                  </Form.Group>
+                </div>
+                <div className="col-md-6">
+                  <Form.Group controlId="formLastName">
+                    <Form.Label className="text-light">.</Form.Label>
+                    <Form.Select
+                      className="border-dark"
+                      aria-label="Select Engineer"
+                      value={fields?.user}
+                      onChange={(e) => handleChange('user', e.target.value)}
+                    >
+                      <option value={''}>Select Engineer</option>
+                      {resources?.map((user, index) => (
+                        <option key={index} value={user.id}>
+                          {user.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                   {errorMessages?.user?.message && (
+                      <span className="text-danger fs-13 ms-2">{errorMessages?.user?.message}</span>
+                    )}
+                </div>
+              </div>
             </div>
-
             <div className="col-md-6"></div>
           </div>
           <div className="row mb-3">
@@ -136,7 +161,7 @@ const RenderScheduleOffcanvas = ({
                 handleDelete(id);
                 handleClose();
               }}
-              onCancel={() => {}}
+              onCancel={() => { }}
               itemId={fields._id}
             >
               <Button type="button" variant="outline-danger" className="ms-2" onClick={handleClose}>

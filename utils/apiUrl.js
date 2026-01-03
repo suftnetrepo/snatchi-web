@@ -15,8 +15,9 @@ export const SCHEDULER = {
   removeOne: `${HOST}scheduler/`,
   getAll: `${HOST}scheduler/`,
   fetchAll: `${HOST}scheduler/`,
+  filter: `${HOST}scheduler/`,
   getByUser: `${HOST}user?action=getByUser`,
-  getByDates: `${HOST}user?action=getByDates`
+  getByDates: `${HOST}user?action=getByDates`,
 };
 
 export const USER = {

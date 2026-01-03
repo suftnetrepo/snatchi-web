@@ -59,8 +59,8 @@ export const GET = async (req) => {
       const startDate = url.searchParams.get('startDate');
       const endDate = url.searchParams.get('endDate');
       const id = url.searchParams.get('id');
-      const results = await getByUser(id, startDate, endDate);
-      return NextResponse.json({ data: results });
+      const {data} = await getByUser(id, startDate, endDate);
+      return NextResponse.json({ data, success : true, totalCount: 0  });
     }
 
     return NextResponse.json({ success: false, message: 'Invalid action parameter' }, { status: 400 });

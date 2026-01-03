@@ -16,8 +16,6 @@ async function getSchedules({ suid, page = 1, limit = 10, sortField, sortOrder, 
 
   try {
     const sortOptions = sortField ? { [sortField]: sortOrder === 'desc' ? -1 : 1 } : { createdAt: -1 };
-
-    // Build match condition for search
     const searchMatch = searchQuery
       ? {
           $or: [
@@ -91,7 +89,7 @@ async function getSchedules({ suid, page = 1, limit = 10, sortField, sortOrder, 
       totalCount
     };
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
@@ -116,20 +114,24 @@ async function get({ suid }) {
       data: result
     };
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
 
 async function getByUser(user_id, startDate, endDate) {
-  if (!isValidObjectId(user_id)) {
-    throw new Error(JSON.stringify([
-      { field: 'user_id', message: 'Invalid MongoDB ObjectId' }
-    ]));
-  }
 
   try {
-    const query = { user: user_id };
+    const query = {  };
+
+    if (user_id) {
+      if (!mongoose.isValidObjectId(user_id)) {
+        throw new Error(JSON.stringify([
+          { field: 'user_id', message: 'Invalid MongoDB ObjectId' }
+        ]));
+      }
+      query.user = user_id;
+    }
 
     if (startDate && endDate) {
       const start = new Date(startDate);

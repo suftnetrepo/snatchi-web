@@ -19,12 +19,12 @@ interface Schedule {
   integrator: string;
   user: User;
   title: string;
-  startDate: string; 
-  endDate: string; 
+  startDate: string;
+  endDate: string;
   status: string;
   description: string;
-  createdAt: string; 
-  updatedAt: string; 
+  createdAt: string;
+  updatedAt: string;
   __v: number;
 }
 
@@ -64,6 +64,7 @@ interface FetchUsersParams {
 interface FetchByDatesParams {
   startDate: string;
   endDate: string;
+  id?: string;
 }
 
 interface ApiResponse<T = any> {
@@ -83,8 +84,8 @@ const useScheduler = (searchQuery) => {
     error: null,
     success: false,
     rules: schedulerValidator.rules,
-    model : schedulerSearchValidator.model,
-    modelRules :schedulerSearchValidator.rules,
+    model: schedulerSearchValidator.model,
+    modelRules: schedulerSearchValidator.rules,
   });
 
   const updateState = useCallback((updates: Partial<SchedulerState>) => {
@@ -105,7 +106,7 @@ const useScheduler = (searchQuery) => {
     }));
   }, []);
 
-   const handleSearchChange = useCallback((name: string, value: string) => {
+  const handleSearchChange = useCallback((name: string, value: string) => {
     setState((prevState) => ({
       ...prevState,
       model: {
@@ -114,6 +115,10 @@ const useScheduler = (searchQuery) => {
       }
     }));
   }, []);
+
+  const handleResetSearch = useCallback(async () => {
+    updateState({ model: schedulerSearchValidator.reset(), success: false, loading: false, error: null });
+  }, [updateState]);
 
   const handleSelection = useCallback((startDate: Date, endDate: Date, id: string) => {
     setState((prevState) => ({
@@ -136,13 +141,14 @@ const useScheduler = (searchQuery) => {
         ...prevState.fields,
         ...schedule,
         startDate: schedule?.startDate ? new Date(schedule.startDate).toISOString().slice(0, 16) + ':00' : '',
-        endDate: schedule?.endDate ? new Date(schedule.endDate).toISOString().slice(0, 16) + ':00' : ''
+        endDate: schedule?.endDate ? new Date(schedule.endDate).toISOString().slice(0, 16) + ':00' : '',
+        user: schedule.user?._id
       }
     }));
   }, []);
 
-  const handleResizeUpdate = useCallback(async (schedule: Partial<Schedule>, id : string) => {
-    await handleEdit(schedule,id);
+  const handleResizeUpdate = useCallback(async (schedule: Partial<Schedule>, id: string) => {
+    await handleEdit(schedule, id);
   }, []);
 
   const handleError = useCallback(
@@ -163,7 +169,7 @@ const useScheduler = (searchQuery) => {
         if (response.success) {
           setState((prevState) => ({
             ...prevState,
-            events: prevState.events.filter((schedule) => schedule.id !== id),
+            data: prevState.data.filter((schedule) => schedule._id !== id),
             loading: false
           }));
           return true;
@@ -185,37 +191,21 @@ const useScheduler = (searchQuery) => {
 
       try {
         // @ts-ignore
-        const response: ApiResponse = await zat(SCHEDULER.updateOne, body, VERBS.PUT, {
+        const { data, success, errorMessage } = await zat(SCHEDULER.updateOne, body, VERBS.PUT, {
           id,
           action: 'update'
         });
 
-        if (response.success) {
-          const updateSchedule = {
-            ...response.data,
-            id: response.data._id,
-            text: response.data.title,
-            start: response.data.startDate ? new Date(response.data.startDate).toISOString().slice(0, 16) + ':00' : '',
-            end: response.data.endDate ? new Date(response.data.endDate).toISOString().slice(0, 16) + ':00' : '',
-            resource: response.data.user._id,
-            lock: response.data.status === 'Lock',
-            barColor:
-              response.data.status === 'Pending'
-                ? '#ffbb99'
-                : response.data.status === 'Accepted'
-                  ? '#00cc99'
-                  : '#ff66a3'
-          };
-
+        if (success) {
           setState((prevState) => ({
             ...prevState,
-            events: prevState.events.map((event) => (event.id === id ? updateSchedule : event)),
+            data: prevState.data.map((event) => (event._id === id ? data : event)),
             loading: false,
             success: true
           }));
           return true;
         } else {
-          handleError(response.errorMessage || 'Failed to update the schedule.');
+          handleError(errorMessage || 'Failed to update the schedule.');
           return false;
         }
       } catch (error) {
@@ -260,33 +250,33 @@ const useScheduler = (searchQuery) => {
   const handleFetchAll = useCallback(async ({ pageIndex = 1, pageSize = 10, sortBy = [], searchQuery = '' }: { pageIndex?: number; pageSize?: number; sortBy?: Array<{ id: string; desc: boolean }>; searchQuery?: string } = {}) => {
     const sortField = (sortBy && sortBy.length > 0) ? sortBy[0].id : null;
     const sortOrder = (sortBy && sortBy.length > 0) ? (sortBy[0].desc ? 'desc' : 'asc') : null;
-  
-      try {
-        const { data, success, errorMessage, totalCount } = await zat(SCHEDULER.fetchAll, null, VERBS.GET, {
-          action: 'paginate',
-          page: pageIndex === 0 ? 1 : pageIndex,
-          limit: pageSize,
-          ...(sortField && { sortField }),
-          ...(sortOrder && { sortOrder }),
-          searchQuery
-        } as any);
-  
-        if (success) {
-          setState((pre) => ({
-            ...pre,
-            data: data,
-            totalCount: totalCount,
-            loading: false
-          }));
-          return true;
-        } else {
-          handleError(errorMessage);
-          return false;
-        }
-      } catch (error) {
-        handleError('An unexpected error occurred while fetching projects.');
+
+    try {
+      const { data, success, errorMessage, totalCount } = await zat(SCHEDULER.fetchAll, null, VERBS.GET, {
+        action: 'paginate',
+        page: pageIndex === 0 ? 1 : pageIndex,
+        limit: pageSize,
+        ...(sortField && { sortField }),
+        ...(sortOrder && { sortOrder }),
+        searchQuery
+      } as any);
+
+      if (success) {
+        setState((pre) => ({
+          ...pre,
+          data: data,
+          totalCount: totalCount,
+          loading: false
+        }));
+        return true;
+      } else {
+        handleError(errorMessage);
         return false;
       }
+    } catch (error) {
+      handleError('An unexpected error occurred while fetching projects.');
+      return false;
+    }
   }, [handleError]);
 
   const handleFetchUsers = useCallback(
@@ -412,39 +402,52 @@ const useScheduler = (searchQuery) => {
     [handleError, updateState]
   );
 
+  const handleSearchByDates = useCallback(
+    async ({ startDate, endDate, id }: FetchByDatesParams): Promise<boolean> => {
+      updateState({ loading: true, error: null });
+
+      try {
+        // @ts-ignore
+        const { data, success } = await zat(SCHEDULER.filter, null, VERBS.GET, {
+          action: 'getScheduleBySearch',
+          startDate,
+          endDate, id
+        })
+
+        if (success) {
+          setState((pre) => ({
+            ...pre,
+            data: data,
+            totalCount: data?.length,
+            loading: false
+          }));
+        }
+        return true;
+      } catch (error) {
+        handleError('An unexpected error occurred while fetching schedules by dates.');
+        return false;
+      }
+    },
+    [handleError, updateState]
+  );
+
   const handleSave = useCallback(
     async (body: Partial<Schedule>): Promise<boolean> => {
       updateState({ loading: true, error: null });
 
       try {
-        const response: ApiResponse<Schedule> = await zat(SCHEDULER.createOne, body, VERBS.POST);
+        const { data, success, errorMessage } = await zat(SCHEDULER.createOne, body, VERBS.POST);
 
-        if (response.success && response.data) {
-          const newSchedule = {
-            ...response.data,
-            id: response.data._id,
-            text: response.data.title,
-            start: response.data.startDate ? new Date(response.data.startDate).toISOString().slice(0, 16) + ':00' : '',
-            end: response.data.endDate ? new Date(response.data.endDate).toISOString().slice(0, 16) + ':00' : '',
-            resource: response.data.user._id,
-            lock: response.data.status === 'Lock',
-            barColor:
-              response.data.status === 'Pending'
-                ? '#ffbb99'
-                : response.data.status === 'Accepted'
-                  ? '#009999'
-                  : '#ff66a3'
-          };
-        
+        if (success) {
           setState((prevState) => ({
             ...prevState,
-            events: [newSchedule, ...prevState.events],
+            data: [data, ...prevState.data],
             loading: false,
             success: true
           }));
           return true;
         } else {
-          handleError(response.errorMessage || 'Failed to save the schedule.');
+          handleError(errorMessage || 'Failed to save the schedule.');
           return false;
         }
       } catch (error) {
@@ -484,7 +487,9 @@ const useScheduler = (searchQuery) => {
     handleSelectedUpdate,
     handleResizeUpdate,
     handleFetchAll,
-    handleSearchChange
+    handleSearchChange,
+    handleSearchByDates,
+    handleResetSearch
   };
 };
 
