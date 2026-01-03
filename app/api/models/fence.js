@@ -3,6 +3,10 @@ const { Schema } = mongoose;
 
 const fenceSchema = new mongoose.Schema(
   {
+    uuid: {
+      type: String,
+      required: true,
+    },
     integrator: {
       type: Schema.Types.ObjectId,
       ref: 'Integrator',
@@ -72,5 +76,6 @@ const fenceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+fenceSchema.index({ uuid: 1 }, { unique: true });
 const Fence = mongoose.models.Fence || mongoose.model('Fence', fenceSchema);
 module.exports = Fence;

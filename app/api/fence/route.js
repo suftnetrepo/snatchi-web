@@ -1,4 +1,4 @@
-import { add, remove, getBydate, getByUser, getByUserOnly } from '../services/fence';
+import { bulkInsert, add, remove, getBydate, getByUser, getByUserOnly } from '../services/fence';
 import { logger } from '../utils/logger';
 const { NextResponse } = require('next/server');
 import { getUserSession } from '@/utils/generateToken';
@@ -123,11 +123,10 @@ export const DELETE = async (req) => {
 
 export const POST = async (req) => {
   try {
-
     const body = await req.json();
-    console.log('Fence body', body);
-    const result = await add(body);
-
+    console.log('Fence body....................', JSON.stringify(body));
+    const result = await bulkInsert(body?.location);
+    console.log('Fence body....................result', JSON.stringify(result));
     return NextResponse.json({ success: true, data: result }, { status: 200 });
   } catch (error) {
     console.error(error);

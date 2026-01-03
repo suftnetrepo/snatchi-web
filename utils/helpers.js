@@ -515,6 +515,10 @@ const getPriorityStatusColorCode = (priority) => {
   return colors[priority] || 'bg-secondary';
 };
 
+function getTimeOnly(timestamp) {
+  return new Date(timestamp).toISOString().slice(11, 19);
+}
+
 export {
   formatRelativeTime,
   getIconColor,
@@ -557,5 +561,6 @@ export {
   convertTimestampToDate,
   formattedTime,
   getFenceStatusColorCode,
-  getPriorityStatusColorCode
+  getPriorityStatusColorCode,
+  getTimeOnly
 };

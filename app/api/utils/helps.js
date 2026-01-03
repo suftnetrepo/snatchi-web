@@ -178,6 +178,11 @@ function getShortDescription(html) {
   return text
 }
 
+
+function getTimeOnly(timestamp) {
+  return new Date(timestamp).toISOString().slice(11, 19);
+}
+
 export {
   getAggregate,
   getShortDescription,
@@ -191,5 +196,6 @@ export {
   convertToUnix,
   convertFromUnix,
   converterTimeStampToDate,
-  verifyJwtTokenAsync
+  verifyJwtTokenAsync,
+  getTimeOnly
 };
