@@ -9,17 +9,13 @@ import { MdMyLocation } from 'react-icons/md';
 import { MdDelete, MdCancel, MdFilterList } from 'react-icons/md';
 import Select from 'react-select';
 import Tooltip from '@mui/material/Tooltip';
-import { formattedTime, getFenceStatusColorCode } from '../../../../utils/helpers';
+import { formattedTime,formatDateTime, getFenceStatusColorCode } from '../../../../utils/helpers';
 
 const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const { data: fenceData, error: fenceError, loading, success, userId, handleReset, handleFetchByUser } = useFence();
   const { data, error, customStyles, teamData, handleSelect, fields, handleChange, handleDelete, handleFetchUsers } =
     useTeam(id);
-
-  console.log('userId', userId);
-  // console.log('data', data);
-  // console.log('project', project);
 
   useEffect(() => {
     handleFetchUsers({ pageIndex: 1, pageSize: 100 });
@@ -185,7 +181,7 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                     fenceData?.map((fence, index) => {
                       return (
                         <tr key={`${index}-${fence._id}`} >
-                          <td className='text-dark'>{new Date(fence.date).toDateString()}</td>
+                          <td className='text-dark'>{formatDateTime(fence.date)}</td>
                           <td className='text-dark'>{formattedTime(fence.time)}</td>
                           <td className='text-dark'> <span className={`badge ${getFenceStatusColorCode(fence.status)}`}>{fence.status}</span></td>
                           <td className='text-dark'>{fence.latitude}</td>

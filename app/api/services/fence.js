@@ -60,6 +60,8 @@ async function getByUser(dateString, user) {
 async function getByUserOnly(user, project, dateString) {
   try {
 
+     // resetFenceCollection()
+
     if (!dateString) {
       throw new Error('Date is required');
     }
@@ -93,14 +95,14 @@ async function getByUserOnly(user, project, dateString) {
 
 async function resetFenceCollection() {
   await Fence.deleteMany({});
- // await Fence.syncIndexes();
+  await Fence.syncIndexes();
   console.log('✅ Fence collection reset and indexes synced');
 }
 
 async function bulkInsert(location) {
   try {
 
-    // resetFenceCollection();
+     // resetFenceCollection();
 
     // 1️⃣ Ensure location is always an array
     if (!Array.isArray(location)) {
