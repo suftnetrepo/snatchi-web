@@ -10,7 +10,11 @@ const useFence = () => {
     error: null,
     success: false,
     totalCount: 0,
-        userId: ""
+    userId: '',
+    fields :{
+      startDate : new Date(),
+      endDate : new Date()
+    }
   });
 
   const handleError = useCallback((error) => {
@@ -34,12 +38,23 @@ const useFence = () => {
     });
   }, []);
 
-  async function handleFetchByUser(userId, projectId, date ) {
+  const handleDateChange = (name, value) => {
+    setState((prevState) => ({
+      ...prevState,
+      fields: {
+        ...prevState.fields,
+        [name]: value
+      }
+    }));
+  };
+
+  async function handleFetchByUser(userId, projectId, date) {
     setState((prev) => ({ ...prev, loading: true }));
     const { success, data, errorMessage } = await zat(FENCE.fetch, null, VERBS.GET, {
       action: 'getByUserOnly',
       userId: userId,
-      projectId: projectId, date :date
+      projectId: projectId,
+      date: date
     });
 
     if (success) {
@@ -54,28 +69,56 @@ const useFence = () => {
       handleError(errorMessage || 'Failed to fetch the fence.');
     }
   }
-  const handleSave = useCallback(async (body) => {
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-    const { success, errorMessage } = await zat(FENCE.addOne, body, VERBS.POST);
+
+  async function handleFetchByDates( startDate, endDate, userId, id) {
+    setState((prev) => ({ ...prev, loading: true }));
+    const { success, data, errorMessage } = await zat(FENCE.fetch, null, VERBS.GET, {
+      action: 'getByDatesUser',
+      userId: userId,
+      startDate: startDate,
+      endDate: endDate, id
+    });
 
     if (success) {
       setState((prevState) => ({
         ...prevState,
+        data: data,
+        loading: false,
         success: true,
-        loading: false
+        userId
       }));
-
-      return true;
     } else {
-      handleError(errorMessage);
+      handleError(errorMessage || 'Failed to fetch the fence.');
     }
-  }, [handleError]);
+  }
+
+  const handleSave = useCallback(
+    async (body) => {
+      setState((prev) => ({ ...prev, loading: true, error: null }));
+      const { success, errorMessage } = await zat(FENCE.addOne, body, VERBS.POST);
+
+      if (success) {
+        setState((prevState) => ({
+          ...prevState,
+          success: true,
+          loading: false
+        }));
+
+        return true;
+      } else {
+        handleError(errorMessage);
+      }
+    },
+    [handleError]
+  );
 
   return {
     ...state,
     handleSave,
     handleReset,
-    handleFetchByUser
+    handleFetchByUser,
+    handleFetchByDates,
+    handleDateChange
   };
 };
 

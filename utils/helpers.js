@@ -519,7 +519,55 @@ function getTimeOnly(timestamp) {
   return new Date(timestamp).toISOString().slice(11, 19);
 }
 
+function calculateWorkSummary(logs) {
+   const groupedByDay = {};
+
+  // Group by day
+  for (const log of logs) {
+    const day = new Date(log.date).toISOString().split('T')[0];
+    if (!groupedByDay[day]) groupedByDay[day] = [];
+    groupedByDay[day].push(log);
+  }
+
+  let totalEnter = 0;
+  let totalExit = 0;
+  let totalMs = 0;
+
+  // Process each day independently
+  for (const day in groupedByDay) {
+    const dayLogs = groupedByDay[day].sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
+    );
+
+    let openEnter = null;
+
+    for (const log of dayLogs) {
+      const time = new Date(log.date);
+
+      if (log.status === 'Enter' && !openEnter) {
+        openEnter = time;
+        totalEnter++;
+      }
+
+      if (log.status === 'Exit' && openEnter) {
+        totalExit++;
+        totalMs += time - openEnter;
+        openEnter = null;
+      }
+    }
+  }
+
+  return {
+    totalEnter,
+    totalExit,
+    totalHoursWorked: +(totalMs / (1000 * 60 * 60)).toFixed(2),
+    totalDaysWorked: +(totalMs / (1000 * 60 * 60 * 24)).toFixed(3),
+  };
+}
+
+
 export {
+  calculateWorkSummary,
   formatRelativeTime,
   getIconColor,
   getIcon,

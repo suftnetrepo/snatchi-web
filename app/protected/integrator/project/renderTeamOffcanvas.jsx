@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Offcanvas, ListGroup, Form, Alert, Button } from 'react-bootstrap';
+import { Offcanvas, ListGroup, Form, Alert, Button, Badge } from 'react-bootstrap';
 import { useTeam } from '../../../../hooks/useTeam';
 import { useFence } from '../../../../hooks/useFence';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
@@ -9,13 +9,17 @@ import { MdMyLocation } from 'react-icons/md';
 import { MdDelete, MdCancel, MdFilterList } from 'react-icons/md';
 import Select from 'react-select';
 import Tooltip from '@mui/material/Tooltip';
-import { formattedTime,formatDateTime, getFenceStatusColorCode } from '../../../../utils/helpers';
+import { formattedTime, formatDateTime, getFenceStatusColorCode, calculateWorkSummary } from '../../../../utils/helpers';
 
 const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
-  const [selectedDate, setSelectedDate] = useState(new Date())
-  const { data: fenceData, error: fenceError, loading, success, userId, handleReset, handleFetchByUser } = useFence();
+  const { data: fenceData, error: fenceError, loading, success, fields: fence_field, userId, handleFetchByDates, handleDateChange, handleReset, handleFetchByUser } = useFence();
   const { data, error, customStyles, teamData, handleSelect, fields, handleChange, handleDelete, handleFetchUsers } =
     useTeam(id);
+
+  const summary = calculateWorkSummary(fenceData)
+
+  console.log("summary", summary)
+  console.log("fenceData....", fenceData)
 
   useEffect(() => {
     handleFetchUsers({ pageIndex: 1, pageSize: 100 });
@@ -155,14 +159,28 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
             <div className='d-flex flex-row justify-content-start align-items-start mb-2'>
               <Form.Control
                 type="date"
-               value={selectedDate ?? selectedDate?.split('T')[0]} 
+                placeholder='start Date'
+                value={fence_field.startDate ?? fence_field?.startDate?.split('T')[0]}
                 className="form-control border border-secondary rounded-3 "
-                onChange={(e) => setSelectedDate(e.target.value)}
-              /> <Button disabled={!userId} type="button" className='p-3 ms-2' variant="primary" onClick={() => {
-              handleFetchByUser(userId, id, selectedDate);
+                onChange={(e) => handleDateChange("startDate", e.target.value)}
+              />
+              <Form.Control
+                type="date"
+                placeholder='end date'
+                value={fence_field.endDate ?? fence_field?.endDate?.split('T')[0]}
+                className="form-control border border-secondary rounded-3 ms-2"
+                onChange={(e) => handleDateChange("endDate", e.target.value)}
+              />
+              <Button disabled={!userId} type="button" className='p-3 ms-2' variant="primary" onClick={() => {
+                handleFetchByDates(fence_field?.startDate, fence_field?.endDate, userId, id);
               }}>
                 <MdFilterList />
               </Button>
+            </div>
+            <div className='d-flex gap2 flex-row justify-content-start align-items-start mb-2'>
+              <Badge bg="success" className='me-1'>Enter : {summary?.totalEnter} </Badge>
+              <Badge bg="danger" className='me-1'>Exit : {summary?.totalExit} </Badge>
+              <Badge bg="secondary" className='me-1'>Work hours : {summary?.totalHoursWorked}</Badge>
             </div>
             <div className='w-100'>
               <table class="table table-bordered">

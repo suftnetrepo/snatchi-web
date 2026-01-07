@@ -57,10 +57,35 @@ async function getByUser(dateString, user) {
   }
 }
 
+async function getByDatesUser(startDateString, endDateString, user, id) {
+  const startDate = new Date(startDateString);
+  const endDate = new Date(endDateString);
+
+  try {
+    const result = await Fence.find({
+      user: user,
+      project: id,
+      date: {
+        $gte: startDate,
+        $lt: endDate
+      }
+    });
+
+    if (!result) {
+      throw new Error('create new fence failed');
+    }
+
+    return result;
+  } catch (error) {
+    logger.error(error);
+    throw new Error('An unexpected error occurred. Please try again.');
+  }
+}
+
 async function getByUserOnly(user, project, dateString) {
   try {
 
-     // resetFenceCollection()
+    // resetFenceCollection()
 
     if (!dateString) {
       throw new Error('Date is required');
@@ -102,7 +127,7 @@ async function resetFenceCollection() {
 async function bulkInsert(location) {
   try {
 
-     // resetFenceCollection();
+    // resetFenceCollection();
 
     // 1️⃣ Ensure location is always an array
     if (!Array.isArray(location)) {
@@ -212,4 +237,4 @@ async function remove(suid, id) {
   }
 }
 
-export { bulkInsert, remove, add, getByUser, getBydate, getByUserOnly };
+export { getByDatesUser, bulkInsert, remove, add, getByUser, getBydate, getByUserOnly };

@@ -1,4 +1,4 @@
-import { bulkInsert, add, remove, getBydate, getByUser, getByUserOnly } from '../services/fence';
+import { bulkInsert, add, getByDatesUser, remove, getBydate, getByUser, getByUserOnly } from '../services/fence';
 import { logger } from '../utils/logger';
 const { NextResponse } = require('next/server');
 import { getUserSession } from '@/utils/generateToken';
@@ -72,6 +72,23 @@ export const GET = async (request) => {
         }
 
         const result = await getByUser(date, userId);
+        return NextResponse.json({ success: true, data: result }, { status: 200 });
+      },
+
+      async getByDatesUser() {
+        const startDate = url.searchParams.get('startDate');
+        const endDate = url.searchParams.get('endDate');
+        const userId = url.searchParams.get('userId');
+        const id = url.searchParams.get('id');
+
+        if (!startDate || !endDate || !userId) {
+          return NextResponse.json(
+            { success: false, error: 'Missing required parameters: date and userId' },
+            { status: 400 }
+          );
+        }
+
+        const result = await getByDatesUser(startDate,endDate, userId, id);
         return NextResponse.json({ success: true, data: result }, { status: 200 });
       }
     };
