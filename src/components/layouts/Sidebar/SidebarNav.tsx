@@ -38,6 +38,9 @@ const IntegratorSidebarNav = () => {
       <SidebarNavItem icon={faHome} href="/protected/integrator/dashboard">
         Dashboard
       </SidebarNavItem>
+       <SidebarNavItem icon={faCalendar} href="/protected/integrator/scheduler">
+        Scheduler
+      </SidebarNavItem>
       <SidebarNavItem icon={faProjectDiagram} href="/protected/integrator/project">
         Projects
       </SidebarNavItem>
@@ -47,9 +50,7 @@ const IntegratorSidebarNav = () => {
       <SidebarNavItem icon={faMoneyCheck} href="/protected/integrator/invoice">
         Invoices
       </SidebarNavItem>
-       <SidebarNavItem icon={faCalendar} href="/protected/integrator/scheduler">
-        Schedulers
-      </SidebarNavItem>
+      
       <SidebarNavItem icon={faBuildingUser} href="/protected/integrator/user">
         Users
       </SidebarNavItem>

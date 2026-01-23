@@ -98,7 +98,7 @@ const RenderDocumentOffcanvas = ({ show, handleClose, projectId, taskId }) => {
           <div className="row">
             <div className="col-md-12">
               <Form.Group controlId="formName" className="mb-1">
-                <Form.Label className="text-dark">Document Name</Form.Label>
+                <Form.Label className="text-dark">Name</Form.Label>
                 <Form.Control
                   type="text"
                   placeholder="Enter document name"
@@ -114,7 +114,7 @@ const RenderDocumentOffcanvas = ({ show, handleClose, projectId, taskId }) => {
             </div>
             <div className="col-md-12">
               <Form.Group controlId="formLastName" className="mb-3">
-                <Form.Label className="text-dark">Document Type</Form.Label>
+                <Form.Label className="text-dark">Type</Form.Label>
                 <Form.Select
                   className="border-dark"
                   aria-label="Select Status"

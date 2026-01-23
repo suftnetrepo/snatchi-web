@@ -88,7 +88,7 @@ const Scheduler = () => {
   const columns = useMemo(
     () => [
       {
-        Header: 'User',
+        Header: 'Engineer',
         accessor: 'user',
         Cell: ({ value, row }) => (
           <div className="d-flex align-items-center">
@@ -147,7 +147,7 @@ const Scheduler = () => {
     <>
       <div className={`ms-5 me-5 mt-2 ${!loading ? 'overlay__block' : null}`}>
         <div className="card-body">
-          <h3 className="card-title ms-2 mb-2">Schedules</h3>
+          <h3 className="card-title ms-2 mb-2">Scheduler</h3>
           <div className="row d-flex justify-content-between align-items-center mb-3">
             <div className="col-md-10">
               <div className="d-flex justify-content-start align-items-center mb-3">
