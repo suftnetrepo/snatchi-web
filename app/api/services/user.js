@@ -208,6 +208,94 @@ const aggregateUserDataByRole = async (integratorId) => {
   }
 };
 
+/**
+ * Build search filter for multiple criteria (name, contact info, address fields)
+ * @param {string} searchTerm - The search term
+ * @returns {Object} MongoDB query filter with $or operator
+ */
+function buildUserSearchFilter(searchTerm) {
+  const regexPattern = { $regex: searchTerm, $options: 'i' };
+  
+  return {
+    $or: [
+      // Name fields
+      { first_name: regexPattern },
+      { last_name: regexPattern },
+      // Contact fields
+      { email: regexPattern },
+      { mobile: regexPattern },
+      // Address fields (nested)
+      { 'address.addressLine1': regexPattern },
+      { 'address.county': regexPattern },
+      { 'address.town': regexPattern },
+      { 'address.country': regexPattern },
+      { 'address.postcode': regexPattern },
+      { 'address.completeAddress': regexPattern }
+    ]
+  };
+}
+
+/**
+ * Search users by multiple criteria including name, contact info, address, and integration name
+ * @param {Object} options - Search options
+ * @param {string} options.searchTerm - Search term (required)
+ * @param {string} options.integratorId - Filter by integrator ID (optional)
+ * @param {number} options.page - Page number for pagination (default: 1)
+ * @param {number} options.limit - Results limit per page (default: 10)
+ * @returns {Object} Search results with data and totalCount
+ */
+async function searchUsersByMultipleCriteria({ 
+  searchTerm, 
+  integratorId, 
+  page = 1, 
+  limit = 10 
+}) {
+  if (!searchTerm || searchTerm.trim().length === 0) {
+    throw new Error(JSON.stringify([{ field: 'searchTerm', message: 'Search term is required' }]));
+  }
+
+  const skip = (page - 1) * limit;
+
+  try {
+    const searchFilter = buildUserSearchFilter(searchTerm.trim());
+    
+    // Build base query
+    let query = searchFilter;
+    
+    // Add integrator filter if provided (use string, not ObjectId)
+    if (integratorId) {
+      query = {
+        $and: [
+          searchFilter,
+          { integrator: integratorId }
+        ]
+      };
+    }
+
+    // Execute query with pagination
+    const [users, totalCount] = await Promise.all([
+      User.find(query)
+        .select('-password')
+        .skip(skip)
+        .limit(limit)
+        .populate('integrator', 'name')
+        .exec(),
+      User.countDocuments(query)
+    ]);
+
+    return {
+      data: users,
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit)
+    };
+  } catch (error) {
+    logger.error(error);
+    throw new Error('An unexpected error occurred during user search. Please try again.');
+  }
+}
+
 export {
   searchUsers,
   aggregateUserDataByRole,
@@ -217,5 +305,6 @@ export {
   getUserById,
   changePassword,
   createUser,
-  updateFcmToken
+  updateFcmToken,
+  searchUsersByMultipleCriteria
 };
