@@ -86,7 +86,57 @@ const userSchema = new Schema(
           required: true,
         }
       }
-    ]
+    ],
+    address: {
+      addressLine1: {
+        type: String,
+        required: false,
+        default: ''
+      },
+      county: {
+        type: String,
+        required: false,
+        default: ''
+      },
+      town: {
+        type: String,
+        required: false,
+        default: ''
+      },
+      country: {
+        type: String,
+        required: false,
+        default: ''
+      },
+      country_code: {
+        type: String,
+        required: false,
+        default: ''
+      },
+      postcode: {
+        type: String,
+        required: false,
+        default: ''
+      },
+      completeAddress: {
+        type: String,
+        required: false,
+        default: ''
+      },
+      location: {
+        type: {
+          type: String,
+          enum: ['Point'],
+          required: false,
+          default: 'Point'
+        },
+        coordinates: {
+          type: [Number],
+          required: false,
+          default: [0, 0]
+        }
+      }
+    }
   },
   { timestamps: true }
 );

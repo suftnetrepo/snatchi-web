@@ -13,11 +13,7 @@ export const SCHEDULER = {
   updateOne: `${HOST}scheduler`,
   updatestatus: `${HOST}scheduler`,
   removeOne: `${HOST}scheduler/`,
-  getAll: `${HOST}scheduler/`,
-  fetchAll: `${HOST}scheduler/`,
-  filter: `${HOST}scheduler/`,
   getByUser: `${HOST}user?action=getByUser`,
-  getByDates: `${HOST}user?action=getByDates`,
 };
 
 export const USER = {
@@ -28,7 +24,8 @@ export const USER = {
   removeOne: `${HOST}user/`,
   getById: `${HOST}user/`,
   aggregate: `${HOST}user?action=aggregate`,
-  search: `${HOST}user/`
+  search: `${HOST}user/`,
+  searchMultiple: `${HOST}user/`
 };
 
 export const INVOICE = {

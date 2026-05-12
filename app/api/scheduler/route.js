@@ -1,4 +1,4 @@
-import { getSchedules, remove, update, add, get, updateByStatus, getByUser, getUsersByDates } from '../services/scheduler';
+import { remove, update, add, updateByStatus, getByUser } from '../services/scheduler';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
@@ -14,53 +14,11 @@ export const GET = async (req) => {
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
-
-    if (action === 'paginate') {
-      const sortField = url.searchParams.get('sortField');
-      const sortOrder = url.searchParams.get('sortOrder');
-      const searchQuery = url.searchParams.get('searchQuery');
-      const page = parseInt(url.searchParams.get('page') || '1', 10);
-      const limit = parseInt(url.searchParams.get('limit') || '10', 10);
-
-      const { data, success, totalCount } = await getSchedules({
-        suid: user?.integrator,
-        page,
-        limit,
-        sortField,
-        sortOrder,
-        searchQuery
-      });
-      return NextResponse.json({ data, success, totalCount });
-    }
-
-    if (action === 'getAll') {
-      const { data, success, totalCount } = await get({
-        suid: user?.integrator
-      });
-
-      return NextResponse.json({ data, success, totalCount });
-    }
+    const id = url.searchParams.get('id');
 
     if (action === 'getByUser') {
-      const startDate = url.searchParams.get('startDate');
-      const endDate = url.searchParams.get('endDate');
-      const results = await getByUser(user?.id, startDate, endDate);
+      const results = await getByUser(id);
       return NextResponse.json({ data: results });
-    }
-
-    if (action === 'getByDates') {
-      const startDate = url.searchParams.get('startDate');
-      const endDate = url.searchParams.get('endDate');
-      const results = await getUsersByDates(user?.id, startDate, endDate);
-      return NextResponse.json({ data: results });
-    }
-
-    if (action === 'getScheduleBySearch') {
-      const startDate = url.searchParams.get('startDate');
-      const endDate = url.searchParams.get('endDate');
-      const id = url.searchParams.get('id');
-      const {data} = await getByUser(id, startDate, endDate);
-      return NextResponse.json({ data, success : true, totalCount: 0  });
     }
 
     return NextResponse.json({ success: false, message: 'Invalid action parameter' }, { status: 400 });

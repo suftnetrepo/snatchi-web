@@ -5,6 +5,7 @@ const schedulerSchema = new mongoose.Schema(
   {
     integrator: { type: Schema.Types.ObjectId, ref: 'Integrator', required: true },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    project: { type: Schema.Types.ObjectId, ref: 'Project', required: true }, 
     title: {
       type: String,
       required: true,
@@ -18,9 +19,17 @@ const schedulerSchema = new mongoose.Schema(
       type: Date,
       required: true
     },
+    startTime: {
+      type: String,
+      required: true
+    },
+    endTime: {
+      type: String,
+      required: true
+    },  
     status: {
       type: String,
-      enum: ['Pending', 'Declined', 'Accepted', 'Lock'],
+      enum: ['Pending', 'Declined', 'Accepted', 'Paid', 'Completed', 'Cancelled', 'Progress'],
       required: true
     },
      description: {

@@ -7,7 +7,8 @@ import {
   createUser,
   getUserById,
   aggregateUserDataByRole,
-  changePassword
+  changePassword,
+  searchUsersByMultipleCriteria
 } from '../services/user';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
@@ -30,7 +31,7 @@ export const GET = async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
-    console.log('action', user);
+    console.log('action', action);
 
     if (action === 'users') {
       const sortField = url.searchParams.get('sortField');
@@ -65,6 +66,22 @@ export const GET = async (req) => {
       const searchQuery = url.searchParams.get('searchQuery');
       const searchResults = await searchUsers(searchQuery);
       return NextResponse.json({ success: true, data: searchResults });
+    }
+
+    if (action === 'searchMultiple') {
+      const searchQuery = url.searchParams.get('searchQuery');
+      const page = parseInt(url.searchParams.get('page') || '1', 10);
+      const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+
+      console.log('searchQuery', searchQuery);
+
+      const result = await searchUsersByMultipleCriteria({
+        searchQuery,
+        page,
+        limit
+      });
+      
+      return NextResponse.json({ success: true, ...result });
     }
 
     return NextResponse.json({ success: false, message: 'Invalid action parameter' }, { status: 400 });

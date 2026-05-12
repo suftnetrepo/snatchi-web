@@ -7,7 +7,7 @@ import { userValidator } from '@/protected/integrator/rules';
 const useUser = (searchQuery, flag = true) => {
   const [state, setState] = useState({
     data: [],
-    resources :[],
+    resources: [],
     editData: {},
     aggregateData: [],
     searchResults: [],
@@ -17,15 +17,10 @@ const useUser = (searchQuery, flag = true) => {
     totalCount: 0,
     success: false,
     fields: userValidator.fields,
-    error: null,
-    success: false,
     rules: userValidator.rules
   });
 
   const handleChange = (name, value) => {
-    console.log('name', name);
-    console.log('value', value);
-
     setState((prevState) => ({
       ...prevState,
       fields: {
@@ -67,6 +62,41 @@ const useUser = (searchQuery, flag = true) => {
       return true;
     } else {
       handleError(errorMessage);
+    }
+  };
+
+  const handleSearchUsersByMultipleCriteria = async (searchTerm, pageIndex = 1, pageSize = 10) => {
+    if (!searchTerm) {
+      handleError('Search term is required');
+      return { success: false, data: [] };
+    }
+
+    // setState((prev) => ({ ...prev, loading: true, error: null }));
+
+    const { data, success, errorMessage, totalCount, totalPages } = await zat(USER.searchMultiple, null, VERBS.GET, {
+      action: 'searchMultiple',
+      searchTerm: searchTerm?.trim(),
+      page: pageIndex,
+      limit: pageSize
+    });
+
+    if (success) {
+      setState((pre) => ({
+        ...pre,
+        searchResults: data,
+        totalCount: totalCount || 0,
+        loading: false,
+        success: true
+      }));
+      return {
+        success: true,
+        data: data,
+        totalCount: totalCount || 0,
+        totalPages: totalPages || 1
+      };
+    } else {
+      handleError(errorMessage);
+      return { success: false, data: [] };
     }
   };
 
@@ -238,8 +268,79 @@ const useUser = (searchQuery, flag = true) => {
     handleReset,
     handleAggregate,
     handleSearchUser,
+    handleSearchUsersByMultipleCriteria,
     handleChange
   };
 };
 
-export { useUser };
+const useMultiUserSearch = () => {
+  const [state, setState] = useState({
+    data: [],
+    loading: false,
+    searchTerm: '',
+    error: null,
+    totalCount: 0,
+    success: false
+  });
+
+  const handleError = (error) => {
+    setState((pre) => {
+      return { ...pre, error: error, success: false, loading: false };
+    });
+  };
+
+  const handleReset = () => {
+    setState((pre) => {
+      return { ...pre, editData: null, success: false, error: null };
+    });
+  };
+
+  const handleSearchUsersByMultipleCriteria = useCallback(
+    async ({ pageIndex = 1, pageSize = 10, sortBy = [], searchQuery = '' }) => {
+      const sortField = sortBy.length > 0 ? sortBy[0].id : null;
+      const sortOrder = sortBy.length > 0 ? (sortBy[0].desc ? 'desc' : 'asc') : null;
+
+      if (!searchQuery) {
+        return { success: false, data: [] };
+      }
+
+      setState((prev) => ({ ...prev, loading: true, error: null }));
+
+      try {
+        const { data, success, errorMessage, totalCount } = await zat(USER.searchMultiple, null, VERBS.GET, {
+          action: 'searchMultiple',
+          page: pageIndex === 0 ? 1 : pageIndex,
+          limit: pageSize,
+          ...(sortField && { sortField }),
+          ...(sortOrder && { sortOrder }),
+          searchQuery
+        });
+
+        if (success) {
+          setState((pre) => ({
+            ...pre,
+            data: data,
+            totalCount: totalCount,
+            loading: false
+          }));
+          return true;
+        } else {
+          handleError(errorMessage);
+          return false;
+        }
+      } catch (error) {
+        handleError('An unexpected error occurred while searching user.');
+        return false;
+      }
+    },
+    []
+  );
+
+  return {
+    ...state,
+    handleReset,
+    handleSearchUsersByMultipleCriteria
+  };
+};
+
+export { useUser, useMultiUserSearch };

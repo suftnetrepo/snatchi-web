@@ -244,30 +244,25 @@ function buildUserSearchFilter(searchTerm) {
  * @param {number} options.limit - Results limit per page (default: 10)
  * @returns {Object} Search results with data and totalCount
  */
-async function searchUsersByMultipleCriteria({ 
-  searchTerm, 
-  integratorId, 
-  page = 1, 
-  limit = 10 
-}) {
-  if (!searchTerm || searchTerm.trim().length === 0) {
-    throw new Error(JSON.stringify([{ field: 'searchTerm', message: 'Search term is required' }]));
+async function searchUsersByMultipleCriteria({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
+  if (!searchQuery || searchQuery.trim().length === 0) {
+    throw new Error(JSON.stringify([{ field: 'searchQuery', message: 'Search term is required' }]));
   }
 
   const skip = (page - 1) * limit;
 
   try {
-    const searchFilter = buildUserSearchFilter(searchTerm.trim());
+    const searchFilter = buildUserSearchFilter(searchQuery.trim());
     
     // Build base query
     let query = searchFilter;
     
     // Add integrator filter if provided (use string, not ObjectId)
-    if (integratorId) {
+    if (suid) {
       query = {
         $and: [
           searchFilter,
-          { integrator: integratorId }
+          { integrator: suid }
         ]
       };
     }
@@ -275,10 +270,10 @@ async function searchUsersByMultipleCriteria({
     // Execute query with pagination
     const [users, totalCount] = await Promise.all([
       User.find(query)
-        .select('-password')
+        .select('_id integrator first_name last_name address secure_url email')
         .skip(skip)
         .limit(limit)
-        .populate('integrator', 'name')
+        .lean()
         .exec(),
       User.countDocuments(query)
     ]);

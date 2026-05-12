@@ -7,19 +7,33 @@ import { useFence } from '../../../../hooks/useFence';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
 import { MdMyLocation } from 'react-icons/md';
 import { MdDelete, MdCancel, MdFilterList } from 'react-icons/md';
-import Select from 'react-select';
 import Tooltip from '@mui/material/Tooltip';
-import { formattedTime, formatDateTime, getFenceStatusColorCode, calculateWorkSummary } from '../../../../utils/helpers';
+import { useRouter } from 'next/navigation';
+import {
+  formattedTime,
+  formatDateTime,
+  getFenceStatusColorCode,
+  calculateWorkSummary
+} from '../../../../utils/helpers';
 
 const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
-  const { data: fenceData, error: fenceError, loading, success, fields: fence_field, userId, handleFetchByDates, handleDateChange, handleReset, handleFetchByUser } = useFence();
+  const {
+    data: fenceData,
+    error: fenceError,
+    loading,
+    success,
+    fields: fence_field,
+    userId,
+    handleFetchByDates,
+    handleDateChange,
+    handleReset,
+    handleFetchByUser
+  } = useFence();
+  const router = useRouter();
   const { data, error, customStyles, teamData, handleSelect, fields, handleChange, handleDelete, handleFetchUsers } =
     useTeam(id);
 
-  const summary = calculateWorkSummary(fenceData)
-
-  console.log("summary", summary)
-  console.log("fenceData....", fenceData)
+  const summary = calculateWorkSummary(fenceData);
 
   useEffect(() => {
     handleFetchUsers({ pageIndex: 1, pageSize: 100 });
@@ -42,14 +56,14 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '40%', backgroundColor: 'white' }}>
       <div className="d-flex flex-row justify-content-between align-items-center p-7">
         <div className="d-flex flex-column justify-content-start align-items-start">
-          {
-            !success ? (<p className="text-dark fw-bold fs-18"> Teams</p>) :
-              (<>
-                <span className="text-dark fw-bold fs-18">Tracking Location</span>
-                <span className="text-dark fw-normal fs-14">{project?.completeAddress}</span>
-              </>)
-          }
-
+          {!success ? (
+            <p className="text-dark fw-bold fs-18"> Teams</p>
+          ) : (
+            <>
+              <span className="text-dark fw-bold fs-18">Tracking Location</span>
+              <span className="text-dark fw-normal fs-14">{project?.completeAddress}</span>
+            </>
+          )}
         </div>
         <div>
           <MdCancel size={48} color="black" onClick={() => onClose()} className="pointer" />
@@ -66,17 +80,16 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
         {!success ? (
           <Form>
             <div className="row">
-              <div className="col-md-12">
-                <Form.Group controlId="formName" className="mb-1">
-                  <Select
-                    options={teamData}
-                    value={fields.id}
-                    onChange={(id) => onChange(id?.value)}
-                    isSearchable={true}
-                    placeholder="Select a user..."
-                    styles={customStyles}
-                  />
-                </Form.Group>
+               <div className="d-flex gap-2 justify-content-end align-items-center mb-4">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    router.push(`/protected/integrator/search-engineers`);
+                  }}
+                >
+                  + Add Engineers
+                </Button>
               </div>
             </div>
             <div>
@@ -123,22 +136,26 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                           </div>
                         </div>
                         <div className="d-flex flex-row justify-content-end align-items-end mx-3">
-                          <Tooltip title="View Enigeer Site log" arrow className='me-2'>
+                          <Tooltip title="View Enigeer Site log" arrow className="me-2">
                             <span className="p-0">
-                              <MdMyLocation size={30} className="pointer" onClick={() => {
-                                const today = new Date();
-                                const formattedDate = today.toISOString().split('T')[0];
-                                handleFetchByUser(team.id._id, id, formattedDate)
-                              }} />
+                              <MdMyLocation
+                                size={30}
+                                className="pointer"
+                                onClick={() => {
+                                  const today = new Date();
+                                  const formattedDate = today.toISOString().split('T')[0];
+                                  handleFetchByUser(team.id._id, id, formattedDate);
+                                }}
+                              />
                             </span>
                           </Tooltip>
-                          <Tooltip title="Remove from Project" arrow >
+                          <Tooltip title="Remove from Project" arrow>
                             <span className="p-0">
                               <DeleteConfirmation
                                 onConfirm={async () => {
                                   handleDelete(team._id);
                                 }}
-                                onCancel={() => { }}
+                                onCancel={() => {}}
                                 itemId={team._id}
                               >
                                 <MdDelete size={30} className="pointer" />
@@ -146,7 +163,6 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                             </span>
                           </Tooltip>
                         </div>
-
                       </ListGroup.Item>
                     );
                   })}
@@ -155,34 +171,46 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
             </div>
           </Form>
         ) : (
-          <div className='d-flex flex-column justify-content-start align-items-start'>
-            <div className='d-flex flex-row justify-content-start align-items-start mb-2'>
+          <div className="d-flex flex-column justify-content-start align-items-start">
+            <div className="d-flex flex-row justify-content-start align-items-start mb-2">
               <Form.Control
                 type="date"
-                placeholder='start Date'
+                placeholder="start Date"
                 value={fence_field.startDate ?? fence_field?.startDate?.split('T')[0]}
                 className="form-control border border-secondary rounded-3 "
-                onChange={(e) => handleDateChange("startDate", e.target.value)}
+                onChange={(e) => handleDateChange('startDate', e.target.value)}
               />
               <Form.Control
                 type="date"
-                placeholder='end date'
+                placeholder="end date"
                 value={fence_field.endDate ?? fence_field?.endDate?.split('T')[0]}
                 className="form-control border border-secondary rounded-3 ms-2"
-                onChange={(e) => handleDateChange("endDate", e.target.value)}
+                onChange={(e) => handleDateChange('endDate', e.target.value)}
               />
-              <Button disabled={!userId} type="button" className='p-3 ms-2' variant="primary" onClick={() => {
-                handleFetchByDates(fence_field?.startDate, fence_field?.endDate, userId, id);
-              }}>
+              <Button
+                disabled={!userId}
+                type="button"
+                className="p-3 ms-2"
+                variant="primary"
+                onClick={() => {
+                  handleFetchByDates(fence_field?.startDate, fence_field?.endDate, userId, id);
+                }}
+              >
                 <MdFilterList />
               </Button>
             </div>
-            <div className='d-flex gap2 flex-row justify-content-start align-items-start mb-2'>
-              <Badge bg="success" className='me-1'>Enter : {summary?.totalEnter} </Badge>
-              <Badge bg="danger" className='me-1'>Exit : {summary?.totalExit} </Badge>
-              <Badge bg="secondary" className='me-1'>Work hours : {summary?.totalHoursWorked}</Badge>
+            <div className="d-flex gap2 flex-row justify-content-start align-items-start mb-2">
+              <Badge bg="success" className="me-1">
+                Enter : {summary?.totalEnter}{' '}
+              </Badge>
+              <Badge bg="danger" className="me-1">
+                Exit : {summary?.totalExit}{' '}
+              </Badge>
+              <Badge bg="secondary" className="me-1">
+                Work hours : {summary?.totalHoursWorked}
+              </Badge>
             </div>
-            <div className='w-100'>
+            <div className="w-100">
               <table class="table table-bordered">
                 <thead class="table-light">
                   <tr>
@@ -195,27 +223,26 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {
-                    fenceData?.map((fence, index) => {
-                      return (
-                        <tr key={`${index}-${fence._id}`} >
-                          <td className='text-dark'>{formatDateTime(fence.date)}</td>
-                          <td className='text-dark'>{formattedTime(fence.time)}</td>
-                          <td className='text-dark'> <span className={`badge ${getFenceStatusColorCode(fence.status)}`}>{fence.status}</span></td>
-                          <td className='text-dark'>{fence.latitude}</td>
-                          <td className='text-dark'>{fence.longitude}</td>
-                          <td className='text-dark'>{fence.radius}m</td>
-                        </tr>
-                      );
-                    }
-                    )
-                  }
+                  {fenceData?.map((fence, index) => {
+                    return (
+                      <tr key={`${index}-${fence._id}`}>
+                        <td className="text-dark">{formatDateTime(fence.date)}</td>
+                        <td className="text-dark">{formattedTime(fence.time)}</td>
+                        <td className="text-dark">
+                          {' '}
+                          <span className={`badge ${getFenceStatusColorCode(fence.status)}`}>{fence.status}</span>
+                        </td>
+                        <td className="text-dark">{fence.latitude}</td>
+                        <td className="text-dark">{fence.longitude}</td>
+                        <td className="text-dark">{fence.radius}m</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </div>
         )}
-
       </Offcanvas.Body>
     </Offcanvas>
   );
