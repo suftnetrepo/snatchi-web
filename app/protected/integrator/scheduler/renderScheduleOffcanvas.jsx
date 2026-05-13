@@ -15,9 +15,10 @@ const RenderScheduleOffcanvas = ({
   error,
   handleChange,
   handleDelete,
-  success,
-  resources
+  success
 }) => {
+  console.log('RenderScheduleOffcanvas fields:', fields);
+
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
       <div className="d-flex flex-row justify-content-between align-items-center p-7">
@@ -40,11 +41,12 @@ const RenderScheduleOffcanvas = ({
           <div className="row">
             <div className="col-md-12">
               <div className="row">
-                <div className="col-md-6">
+                <div className="col-md-12">
                   <Form.Group controlId="formTitle" className="mb-3">
                     <Form.Label className="text-dark"> Title</Form.Label>
                     <Form.Control
-                      type="text"
+                      as="textarea"
+                      rows={2}
                       placeholder="Enter job title"
                       name="title"
                       value={fields?.title}
@@ -55,27 +57,6 @@ const RenderScheduleOffcanvas = ({
                       <span className="text-danger fs-13 ms-2">{errorMessages?.title?.message}</span>
                     )}
                   </Form.Group>
-                </div>
-                <div className="col-md-6">
-                  <Form.Group controlId="formLastName">
-                    <Form.Label className="text-light">.</Form.Label>
-                    <Form.Select
-                      className="border-dark"
-                      aria-label="Select Engineer"
-                      value={fields?.user}
-                      onChange={(e) => handleChange('user', e.target.value)}
-                    >
-                      <option value={''}>Select Engineer</option>
-                      {resources?.map((user, index) => (
-                        <option key={index} value={user.id}>
-                          {user.name}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                   {errorMessages?.user?.message && (
-                      <span className="text-danger fs-13 ms-2">{errorMessages?.user?.message}</span>
-                    )}
                 </div>
               </div>
             </div>
@@ -88,8 +69,8 @@ const RenderScheduleOffcanvas = ({
                   <Form.Group controlId="formStartDate">
                     <Form.Label className="text-dark">Start Date</Form.Label>
                     <Form.Control
-                      type="datetime-local"
-                      value={fields.startDate}
+                      type="date"
+                      value={fields.startDate ? fields.startDate.split('T')[0] : ''}
                       onChange={(e) => handleChange('startDate', e.target.value)}
                       className="border-dark"
                     />
@@ -102,14 +83,48 @@ const RenderScheduleOffcanvas = ({
                   <Form.Group controlId="formEndDate">
                     <Form.Label className="text-dark">End Date</Form.Label>
                     <Form.Control
-                      type="datetime-local"
-                      value={fields.endDate}
+                      type="date"
+                      value={fields.endDate ? fields.endDate.split('T')[0] : ''}
                       onChange={(e) => handleChange('endDate', e.target.value)}
                       className="border-dark"
                     />
                   </Form.Group>
                   {errorMessages?.endDate?.message && (
                     <span className="text-danger fs-13">{errorMessages?.endDate?.message}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="row mb-3">
+            <div className="col-md-12">
+              <div className="row">
+                <div className="col-md-6">
+                  <Form.Group controlId="formStartTime">
+                    <Form.Label className="text-dark">Start Time</Form.Label>
+                    <Form.Control
+                      type="time"
+                      value={fields.startTime || ''}
+                      onChange={(e) => handleChange('startTime', e.target.value)}
+                      className="border-dark"
+                    />
+                  </Form.Group>
+                  {errorMessages?.startTime?.message && (
+                    <span className="text-danger fs-13">{errorMessages?.startTime?.message}</span>
+                  )}
+                </div>
+                <div className="col-md-6">
+                  <Form.Group controlId="formEndTime">
+                    <Form.Label className="text-dark">End Time</Form.Label>
+                    <Form.Control
+                      type="time"
+                      value={fields.endTime || ''}
+                      onChange={(e) => handleChange('endTime', e.target.value)}
+                      className="border-dark"
+                    />
+                  </Form.Group>
+                  {errorMessages?.endTime?.message && (
+                    <span className="text-danger fs-13">{errorMessages?.endTime?.message}</span>
                   )}
                 </div>
               </div>
@@ -122,7 +137,7 @@ const RenderScheduleOffcanvas = ({
                 <Form.Control
                   as="textarea"
                   rows={3}
-                  placeholder="Enter short job description"
+                  placeholder="Enter short note"
                   value={fields.description}
                   onChange={(e) => handleChange('description', e.target.value)}
                   className="border-dark"
@@ -161,7 +176,7 @@ const RenderScheduleOffcanvas = ({
                 handleDelete(id);
                 handleClose();
               }}
-              onCancel={() => { }}
+              onCancel={() => {}}
               itemId={fields._id}
             >
               <Button type="button" variant="outline-danger" className="ms-2" onClick={handleClose}>

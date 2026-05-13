@@ -85,7 +85,7 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                   type="button"
                   size="sm"
                   onClick={() => {
-                    router.push(`/protected/integrator/search-engineers`);
+                    router.push(`/protected/integrator/search-engineers?projectId=${project._id}`);
                   }}
                 >
                   + Add Engineers

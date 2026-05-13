@@ -7,6 +7,14 @@ import { logger } from '../utils/logger';
 
 mongoConnect();
 
+// Helper function to extract time from date
+const extractTimeFromDate = (dateString) => {
+  const date = new Date(dateString);
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
+
 async function getByUser(user_id) {
   try {
     const query = {};
@@ -15,7 +23,7 @@ async function getByUser(user_id) {
       if (!mongoose.isValidObjectId(user_id)) {
         throw new Error(JSON.stringify([{ field: 'user_id', message: 'Invalid MongoDB ObjectId' }]));
       }
-      query.user = user_id;
+      query.engineer = user_id;
     }
 
     // Only return future schedules
@@ -23,7 +31,7 @@ async function getByUser(user_id) {
 
     query.startDate = { $gte: now };
 
-    const result = await Scheduler.find(query).populate('user', 'first_name last_name email');
+    const result = await Scheduler.find(query).populate('engineer', 'first_name last_name email');
     return { data: result };
   } catch (error) {
     logger.error(error);
@@ -37,24 +45,23 @@ async function add(body) {
     throw new Error(bodyErrors.map((it) => it.message).join(','));
   }
 
-  if (!isValidObjectId(body.user)) {
-    throw new Error(JSON.stringify([{ field: 'user', message: 'Invalid user MongoDB ObjectId' }]));
-  }
-
-  if (!isValidObjectId(body.integrator)) {
-    throw new Error(JSON.stringify([{ field: 'integrator', message: 'Invalid integrator MongoDB ObjectId' }]));
-  }
-
-  const { startDate, endDate, ...rest } = body;
+  const { startDate, endDate, startTime, endTime, ...rest } = body;
+  
+  // Extract time from dates if startTime/endTime not provided
+  const derivedStartTime = startTime || extractTimeFromDate(startDate);
+  const derivedEndTime = endTime || extractTimeFromDate(endDate);
+  
   const schedulerData = {
     ...rest,
     startDate: new Date(startDate).toISOString(),
-    endDate: new Date(endDate).toISOString()
+    endDate: new Date(endDate).toISOString(),
+    startTime: derivedStartTime,
+    endTime: derivedEndTime
   };
 
   try {
     const scheduler = await Scheduler.create(schedulerData);
-    await scheduler.populate('user', 'first_name last_name email');
+    await scheduler.populate('engineer', 'first_name last_name email');
     return scheduler;
   } catch (error) {
     console.error(error);
@@ -76,6 +83,10 @@ async function update(suid, id, body) {
     throw new Error(bodyErrors.map((it) => it.message).join(','));
   }
 
+  // Extract time from dates if startTime/endTime not provided
+  const derivedStartTime = body.startTime || extractTimeFromDate(body.startDate);
+  const derivedEndTime = body.endTime || extractTimeFromDate(body.endDate);
+
   try {
     const result = await Scheduler.findOneAndUpdate(
       { _id: id, integrator: suid },
@@ -83,10 +94,12 @@ async function update(suid, id, body) {
         ...body,
         startDate: new Date(body.startDate),
         endDate: new Date(body.endDate),
+        startTime: derivedStartTime,
+        endTime: derivedEndTime,
         updatedAt: new Date()
       },
       { new: true, runValidators: true }
-    ).populate('user', 'first_name last_name email');
+    ).populate('engineer', 'first_name last_name email');
 
     return result;
   } catch (error) {

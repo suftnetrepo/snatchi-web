@@ -33,7 +33,7 @@ function Table({ data, columns, loading, pageCount: controlledPageCount, fetchDa
   );
 
   useEffect(() => {
-      fetchData && fetchData({ pageIndex, pageSize, sortBy, searchQuery :"" });
+    fetchData && fetchData({ pageIndex, pageSize, sortBy, searchQuery: '' });
   }, [fetchData, pageIndex, pageSize, sortBy]);
 
   return (
@@ -44,15 +44,14 @@ function Table({ data, columns, loading, pageCount: controlledPageCount, fetchDa
             {headerGroups.map((headerGroup) => (
               <tr {...headerGroup.getHeaderGroupProps()}>
                 {headerGroup.headers.map((column) => (
-                  <th {...column.getHeaderProps(column.getSortByToggleProps())}>
+                  <th {...column.getHeaderProps(column.getSortByToggleProps())} className={column.headerClassName}>
                     {column.render('Header')}
                     <span>
                       {column.isSorted
                         ? column.isSortedDesc
                           ? ' 🔽' // Descending
                           : ' 🔼' // Ascending
-                        : 
-                        ' ⬍'}
+                        : ' ⬍'}
                     </span>
                   </th>
                 ))}
@@ -65,7 +64,9 @@ function Table({ data, columns, loading, pageCount: controlledPageCount, fetchDa
               return (
                 <tr {...row.getRowProps()}>
                   {row.cells.map((cell) => (
-                    <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                    <td {...cell.getCellProps()} className={cell.column.className}>
+                      {cell.render('Cell')}
+                    </td>
                   ))}
                 </tr>
               );

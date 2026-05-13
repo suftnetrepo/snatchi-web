@@ -565,8 +565,25 @@ function calculateWorkSummary(logs) {
   };
 }
 
+const formatDateForInput = (date) => {
+      return date.toISOString().slice(0, 19);
+    };
+
+const decodeHtmlToText = (htmlString) => {
+  if (!htmlString) return '';
+  
+  // Create a temporary element to decode HTML entities
+  const txt = typeof DOMParser !== 'undefined' 
+    ? new DOMParser().parseFromString(htmlString, 'text/html').documentElement.textContent 
+    : htmlString;
+  
+  // Remove any remaining HTML tags
+  return txt ? txt.replace(/<[^>]*>/g, '') : '';
+};
 
 export {
+  formatDateForInput,
+  decodeHtmlToText,
   calculateWorkSummary,
   formatRelativeTime,
   getIconColor,

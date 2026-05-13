@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 const schedulerSchema = new mongoose.Schema(
   {
     integrator: { type: Schema.Types.ObjectId, ref: 'Integrator', required: true },
-    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    engineer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     project: { type: Schema.Types.ObjectId, ref: 'Project', required: true }, 
     title: {
       type: String,

@@ -1,51 +1,72 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { Table } from '@/components/elements/table/table';
-import { Form, Button } from 'react-bootstrap';
-import { TiEdit, TiCancel } from 'react-icons/ti';
-import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
-import useDebounce from '../../../../hooks/useDebounce';
-import { dateFormatted, getStatusColorCode } from '../../../../utils/helpers';
-import { validate } from '@/validator/validator';
+import React, { useEffect, useState } from 'react';
+import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
+import { Button } from 'react-bootstrap';
+import { MdArrowBack } from 'react-icons/md';
+import { format, parse, startOfWeek, getDay } from 'date-fns';
+import enGB from 'date-fns/locale/en-GB';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useScheduler } from '../../../../hooks/useScheduler';
 import { RenderScheduleOffcanvas } from './renderScheduleOffcanvas';
-import { chose } from '../../../../utils/utils';
-import Tooltip from '@mui/material/Tooltip';
+import { chose, capitalize } from '../../../../utils/utils';
+import { validate } from '../../../../validator/validator';
 
-const Scheduler = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const [errorMessages, setErrorMessages] = useState({});
-  const [filterErrorMessages, setFilterErrorMessages] = useState({});
+const locales = {
+  'en-GB': enGB
+};
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales
+});
+
+export default function Scheduler() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get('projectId');
+  const engineerId = searchParams.get('engineerId');
+  const firstName = searchParams.get('first_name');
+  const lastName = searchParams.get('last_name');
+  const searchQuery = searchParams.get('searchQuery');
   const {
-    handleSelectedUpdate,
     data,
-    loading,
     error,
-    totalCount,
     fields,
     rules,
-    success,
-    resources,
-    model,
-    modelRules,
     handleSave,
     handleChange,
+    handleSelection,
     handleDelete,
     handleReset,
     handleEdit,
-    handleFetchAll,
-    handleSearchChange,
-    handleSearchByDates,
-    handleResetSearch
-  } = useScheduler(debouncedSearchQuery);
+    success,
+    handleProjectSelect
+  } = useScheduler(engineerId);
   const [show, setShow] = useState(false);
+  const [errorMessages, setErrorMessages] = useState({});
+
+  console.log('Scheduler fields:', fields, projectId);
+
+  // Project selection effect
+  useEffect(() => {
+    if (projectId) {
+      handleProjectSelect(projectId);
+    }
+  }, [projectId]); 
 
   const handleClose = () => {
     setShow(false);
     handleReset();
   };
+
+  const handleSelect = (slotInfo) => {
+    handleSelection(slotInfo.start, slotInfo.end, engineerId, projectId);
+    setShow(true);
+  }
 
   const handleSubmit = async () => {
     setErrorMessages({});
@@ -57,7 +78,7 @@ const Scheduler = () => {
       return;
     }
 
-    const body = chose(fields, ['_id', 'title', 'startDate', 'endDate', 'status', 'user', 'description']);
+    const body = chose(fields, ['_id', 'title', 'startDate', 'endDate', 'startTime', 'endTime', 'status', 'engineer', 'project', 'description']);
 
     if (fields._id) {
       await handleEdit(body, fields._id);
@@ -67,199 +88,34 @@ const Scheduler = () => {
     }
   };
 
-  const handleSearch = async () => {
-    setFilterErrorMessages({});
-
-    const validationResult = validate(model, modelRules);
-
-    if (validationResult.hasError) {
-      setFilterErrorMessages(validationResult.errors);
-      return;
-    }
-
-    await handleSearchByDates({ ...model, id: model?.user });
-  };
-
-  const onReset = async () => {
-    handleResetSearch();
-    handleFetchAll({ searchQuery });
-  };
-
-  const columns = useMemo(
-    () => [
-      {
-        Header: 'Engineer',
-        accessor: 'user',
-        Cell: ({ value, row }) => (
-          <div className="d-flex align-items-center">
-            {value.first_name} {value.last_name}
-          </div>
-        )
-      },
-      { Header: 'Title', accessor: 'title', sortType: 'basic' },
-      {
-        Header: 'Start Date',
-        accessor: 'startDate',
-        Cell: ({ value, row }) => <div className="d-flex align-items-center">{dateFormatted(value)}</div>
-      },
-      {
-        Header: 'End Date',
-        accessor: 'endDate',
-        Cell: ({ value }) => <div className="d-flex align-items-center">{dateFormatted(value)}</div>
-      },
-      {
-        Header: 'Status',
-        accessor: 'status',
-        headerClassName: { textAlign: 'center' },
-        Cell: ({ value }) => (
-          <div className="d-flex justify-content-start align-items-center">
-            <span className={`badge ${getStatusColorCode(value)}`}>{value}</span>
-          </div>
-        )
-      },
-
-      {
-        Header: 'Actions',
-        disableSortBy: true,
-        headerClassName: { textAlign: 'center' },
-        Cell: ({ row }) => (
-          <div className="d-flex justify-content-center align-items-center">
-            <Tooltip title="Edit Project" arrow>
-              <span className="p-0">
-                <TiEdit
-                  size={30}
-                  className="pointer me-2"
-                  onClick={() => {
-                    handleSelectedUpdate(row.original);
-                    setShow(true);
-                  }}
-                />
-              </span>
-            </Tooltip>
-          </div>
-        )
-      }
-    ],
-    []
-  );
-
   return (
-    <>
-      <div className={`ms-5 me-5 mt-2 ${!loading ? 'overlay__block' : null}`}>
-        <div className="card-body">
-          <h3 className="card-title ms-2 mb-2">Scheduler</h3>
-          <div className="row d-flex justify-content-between align-items-center mb-3">
-            <div className="col-md-10">
-              <div className="d-flex justify-content-start align-items-center mb-3">
-                <div className="row d-flex justify-content-between align-items-center ">
-                  <div className="col-md-4">
-                    <Form.Group controlId="formStartDate">
-                      <Form.Label className="text-light">Start Date</Form.Label>
-                      <input
-                        type="text"
-                        className="form-control w-25"
-                        placeholder="Search title, status, user ..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </Form.Group>
-                  </div>
-
-                  <div className="col-md-4 ms-6">
-                    <Form.Group controlId="formLastName">
-                      <Form.Label className="text-light">.</Form.Label>
-                      <Form.Select
-                        className="border-dark"
-                        aria-label="Select Engineer"
-                        value={model?.user}
-                        onChange={(e) => handleSearchChange('user', e.target.value)}
-                      >
-                        <option value={''}>Select Engineer</option>
-                        {resources.map((user, index) => (
-                          <option key={index} value={user.id}>
-                            {user.name}
-                          </option>
-                        ))}
-                      </Form.Select>
-                    </Form.Group>
-                  </div>
-                </div>
-
-                <div className="row ms-2 ">
-                  <div className="col-md-4">
-                    <Form.Group controlId="formStartDate">
-                      <Form.Label className="text-dark">Start Date</Form.Label>
-                      <Form.Control
-                        type="date"
-                        value={model?.startDate}
-                        onChange={(e) => handleSearchChange('startDate', e.target.value)}
-                        className="border-dark"
-                      />
-                    </Form.Group>
-                    {filterErrorMessages?.startDate?.message && (
-                      <span className="text-danger fs-13">{filterErrorMessages?.startDate?.message}</span>
-                    )}
-                  </div>
-                  <div className="col-md-4">
-                    <Form.Group controlId="formEndDate">
-                      <Form.Label className="text-dark">End Date</Form.Label>
-                      <Form.Control
-                        type="date"
-                        value={model?.endDate}
-                        onChange={(e) => handleSearchChange('endDate', e.target.value)}
-                        className="border-dark"
-                      />
-                    </Form.Group>
-                    {filterErrorMessages?.endDate?.message && (
-                      <span className="text-danger fs-13">{filterErrorMessages?.endDate?.message}</span>
-                    )}
-                  </div>
-                  <div className="col-md-4 d-flex justify-content-end align-items-center">
-                    <Button
-                      type="submit"
-                      size="sm"
-                      onClick={() => {
-                        handleSearch();
-                      }}
-                      className="mt-8"
-                    >
-                      Filter
-                    </Button>
-                     <Button
-                      type="submit"
-                      variant="secondary"
-                      size="sm"
-                      onClick={async () => {
-                        await onReset();
-                      }}
-                      className="mt-8 ms-2 secondary"
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-2 d-flex justify-content-end align-items-center">
-              <Button
-                type="submit"
-                size="sm"
-                onClick={() => {
-                  setShow(true);
-                }}
-                className="mt-4"
-              >
-                + Add Schedule
-              </Button>
-            </div>
-          </div>
-          <Table data={data} columns={columns} pageCount={totalCount} loading={loading} fetchData={handleFetchAll} />
+    <div className="py-0">
+      <div className="calendar-wrapper">
+        <div className="d-flex justify-content-start align-items-center mb-3">
+          <Button
+            variant="outline-secondary"
+            onClick={() => router.push(`/protected/integrator/search-engineers?projectId=${projectId}&searchQuery=${searchQuery}`)}
+          >
+            <MdArrowBack size={24} /> Back
+          </Button>
+          <h3 className="card-title ms-2">{`${capitalize(firstName)} ${capitalize(lastName)}`}</h3>
         </div>
+        <Calendar
+          localizer={localizer}
+          events={data}
+          startAccessor="startDate"
+          endAccessor="endDate"
+          defaultView="week"
+          views={['week', 'day']}
+          selectable
+          step={15}
+          timeslots={4}
+          onSelectSlot={(slotInfo) => handleSelect(slotInfo)}
+          style={{ height: '100%', width: '100%' }}
+        />
       </div>
-      {!loading && <span className="overlay__block" />}
-      {error && <ErrorDialogue showError={error} onClose={() => {}} />}
+
       <RenderScheduleOffcanvas
-      resources={resources}
         error={error}
         fields={fields}
         errorMessages={errorMessages}
@@ -270,8 +126,6 @@ const Scheduler = () => {
         handleClose={handleClose}
         handleDelete={handleDelete}
       />
-    </>
+    </div>
   );
-};
-
-export default Scheduler;
+}

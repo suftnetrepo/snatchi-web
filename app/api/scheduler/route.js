@@ -16,9 +16,9 @@ export const GET = async (req) => {
     const action = url.searchParams.get('action');
     const id = url.searchParams.get('id');
 
-    if (action === 'getByUser') {
+    if (action === 'getByEngineer') {
       const results = await getByUser(id);
-      return NextResponse.json({ data: results });
+      return NextResponse.json({ success: true, data: results.data });
     }
 
     return NextResponse.json({ success: false, message: 'Invalid action parameter' }, { status: 400 });
@@ -70,11 +70,11 @@ export const PUT = async (req) => {
         const { title, description, status } = body;
         if (status === 'Pending') {
           await sendUserNotification({
-            userId: body.user._id,
+            userId: body.engineer,
             title,
             body: description,
             screen: 'calendar',
-            screenParams: { scheduleId: id, startDate: body.startDate, endDate: body.endDate }
+            screenParams: { scheduleId: id, startDate: body.startDate, endDate: body.endDate, projectId : body.project }
           });
         }
       }
@@ -100,11 +100,11 @@ export const POST = async (req) => {
       const { title, description, status } = body;
       if (status === 'Pending') {
         await sendUserNotification({
-          userId: body.user,
+          userId: body.engineer,
           title,
           body: description,
           screen: 'calendar',
-          screenParams: { scheduleId: result._id }
+          screenParams: { scheduleId: result._id, projectId : body.project}
         });
       }
     }

@@ -13,7 +13,7 @@ export const SCHEDULER = {
   updateOne: `${HOST}scheduler`,
   updatestatus: `${HOST}scheduler`,
   removeOne: `${HOST}scheduler/`,
-  getByUser: `${HOST}user?action=getByUser`,
+  getByEngineer: `${HOST}scheduler/`,
 };
 
 export const USER = {

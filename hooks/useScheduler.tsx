@@ -1,16 +1,23 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
-import { SCHEDULER } from '../utils/apiUrl';
+import { PROJECT, SCHEDULER } from '../utils/apiUrl';
 import { schedulerValidator, schedulerSearchValidator } from '../app/protected/integrator/rules';
+import { formatDateForInput, decodeHtmlToText } from '../utils/helpers';
 
 interface Schedule {
   _id: string;
   integrator: string;
+  engineer?: {
+    _id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
   project: string;
   title: string;
-  startDate: string;
-  endDate: string;
+  startDate: string | Date;
+  endDate: string | Date;
   startTime: string;
   endTime: string;
   status: string;
@@ -37,7 +44,7 @@ interface ApiResponse<T = any> {
   errorMessage?: string;
 }
 
-const useScheduler = () => {
+const useScheduler = (engineerId: string) => {
   const [state, setState] = useState<SchedulerState>({
     data: [],
     loading: false,
@@ -67,27 +74,104 @@ const useScheduler = () => {
     }));
   }, []);
 
-  const fetchUserSchedules = async (id: string) => {
-    updateState({ loading: true, error: null });
+  const handleSelection = useCallback((start: Date, end: Date, engineer: string, project: string) => {
+    // Format dates to datetime-local format (YYYY-MM-DDTHH:mm:ss)
+    const extractTimeFromDate = (date: Date): string => {
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    };
 
-    try {
-      const params = new URLSearchParams({
-        action: 'getByUser',
-        id: id
+    setState((prevState) => ({
+      ...prevState,
+      success: false,
+      loading: false,
+      fields: {
+        ...prevState.fields,
+        startDate: formatDateForInput(start),
+        endDate: formatDateForInput(end),
+        startTime: extractTimeFromDate(start),
+        endTime: extractTimeFromDate(end),
+        engineer,
+        project
+      }
+    }));
+  }, []);
+
+  
+const buildScheduleDateTime = (dateValue: string, timeValue: string) => {
+  const date = new Date(dateValue);
+  const [hour, minute] = timeValue.split(':').map(Number);
+
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    hour,
+    minute,
+    0,
+    0
+  );
+};
+
+const fetchUserSchedules = async (id: string) => {
+  updateState({ loading: true, error: null });
+
+  try {
+    const params = new URLSearchParams({
+      action: 'getByEngineer',
+      id,
+    });
+
+    const response: ApiResponse<Schedule[]> = await zat(
+      SCHEDULER.getByEngineer,
+      null,
+      VERBS.GET,
+      params
+    );
+
+    if (response.success) {
+      const transformedData = (response.data || []).map((schedule) => {
+        const startDateStr = schedule.startDate instanceof Date 
+          ? schedule.startDate.toISOString().split('T')[0] 
+          : schedule.startDate;
+        
+        const start = buildScheduleDateTime(
+          startDateStr,
+          schedule.startTime
+        );
+
+        const end = buildScheduleDateTime(
+          startDateStr,
+          schedule.endTime
+        );
+
+        return {
+          ...schedule,
+          id: schedule._id,
+          title: schedule.title,
+          start,
+          end,
+          startDate: start,
+          endDate: end,
+          engineerName: `${schedule.engineer?.first_name || ''} ${
+            schedule.engineer?.last_name || ''
+          }`.trim(),
+        };
       });
 
-      // @ts-ignore
-      const response: ApiResponse<Schedule[]> = await zat(SCHEDULER.getByUser, null, VERBS.GET, params);
-
-      if (response.success) {
-        updateState({ data: response.data || [], loading: false, success: true });
-      } else {
-        handleError(response.errorMessage || 'Failed to fetch schedules.');
-      }
-    } catch (error) {
-      handleError('An unexpected error occurred while fetching schedules.');
+      updateState({
+        data: transformedData,
+        loading: false,
+        success: true,
+      });
+    } else {
+      handleError(response.errorMessage || 'Failed to fetch schedules.');
     }
-  };
+  } catch (error) {
+    handleError('An unexpected error occurred while fetching schedules.');
+  }
+};
 
   const handleError = useCallback(
     (error: string) => {
@@ -135,9 +219,16 @@ const useScheduler = () => {
         });
 
         if (success) {
+          // Transform string dates to Date objects for the calendar
+          const transformedSchedule = {
+            ...data,
+            startDate: new Date(data.startDate),
+            endDate: new Date(data.endDate)
+          };
+
           setState((prevState) => ({
             ...prevState,
-            data: prevState.data.map((event) => (event._id === id ? data : event)),
+            data: prevState.data.map((event) => (event._id === id ? transformedSchedule : event)),
             loading: false,
             success: true
           }));
@@ -168,7 +259,18 @@ const useScheduler = () => {
         if (response.success) {
           setState((prevState) => ({
             ...prevState,
-            data: prevState.data.map((schedule) => (schedule._id === id ? { ...schedule, ...body } : schedule)),
+            data: prevState.data.map((schedule) => {
+              if (schedule._id === id) {
+                // Transform string dates to Date objects if they exist
+                return {
+                  ...schedule,
+                  ...body,
+                  startDate: body.startDate ? new Date(body.startDate) : schedule.startDate,
+                  endDate: body.endDate ? new Date(body.endDate) : schedule.endDate
+                };
+              }
+              return schedule;
+            }),
             loading: false,
             success: true
           }));
@@ -193,9 +295,16 @@ const useScheduler = () => {
         const { data, success, errorMessage } = await zat(SCHEDULER.createOne, body, VERBS.POST);
 
         if (success) {
+          // Transform string dates to Date objects for the calendar
+          const transformedSchedule = {
+            ...data,
+            startDate: new Date(data.startDate),
+            endDate: new Date(data.endDate)
+          };
+
           setState((prevState) => ({
             ...prevState,
-            data: [data, ...prevState.data],
+            data: [transformedSchedule, ...prevState.data],
             loading: false,
             success: true
           }));
@@ -212,6 +321,35 @@ const useScheduler = () => {
     [handleError]
   );
 
+  async function handleProjectSelect(id: string) {
+    setState((prev) => ({ ...prev, loading: true }));
+    const { success, data, errorMessage } = await zat(PROJECT.fetchOne, null, VERBS.GET, {
+      action: 'single',
+      id: id
+    });
+
+    if (success) {
+      setState((prevState) => ({
+        ...prevState,
+        fields: {
+          ...prevState.fields,
+          title: data.name,
+          description: decodeHtmlToText(data.description)
+        },
+        loading: false
+      }));
+    } else {
+      handleError(errorMessage || 'Failed to fetch the project.');
+    }
+  }
+
+  // Only fetch schedules on initial load with engineerId
+  useEffect(() => {
+    if (engineerId) {
+      fetchUserSchedules(engineerId);
+    }
+  }, [engineerId]); // Only depend on engineerId, not fetchUserSchedules
+
   const clearMessages = useCallback(() => {
     updateState({ error: null, success: false });
   }, [updateState]);
@@ -226,7 +364,10 @@ const useScheduler = () => {
     handleEditStatus,
     handleSave,
     clearMessages,
+    handleSelection,
+    handleProjectSelect
   };
 };
 
 export { useScheduler };
+ 

@@ -1,4 +1,3 @@
-
 const projectValidator = {
   rules: {
     name: [
@@ -290,7 +289,9 @@ const schedulerValidator = {
       status: 'Pending',
       startDate: '',
       endDate: '',
-      description: ''
+      description: '',
+      engineer: '',
+      project: ''
     };
   },
   fields: {
@@ -298,8 +299,9 @@ const schedulerValidator = {
     status: 'Pending',
     startDate: '',
     endDate: '',
-    title : '',
-    user: '',
+    title: '',
+    engineer: '',
+    project: ''
   }
 };
 
@@ -332,13 +334,13 @@ const schedulerSearchValidator = {
     return {
       user: '',
       startDate: '',
-      endDate: '',
+      endDate: ''
     };
   },
   model: {
     user: '',
     startDate: '',
-    endDate: '',
+    endDate: ''
   }
 };
 

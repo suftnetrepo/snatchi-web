@@ -1,29 +1,31 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Table } from '../../../../src/components/elements/table/table';
 import { TiEye } from 'react-icons/ti';
 import { MdSearch } from 'react-icons/md';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
 import { useMultiUserSearch } from '../../../../hooks/useUser';
-import { Form, Button } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const Search = () => {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [show, setShow] = useState(false);
-  const { data, error, loading, totalCount, handleSearchUsersByMultipleCriteria, handleReset } =
-    useMultiUserSearch();
+  const { data, error, loading, totalCount, handleSearchUsersByMultipleCriteria, handleReset } = useMultiUserSearch();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get('projectId');
+  const previousSearchQuery = searchParams.get('searchQuery');
 
-    console.log('Search data:', data);
-        console.log('Search error:', error);
+  useEffect(() => {
+    if (previousSearchQuery) {
+      setSearchQuery(previousSearchQuery);
+      handleSearchUsersByMultipleCriteria({ searchQuery: previousSearchQuery });
+    }
+  }, [previousSearchQuery]);
 
-  const handleClose = () => {
-    handleReset();
-    setShow(false);
-  };
-  const handleShow = () => {
-    setShow(true);
-  };
+  console.log('Search data:', projectId);
+  console.log('Search error:', error);
 
   const columns = useMemo(
     () => [
@@ -33,30 +35,28 @@ const Search = () => {
         Header: 'Location',
         accessor: 'address',
         Cell: ({ value, row }) => (
-          <div className="d-flex align-items-center">
-            {row.original?.address?.completeAddress || 'N/A'}
-          </div>
+          <div className="d-flex align-items-center">{row.original?.address?.completeAddress || 'N/A'}</div>
         )
       },
       {
         Header: 'Actions',
         disableSortBy: true,
         headerClassName: 'text-center',
+        className: 'text-center align-middle',
         Cell: ({ row }) => (
-          <div className="d-flex justify-content-start align-items-start">
+          <div className="d-flex justify-content-center align-items-center">
             <TiEye
               size={30}
-              className="pointer me-8"
+              className="pointer"
               onClick={() => {
-                // handleShow();
-                // handleSelect(row.original);
+                router.push(`/protected/integrator/scheduler?projectId=${projectId}&userId=${row.original._id}&first_name=${row.original.first_name}&last_name=${row.original.last_name}&searchQuery=${searchQuery}&engineerId=${row.original._id}`);
               }}
             />
           </div>
         )
       }
     ],
-    []
+    [projectId, searchQuery]
   );
 
   return (
@@ -80,10 +80,7 @@ const Search = () => {
               onClick={() => handleSearchUsersByMultipleCriteria({ searchQuery })}
               className="mt-0 d-flex justify-content-center align-items-center  ms-4"
             >
-              <MdSearch
-                size={24}
-                className="pointer"
-              />
+              <MdSearch size={24} className="pointer" />
             </Button>
           </div>
           <Table
@@ -96,8 +93,7 @@ const Search = () => {
         </div>
       </div>
       {!loading && <span className="overlay__block" />}
-      {error && <ErrorDialogue message={error } showError={error} onClose={() => handleReset()} />}
-      {/* <RenderIntegratorOffcanvas handleClose={handleClose} currentChatId={currentChatUser?.uid} session={session} show={show} data={viewData} /> */}
+      {error && <ErrorDialogue message={error} showError={error} onClose={() => handleReset()} />}
     </>
   );
 };

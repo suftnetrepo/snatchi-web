@@ -45,10 +45,13 @@ const Project = () => {
     setShowProjectOffcanvas(false);
   };
 
-
   const columns = useMemo(
     () => [
-      { Header: 'Name', accessor: 'name', sortType: 'basic', Cell: ({ value, row }) => (
+      {
+        Header: 'Name',
+        accessor: 'name',
+        sortType: 'basic',
+        Cell: ({ value, row }) => (
           <div className="d-flex align-items-center">
             <a
               className="pointer"
@@ -60,15 +63,12 @@ const Project = () => {
               {value}
             </a>
           </div>
-        ) },
+        )
+      },
       {
         Header: 'Start Date',
         accessor: 'startDate',
-        Cell: ({ value, row }) => (
-          <div className="d-flex align-items-center">
-            {dateFormatted(value)}
-          </div>
-        )
+        Cell: ({ value, row }) => <div className="d-flex align-items-center">{dateFormatted(value)}</div>
       },
       {
         Header: 'End Date',
@@ -98,8 +98,10 @@ const Project = () => {
 
       {
         Header: 'Actions',
+        accessor: 'actions',
         disableSortBy: true,
-        headerClassName: { textAlign: 'center' },
+        headerClassName: 'text-center actions-header',
+        className: 'text-center actions-cell',
         Cell: ({ row }) => (
           <div className="d-flex justify-content-center align-items-center">
             <Tooltip title="Edit Project" arrow>
@@ -120,7 +122,7 @@ const Project = () => {
                   onConfirm={async (id) => {
                     handleDelete(id);
                   }}
-                  onCancel={() => { }}
+                  onCancel={() => {}}
                   itemId={row.original._id}
                 >
                   <MdDelete size={30} className="pointer" />
@@ -134,7 +136,7 @@ const Project = () => {
                   size={30}
                   className="pointer ms-2"
                   onClick={() => {
-                    setProject(prev => ({ ...prev, projectId: row.original._id }));
+                    setProject((prev) => ({ ...prev, projectId: row.original._id }));
                     router.push(`/protected/integrator/task?projectId=${row.original._id}`);
                   }}
                 />
@@ -147,7 +149,7 @@ const Project = () => {
                   size={30}
                   className="pointer ms-2"
                   onClick={() => {
-                    setProject(prev => ({ ...prev, projectId: row.original._id }));
+                    setProject((prev) => ({ ...prev, projectId: row.original._id }));
                     handleShow();
                   }}
                 />
@@ -160,7 +162,7 @@ const Project = () => {
                   size={35}
                   className="pointer ms-2"
                   onClick={() => {
-                    setProject(prev => ({ ...prev, original: row.original, projectId: row.original._id }));
+                    setProject((prev) => ({ ...prev, original: row.original, projectId: row.original._id }));
                     handleShowTeamOffcanvas();
                   }}
                 />
@@ -200,10 +202,19 @@ const Project = () => {
         </div>
       </div>
       {!loading && <span className="overlay__block" />}
-      {error && <ErrorDialogue showError={error} onClose={() => { }} />}
+      {error && <ErrorDialogue showError={error} onClose={() => {}} />}
       <RenderDocumentOffcanvas show={show} handleClose={handleClose} id={project.projectId} />
-      <RenderTeamOffcanvas project={project.original} show={showTeamOffcanvas} handleClose={handleCloseTeamOffcanvas} id={project.projectId} />
-      <RenderProjectOffcanvas project={project.original} show={showProjectOffcanvas} handleClose={handleCloseProjectOffcanvas} />
+      <RenderTeamOffcanvas
+        project={project.original}
+        show={showTeamOffcanvas}
+        handleClose={handleCloseTeamOffcanvas}
+        id={project.projectId}
+      />
+      <RenderProjectOffcanvas
+        project={project.original}
+        show={showProjectOffcanvas}
+        handleClose={handleCloseProjectOffcanvas}
+      />
     </>
   );
 };

@@ -267,6 +267,28 @@ const useProjectEdit = (id) => {
     }));
   };
 
+    async function handleProjectSelect(id) {
+    setState((prev) => ({ ...prev, loading: true }));
+    const { success, data, errorMessage } = await zat(PROJECT.fetchOne, null, VERBS.GET, {
+      action: 'single',
+      id: id
+    });
+
+    if (success) {
+      setState((prevState) => ({
+        ...prevState,
+        fields: {
+          ...prevState.fields,
+          title: data.title,
+          description: data.description,
+        },
+        loading: false
+      }));
+    } else {
+     
+    }
+  }
+
   async function handleSelect(id) {
     setState((prev) => ({ ...prev, loading: true }));
     const { success, data, errorMessage } = await zat(PROJECT.fetchOne, null, VERBS.GET, {
@@ -333,7 +355,8 @@ const useProjectEdit = (id) => {
     handleEdit,
     handleChange,
     handleSave,
-    handleSelectedAddress
+    handleSelectedAddress,
+    handleProjectSelect
   };
 };
 
