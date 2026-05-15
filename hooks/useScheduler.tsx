@@ -188,10 +188,10 @@ const useScheduler = (engineerId: string) => {
         const transformedData = (response.data || []).map((item: any) => ({
           _id: item.scheduleId,
           engineerId: item.engineerId,
-          firstName: item.firstName,
-          lastName: item.lastName,
+          first_name: item.firstName,
+          last_name: item.lastName,
           role: item.role,
-          avatar: item.avatar
+          secure_url: item.avatar
         }));
 
         updateState({
