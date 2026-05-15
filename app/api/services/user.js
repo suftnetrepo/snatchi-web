@@ -254,14 +254,20 @@ async function searchUsersByMultipleCriteria({ suid, page = 1, limit = 10, sortF
   try {
     const searchFilter = buildUserSearchFilter(searchQuery.trim());
     
-    // Build base query
-    let query = searchFilter;
+    // Build base query with role filter for engineers only
+    let query = {
+      $and: [
+        searchFilter,
+        { role: 'engineer' }
+      ]
+    };
     
-    // Add integrator filter if provided (use string, not ObjectId)
+    // Add integrator filter if provided
     if (suid) {
       query = {
         $and: [
           searchFilter,
+          { role: 'engineer' },
           { integrator: suid }
         ]
       };
@@ -270,7 +276,7 @@ async function searchUsersByMultipleCriteria({ suid, page = 1, limit = 10, sortF
     // Execute query with pagination
     const [users, totalCount] = await Promise.all([
       User.find(query)
-        .select('_id integrator first_name last_name address secure_url email')
+        .select('_id integrator first_name last_name address secure_url email role')
         .skip(skip)
         .limit(limit)
         .lean()

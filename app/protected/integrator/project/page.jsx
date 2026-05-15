@@ -129,20 +129,6 @@ const Project = () => {
                 </DeleteConfirmation>
               </span>
             </Tooltip>
-
-            <Tooltip title="Add Tasks to project" arrow>
-              <span className="p-0">
-                <FaTasks
-                  size={30}
-                  className="pointer ms-2"
-                  onClick={() => {
-                    setProject((prev) => ({ ...prev, projectId: row.original._id }));
-                    router.push(`/protected/integrator/task?projectId=${row.original._id}`);
-                  }}
-                />
-              </span>
-            </Tooltip>
-
             <Tooltip title="Add Documents to project" arrow>
               <span className="p-0">
                 <TiDocument
