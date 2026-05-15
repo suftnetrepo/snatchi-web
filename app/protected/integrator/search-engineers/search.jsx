@@ -4,6 +4,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Table } from '../../../../src/components/elements/table/table';
 import { TiEye } from 'react-icons/ti';
 import { MdSearch } from 'react-icons/md';
+import { MdArrowBack } from 'react-icons/md';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
 import { useMultiUserSearch } from '../../../../hooks/useUser';
 import { Button } from 'react-bootstrap';
@@ -49,7 +50,9 @@ const Search = () => {
               size={30}
               className="pointer"
               onClick={() => {
-                router.push(`/protected/integrator/scheduler?projectId=${projectId}&userId=${row.original._id}&first_name=${row.original.first_name}&last_name=${row.original.last_name}&searchQuery=${searchQuery}&engineerId=${row.original._id}`);
+                router.push(
+                  `/protected/integrator/scheduler?projectId=${projectId}&userId=${row.original._id}&first_name=${row.original.first_name}&last_name=${row.original.last_name}&searchQuery=${searchQuery}&engineerId=${row.original._id}`
+                );
               }}
             />
           </div>
@@ -63,7 +66,17 @@ const Search = () => {
     <>
       <div className={`ms-5 me-5 mt-2 ${!loading ? 'overlay__block' : null}`}>
         <div className="card-body">
-          <h5 className="card-title ms-2 mb-2">Search Engineers</h5>
+          <div className="d-flex justify-content-start align-items-center mb-3">
+            <Button
+              variant="outline-secondary"
+              onClick={() =>
+                router.push(`/protected/integrator/project`)
+              }
+            >
+              <MdArrowBack size={24} /> Back
+            </Button>
+            <h5 className="card-title ms-4">Search Engineers</h5>
+          </div>
           <div className="d-flex justify-content-start align-items-center mb-3">
             {/* Search Box */}
             <input

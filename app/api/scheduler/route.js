@@ -1,4 +1,4 @@
-import { remove, update, add, updateByStatus, getByUser } from '../services/scheduler';
+import { remove, update, add, updateByStatus, getByUser, getByProjectDateRange } from '../services/scheduler';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
@@ -15,9 +15,15 @@ export const GET = async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
     const id = url.searchParams.get('id');
+    const projectId = url.searchParams.get('projectId');
 
     if (action === 'getByEngineer') {
       const results = await getByUser(id);
+      return NextResponse.json({ success: true, data: results.data });
+    }
+
+    if (action === 'getByProjectDateRange') {
+      const results = await getByProjectDateRange(projectId);
       return NextResponse.json({ success: true, data: results.data });
     }
 
@@ -39,7 +45,7 @@ export const DELETE = async (req) => {
     const id = url.searchParams.get('id');
 
     const results = await remove(user?.integrator, id);
-    return NextResponse.json({ data: results });
+    return NextResponse.json({ data: results, success: true }, { status: 200 });
   } catch (error) {
     logger.error(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

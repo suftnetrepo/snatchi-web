@@ -203,12 +203,12 @@ const Project = () => {
       </div>
       {!loading && <span className="overlay__block" />}
       {error && <ErrorDialogue showError={error} onClose={() => {}} />}
-      <RenderDocumentOffcanvas show={show} handleClose={handleClose} id={project.projectId} />
+      <RenderDocumentOffcanvas show={show} handleClose={handleClose} id={project.original?._id} />
       <RenderTeamOffcanvas
         project={project.original}
         show={showTeamOffcanvas}
         handleClose={handleCloseTeamOffcanvas}
-        id={project.projectId}
+        id={project.original?._id}
       />
       <RenderProjectOffcanvas
         project={project.original}

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 import { schedulerValidator } from '../validator/user';
 import Scheduler from '../models/scheduler';
+import Project from '../models/project';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
 import { logger } from '../utils/logger';
@@ -153,4 +154,41 @@ async function remove(suid, id) {
   }
 }
 
-export { remove, add, getByUser, update, updateByStatus };
+async function getByProjectDateRange(projectId) {
+  if (!isValidObjectId(projectId)) {
+    throw new Error(JSON.stringify([{ field: 'projectId', message: 'Invalid MongoDB ObjectId' }]));
+  }
+
+  try {
+    // Get the project to find its start and end dates
+    const project = await Project.findById(projectId, { startDate: 1, endDate: 1 });
+
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    // Find all schedules for this project that fall within the project's date range
+    const schedules = await Scheduler.find({
+      project: projectId,
+      startDate: { $gte: project.startDate },
+      endDate: { $lte: project.endDate }
+    }).populate('engineer', 'first_name last_name role secure_url');
+
+    // Transform the result to include schedule ID and engineer info
+    const result = schedules.map((schedule) => ({
+      scheduleId: schedule._id,
+      engineerId: schedule.engineer?._id,
+      firstName: schedule.engineer?.first_name || '',
+      lastName: schedule.engineer?.last_name || '',
+      role: schedule.engineer?.role || '',
+      avatar: schedule.engineer?.secure_url || ''
+    }));
+
+    return { data: result };
+  } catch (error) {
+    logger.error(error);
+    throw new Error('An unexpected error occurred. Please try again.');
+  }
+}
+
+export { remove, add, getByUser, update, updateByStatus, getByProjectDateRange };

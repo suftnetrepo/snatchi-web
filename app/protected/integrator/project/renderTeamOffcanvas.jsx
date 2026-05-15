@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Offcanvas, ListGroup, Form, Alert, Button, Badge } from 'react-bootstrap';
-import { useTeam } from '../../../../hooks/useTeam';
+import { useScheduler } from '../../../../hooks/useScheduler';
 import { useFence } from '../../../../hooks/useFence';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
 import { MdMyLocation } from 'react-icons/md';
@@ -30,14 +30,16 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
     handleFetchByUser
   } = useFence();
   const router = useRouter();
-  const { data, error, customStyles, teamData, handleSelect, fields, handleChange, handleDelete, handleFetchUsers } =
-    useTeam(id);
+  const { data, error, fetchProjectSchedules, handleDelete } =
+    useScheduler();
 
   const summary = calculateWorkSummary(fenceData);
 
+  console.log('Fence data:', data);
+
   useEffect(() => {
-    handleFetchUsers({ pageIndex: 1, pageSize: 100 });
-  }, []);
+    fetchProjectSchedules(id);
+  }, [id]);
 
   const onClose = () => {
     if (success) {
@@ -47,10 +49,6 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
     }
   };
 
-  const onChange = (id) => {
-    handleSelect(id);
-    handleChange('id', id);
-  };
 
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '40%', backgroundColor: 'white' }}>
@@ -98,15 +96,15 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                   {data?.map((team, index) => {
                     return (
                       <ListGroup.Item
-                        key={`${index}-${team._id}`}
+                        key={`${index}-${team?.engineerId}`}
                         as="li"
                         className="d-flex justify-content-between align-items-center"
                       >
                         <div className="d-flex align-items-center">
-                          {team.id.secure_url ? (
+                          {team?.secure_url ? (
                             <img
-                              src={team.id.secure_url}
-                              alt={`${team?.id.first_name} ${team?.id.last_name}`}
+                              src={team?.secure_url}
+                              alt={`${team?.first_name} ${team?.last_name}`}
                               className="rounded-circle me-2"
                               width="60"
                               height="60"
@@ -118,7 +116,7 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                           ) : (
                             <img
                               src={'http://'}
-                              alt={`${team?.id.first_name} ${team?.id.last_name}`}
+                              alt={`${team?.first_name} ${team?.last_name}`}
                               className="rounded-circle me-2"
                               width="60"
                               height="60"
@@ -130,9 +128,9 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                           )}
                           <div className="d-flex flex-column justify-content-start align-items-start">
                             <span>
-                              {team?.id.first_name} {team?.id.last_name}
+                              {team?.first_name} {team?.last_name}
                             </span>
-                            <span className={`badge bg-primary transparent`}>{team.id.role}</span>
+                            <span className={`badge bg-primary transparent`}>{team?.role}</span>
                           </div>
                         </div>
                         <div className="d-flex flex-row justify-content-end align-items-end mx-3">
@@ -144,7 +142,7 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                                 onClick={() => {
                                   const today = new Date();
                                   const formattedDate = today.toISOString().split('T')[0];
-                                  handleFetchByUser(team.id._id, id, formattedDate);
+                                  handleFetchByUser(team?.engineerId, id, formattedDate);
                                 }}
                               />
                             </span>
@@ -153,10 +151,10 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                             <span className="p-0">
                               <DeleteConfirmation
                                 onConfirm={async () => {
-                                  handleDelete(team._id);
+                                  handleDelete(team?._id);
                                 }}
                                 onCancel={() => {}}
-                                itemId={team._id}
+                                itemId={team?._id}
                               >
                                 <MdDelete size={30} className="pointer" />
                               </DeleteConfirmation>

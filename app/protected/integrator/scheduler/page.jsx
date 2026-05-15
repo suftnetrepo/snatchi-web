@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { Button } from 'react-bootstrap';
 import { MdArrowBack } from 'react-icons/md';
+import { useSession } from 'next-auth/react';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import enGB from 'date-fns/locale/en-GB';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -23,6 +24,86 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales
 });
+
+const statusTheme = {
+  Pending: {
+    color: '#f59e0b',
+    softBg: '#fef3c7'
+  },
+  Accepted: {
+    color: '#2563eb',
+    softBg: '#dbeafe'
+  },
+  Progress: {
+    color: '#8b5cf6',
+    softBg: '#ede9fe'
+  },
+  Completed: {
+    color: '#16a34a',
+    softBg: '#dcfce7'
+  },
+  Paid: {
+    color: '#059669',
+    softBg: '#d1fae5'
+  },
+  Declined: {
+    color: '#dc2626',
+    softBg: '#fee2e2'
+  },
+  Cancelled: {
+    color: '#64748b',
+    softBg: '#e2e8f0'
+  }
+};
+
+const eventStyleGetter = (event) => {
+  const theme = statusTheme[event.status] || statusTheme.Pending;
+
+  return {
+    style: {
+      background: 'transparent',
+      border: 'none',
+      padding: 0,
+      overflow: 'visible',
+      color: 'inherit'
+    },
+    className: `calendar-event-shell`
+  };
+};
+
+const PremiumCalendarEvent = ({ event }) => {
+  const theme = statusTheme[event.status] || statusTheme.Pending;
+
+  return (
+    <div
+      className="premium-event-card"
+      style={{
+        '--event-color': theme.color,
+        '--event-soft-bg': theme.softBg
+      }}
+    >
+      <div className="premium-event-top">
+        <div className="premium-event-time">
+          <span className="premium-event-clock">◷</span>
+          <span>
+            {event.startTime} - {event.endTime}
+          </span>
+        </div>
+
+        <span className="premium-event-status">{event.status}</span>
+      </div>
+
+      <div className="premium-event-title">{event.title}</div>
+
+      {event.description && <div className="premium-event-description">{event.description}</div>}
+
+      <div className="premium-event-footer">
+        <span className="premium-event-calendar">▣</span>
+        <span>View details</span>
+      </div>
+    </div>
+  );
+};
 
 export default function Scheduler() {
   const router = useRouter();
@@ -44,29 +125,38 @@ export default function Scheduler() {
     handleReset,
     handleEdit,
     success,
-    handleProjectSelect
+    handleProjectSelect,
+    handleViewEvent
   } = useScheduler(engineerId);
   const [show, setShow] = useState(false);
   const [errorMessages, setErrorMessages] = useState({});
-
-  console.log('Scheduler fields:', fields, projectId);
-
-  // Project selection effect
+    const { data: session } = useSession();
+    
   useEffect(() => {
     if (projectId) {
       handleProjectSelect(projectId);
     }
-  }, [projectId]); 
+  }, [projectId]);
 
   const handleClose = () => {
     setShow(false);
-    handleReset();
   };
 
   const handleSelect = (slotInfo) => {
     handleSelection(slotInfo.start, slotInfo.end, engineerId, projectId);
     setShow(true);
-  }
+  };
+
+  const handleEventClick = (event) => {
+
+    if( event.integrator === session?.user?.integrator) {
+      handleViewEvent(event);
+    } else {
+      handleSelection(event.startDate, event.endDate, engineerId, projectId);
+    }
+
+    setShow(true);
+  };
 
   const handleSubmit = async () => {
     setErrorMessages({});
@@ -78,7 +168,18 @@ export default function Scheduler() {
       return;
     }
 
-    const body = chose(fields, ['_id', 'title', 'startDate', 'endDate', 'startTime', 'endTime', 'status', 'engineer', 'project', 'description']);
+    const body = chose(fields, [
+      '_id',
+      'title',
+      'startDate',
+      'endDate',
+      'startTime',
+      'endTime',
+      'status',
+      'engineer',
+      'project',
+      'description'
+    ]);
 
     if (fields._id) {
       await handleEdit(body, fields._id);
@@ -94,7 +195,9 @@ export default function Scheduler() {
         <div className="d-flex justify-content-start align-items-center mb-3">
           <Button
             variant="outline-secondary"
-            onClick={() => router.push(`/protected/integrator/search-engineers?projectId=${projectId}&searchQuery=${searchQuery}`)}
+            onClick={() =>
+              router.push(`/protected/integrator/search-engineers?projectId=${projectId}&searchQuery=${searchQuery}`)
+            }
           >
             <MdArrowBack size={24} /> Back
           </Button>
@@ -111,6 +214,11 @@ export default function Scheduler() {
           step={15}
           timeslots={4}
           onSelectSlot={(slotInfo) => handleSelect(slotInfo)}
+          onSelectEvent={handleEventClick}
+          eventPropGetter={eventStyleGetter}
+          components={{
+            event: PremiumCalendarEvent
+          }}
           style={{ height: '100%', width: '100%' }}
         />
       </div>

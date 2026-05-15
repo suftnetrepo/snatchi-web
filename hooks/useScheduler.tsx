@@ -98,80 +98,117 @@ const useScheduler = (engineerId: string) => {
     }));
   }, []);
 
-  
-const buildScheduleDateTime = (dateValue: string, timeValue: string) => {
-  const date = new Date(dateValue);
-  const [hour, minute] = timeValue.split(':').map(Number);
+    const handleViewEvent = useCallback((event: Schedule) => {
+    // Format dates to datetime-local format (YYYY-MM-DDTHH:mm:ss)
+    const extractTimeFromDate = (date: Date): string => {
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    };
 
-  return new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    hour,
-    minute,
-    0,
-    0
-  );
-};
+    setState((prevState) => ({
+      ...prevState,
+      success: false,
+      loading: false,
+      fields: {
+        ...prevState.fields,
+        ...event,
+        startDate: formatDateForInput(new Date(event.startDate)),
+        endDate: formatDateForInput(new Date(event.endDate)),
+        startTime: extractTimeFromDate(new Date(event.startDate)),
+        endTime: extractTimeFromDate(new Date(event.endDate)),
+      }
+    }));
+  }, []);
 
-const fetchUserSchedules = async (id: string) => {
-  updateState({ loading: true, error: null });
+  const buildScheduleDateTime = (dateValue: string, timeValue: string) => {
+    const date = new Date(dateValue);
+    const [hour, minute] = timeValue.split(':').map(Number);
 
-  try {
-    const params = new URLSearchParams({
-      action: 'getByEngineer',
-      id,
-    });
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute, 0, 0);
+  };
 
-    const response: ApiResponse<Schedule[]> = await zat(
-      SCHEDULER.getByEngineer,
-      null,
-      VERBS.GET,
-      params
-    );
+  const fetchUserSchedules = async (id: string) => {
+    updateState({ loading: true, error: null });
 
-    if (response.success) {
-      const transformedData = (response.data || []).map((schedule) => {
-        const startDateStr = schedule.startDate instanceof Date 
-          ? schedule.startDate.toISOString().split('T')[0] 
-          : schedule.startDate;
-        
-        const start = buildScheduleDateTime(
-          startDateStr,
-          schedule.startTime
-        );
-
-        const end = buildScheduleDateTime(
-          startDateStr,
-          schedule.endTime
-        );
-
-        return {
-          ...schedule,
-          id: schedule._id,
-          title: schedule.title,
-          start,
-          end,
-          startDate: start,
-          endDate: end,
-          engineerName: `${schedule.engineer?.first_name || ''} ${
-            schedule.engineer?.last_name || ''
-          }`.trim(),
-        };
+    try {
+      const params = new URLSearchParams({
+        action: 'getByEngineer',
+        id
       });
 
-      updateState({
-        data: transformedData,
-        loading: false,
-        success: true,
-      });
-    } else {
-      handleError(response.errorMessage || 'Failed to fetch schedules.');
+      const response: ApiResponse<Schedule[]> = await zat(SCHEDULER.getByEngineer, null, VERBS.GET, params);
+
+      if (response.success) {
+        const transformedData = (response.data || []).map((schedule) => {
+          const startDateStr =
+            schedule.startDate instanceof Date ? schedule.startDate.toISOString().split('T')[0] : schedule.startDate;
+
+          const start = buildScheduleDateTime(startDateStr, schedule.startTime);
+
+          const end = buildScheduleDateTime(startDateStr, schedule.endTime);
+
+          return {
+            ...schedule,
+            id: schedule._id,
+            title: schedule.title,
+            start,
+            end,
+            startDate: start,
+            endDate: end,
+            engineerName: `${schedule.engineer?.first_name || ''} ${schedule.engineer?.last_name || ''}`.trim()
+          };
+        });
+
+        updateState({
+          data: transformedData,
+          loading: false,
+          success: true
+        });
+      } else {
+        handleError(response.errorMessage || 'Failed to fetch schedules.');
+      }
+    } catch (error) {
+      handleError('An unexpected error occurred while fetching schedules.');
     }
-  } catch (error) {
-    handleError('An unexpected error occurred while fetching schedules.');
-  }
-};
+  };
+
+  const fetchProjectSchedules = async (projectId: string) => {
+    updateState({ loading: true, error: null });
+
+    try {
+      // @ts-ignore
+      const response: ApiResponse<any[]> = await zat(SCHEDULER.getByEngineer, null, VERBS.GET, {
+        action: 'getByProjectDateRange',
+        projectId
+      });
+
+      if (response.success) {
+        // Transform the data to match our Schedule structure
+        const transformedData = (response.data || []).map((item: any) => ({
+          _id: item.scheduleId,
+          engineerId: item.engineerId,
+          firstName: item.firstName,
+          lastName: item.lastName,
+          role: item.role,
+          avatar: item.avatar
+        }));
+
+        updateState({
+          data: transformedData as any,
+          loading: false,
+          success: true
+        });
+        return transformedData;
+      } else {
+        handleError(response.errorMessage || 'Failed to fetch project schedules.');
+        return [];
+      }
+    } catch (error) {
+      handleError('An unexpected error occurred while fetching project schedules.');
+      return [];
+    }
+  };
 
   const handleError = useCallback(
     (error: string) => {
@@ -357,6 +394,7 @@ const fetchUserSchedules = async (id: string) => {
   return {
     ...state,
     fetchUserSchedules,
+    fetchProjectSchedules,
     handleChange,
     handleReset,
     handleEdit,
@@ -365,9 +403,9 @@ const fetchUserSchedules = async (id: string) => {
     handleSave,
     clearMessages,
     handleSelection,
-    handleProjectSelect
+    handleProjectSelect,
+    handleViewEvent
   };
 };
 
 export { useScheduler };
- 

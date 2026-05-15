@@ -128,3 +128,133 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.rbc-event {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.rbc-event-content {
+  height: 100%;
+  overflow: visible !important;
+}
+
+.calendar-event-shell {
+  overflow: visible !important;
+}
+
+.premium-event-card {
+  height: 100%;
+  width: 100%;
+   min-height: 100%;
+
+  padding: 18px 20px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  background: #ffffff;
+  color: #111827;
+
+  border-radius: 18px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-left: 7px solid var(--event-color);
+
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 0.14),
+    0 2px 8px rgba(15, 23, 42, 0.06);
+
+  overflow: hidden;
+}
+
+.premium-event-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.premium-event-time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: var(--event-color);
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.premium-event-clock {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.premium-event-status {
+  padding: 5px 12px;
+
+  border-radius: 999px;
+
+  background: var(--event-soft-bg);
+  color: var(--event-color);
+
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.rbc-event-label {
+  display: none !important;
+}
+
+.rbc-event,
+.rbc-event-content,
+.calendar-event-shell {
+  overflow: visible !important;
+}
+
+.premium-event-card {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.premium-event-top {
+  flex-shrink: 0;
+}
+
+.premium-event-title {
+  flex-shrink: 0;
+  font-size: clamp(13px, 1vw, 18px);
+  line-height: 1.25;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.premium-event-description {
+  flex: 1;
+  min-height: 0;
+
+  font-size: clamp(11px, 0.9vw, 14px);
+  line-height: 1.4;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.premium-event-footer {
+  flex-shrink: 0;
+  margin-top: auto;
+}
+.premium-event-calendar {
+  font-size: 17px;
+}
