@@ -581,7 +581,29 @@ const decodeHtmlToText = (htmlString) => {
   return txt ? txt.replace(/<[^>]*>/g, '') : '';
 };
 
+const getScheduleStatusColor = (status) => {
+  switch (status) {
+    case 'Pending':
+      return '#f59e0b'; // amber
+    case 'Accepted':
+      return '#22c55e'; // green
+    case 'Declined':
+      return '#ef4444'; // red
+    case 'Paid':
+      return '#3b82f6'; // blue
+    case 'Completed':
+      return '#10b981'; // emerald
+    case 'Cancelled':
+      return '#6b7280'; // gray
+    case 'Progress':
+      return '#8b5cf6'; // purple
+    default:
+      return '#d1d5db';
+  }
+};
+
 export {
+  getScheduleStatusColor,
   formatDateForInput,
   decodeHtmlToText,
   calculateWorkSummary,

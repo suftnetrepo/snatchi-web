@@ -48,6 +48,18 @@ async function add(body) {
 
   const { startDate, endDate, startTime, endTime, ...rest } = body;
   
+  // Check if engineer is already scheduled for this project
+  if (rest.engineer && rest.project) {
+    const existingSchedule = await Scheduler.findOne({
+      engineer: rest.engineer,
+      project: rest.project
+    });
+    
+    if (existingSchedule) {
+      throw new Error('Engineer is already scheduled for this project');
+    }
+  }
+  
   // Extract time from dates if startTime/endTime not provided
   const derivedStartTime = startTime || extractTimeFromDate(startDate);
   const derivedEndTime = endTime || extractTimeFromDate(endDate);
@@ -181,7 +193,8 @@ async function getByProjectDateRange(projectId) {
       firstName: schedule.engineer?.first_name || '',
       lastName: schedule.engineer?.last_name || '',
       role: schedule.engineer?.role || '',
-      avatar: schedule.engineer?.secure_url || ''
+      avatar: schedule.engineer?.secure_url || '',
+      status: schedule.status
     }));
 
     return { data: result };

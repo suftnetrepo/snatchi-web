@@ -113,6 +113,7 @@ export default function Scheduler() {
   const firstName = searchParams.get('first_name');
   const lastName = searchParams.get('last_name');
   const searchQuery = searchParams.get('searchQuery');
+  const from = searchParams.get('from');
   const {
     data,
     error,
@@ -130,8 +131,8 @@ export default function Scheduler() {
   } = useScheduler(engineerId);
   const [show, setShow] = useState(false);
   const [errorMessages, setErrorMessages] = useState({});
-    const { data: session } = useSession();
-    
+  const { data: session } = useSession();
+
   useEffect(() => {
     if (projectId) {
       handleProjectSelect(projectId);
@@ -148,8 +149,7 @@ export default function Scheduler() {
   };
 
   const handleEventClick = (event) => {
-
-    if( event.integrator === session?.user?.integrator) {
+    if (event.integrator === session?.user?.integrator) {
       handleViewEvent(event);
     } else {
       handleSelection(event.startDate, event.endDate, engineerId, projectId);
@@ -195,9 +195,13 @@ export default function Scheduler() {
         <div className="d-flex justify-content-start align-items-center mb-3">
           <Button
             variant="outline-secondary"
-            onClick={() =>
-              router.push(`/protected/integrator/search-engineers?projectId=${projectId}&searchQuery=${searchQuery}`)
-            }
+            onClick={() => {
+              if (from === 'offcanvas') {
+                router.back();
+                return;
+              }
+              router.push(`/protected/integrator/project/team?projectId=${projectId}&searchQuery=${searchQuery}`);
+            }}
           >
             <MdArrowBack size={24} /> Back
           </Button>

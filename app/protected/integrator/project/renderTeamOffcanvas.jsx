@@ -6,14 +6,16 @@ import { useScheduler } from '../../../../hooks/useScheduler';
 import { useFence } from '../../../../hooks/useFence';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
 import { MdMyLocation } from 'react-icons/md';
-import { MdDelete, MdCancel, MdFilterList } from 'react-icons/md';
+import { MdDelete, MdCancel, MdFilterList, MdOutlineRemoveRedEye } from 'react-icons/md';
 import Tooltip from '@mui/material/Tooltip';
 import { useRouter } from 'next/navigation';
 import {
   formattedTime,
   formatDateTime,
   getFenceStatusColorCode,
-  calculateWorkSummary
+  calculateWorkSummary,
+  getScheduleStatusColor,
+  capitalizeFirstLetter
 } from '../../../../utils/helpers';
 
 const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
@@ -30,8 +32,7 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
     handleFetchByUser
   } = useFence();
   const router = useRouter();
-  const { data, error, fetchProjectSchedules, handleDelete } =
-    useScheduler();
+  const { data, error, fetchProjectSchedules, handleDelete } = useScheduler();
 
   const summary = calculateWorkSummary(fenceData);
 
@@ -49,13 +50,17 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
     }
   };
 
-
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '40%', backgroundColor: 'white' }}>
       <div className="d-flex flex-row justify-content-between align-items-center p-7">
         <div className="d-flex flex-column justify-content-start align-items-start">
-          {!success ? (
-            <p className="text-dark fw-bold fs-18"> Teams</p>
+          {!success ? (<>
+           <>
+              <span className="text-dark fw-bold fs-18">{project?.name}</span>
+              <span className="text-dark fw-normal fs-14">{project?.completeAddress}</span>
+            </>
+          </>
+          
           ) : (
             <>
               <span className="text-dark fw-bold fs-18">Tracking Location</span>
@@ -78,7 +83,7 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
         {!success ? (
           <Form>
             <div className="row">
-               <div className="d-flex gap-2 justify-content-end align-items-center mb-4">
+              <div className="d-flex gap-2 justify-content-end align-items-center mb-4">
                 <Button
                   type="button"
                   size="sm"
@@ -99,6 +104,12 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                         key={`${index}-${team?.engineerId}`}
                         as="li"
                         className="d-flex justify-content-between align-items-center"
+                        style={{
+                          borderLeft: `6px solid ${getScheduleStatusColor(team?.status)}`,
+                          borderRadius: 10,
+                          paddingLeft: 18,
+                          marginBottom: 10
+                        }}
                       >
                         <div className="d-flex align-items-center">
                           {team?.secure_url ? (
@@ -130,11 +141,38 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                             <span>
                               {team?.first_name} {team?.last_name}
                             </span>
-                            <span className={`badge bg-primary transparent`}>{team?.role}</span>
+                            <div className="d-flex gap-2 mt-1">
+                              <span className="badge bg-primary">{capitalizeFirstLetter(team?.role)}</span>
+
+                              {team?.status && (
+                                <span
+                                  className="badge"
+                                  style={{
+                                    backgroundColor: getScheduleStatusColor(team.status),
+                                    color: '#fff'
+                                  }}
+                                >
+                                  {capitalizeFirstLetter(team.status)}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <div className="d-flex flex-row justify-content-end align-items-end mx-3">
-                          <Tooltip title="View Enigeer Site log" arrow className="me-2">
+                          <Tooltip title="View Engineer Schedules" arrow className="me-2">
+                            <span className="p-0">
+                              <MdOutlineRemoveRedEye
+                                size={30}
+                                className="pointer"
+                                onClick={() => {
+                                  router.push(
+                                    `/protected/integrator/scheduler?projectId=${id}&userId=${team?.engineerId}&first_name=${team?.first_name}&last_name=${team?.last_name}&searchQuery=${''}&engineerId=${team?.engineerId}&from=offcanvas`
+                                  );
+                                }}
+                              />
+                            </span>
+                          </Tooltip>
+                          <Tooltip title="View Engineer Site log" arrow className="me-2">
                             <span className="p-0">
                               <MdMyLocation
                                 size={30}
@@ -147,7 +185,7 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                               />
                             </span>
                           </Tooltip>
-                          <Tooltip title="Remove from Project" arrow>
+                          <Tooltip title="Remove Engineer from Project" arrow>
                             <span className="p-0">
                               <DeleteConfirmation
                                 onConfirm={async () => {

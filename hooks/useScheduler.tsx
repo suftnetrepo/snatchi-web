@@ -4,6 +4,7 @@ import { VERBS } from '../config';
 import { PROJECT, SCHEDULER } from '../utils/apiUrl';
 import { schedulerValidator, schedulerSearchValidator } from '../app/protected/integrator/rules';
 import { formatDateForInput, decodeHtmlToText } from '../utils/helpers';
+import { status } from '@/_/api/utils/subscription-status';
 
 interface Schedule {
   _id: string;
@@ -191,7 +192,8 @@ const useScheduler = (engineerId: string) => {
           first_name: item.firstName,
           last_name: item.lastName,
           role: item.role,
-          secure_url: item.avatar
+          secure_url: item.avatar,
+          status: item.status,
         }));
 
         updateState({
