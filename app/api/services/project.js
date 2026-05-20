@@ -783,15 +783,23 @@ const getProjectWeeklySummary = async (integratorId) => {
       return `${dayName} ${day}`;
     };
 
-    // Helper: Get last 7 days in correct order (oldest to newest)
+    // Helper: Convert date to YYYY-MM-DD string in UTC
+    const dateToUTCString = (date) => {
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    // Helper: Get last 7 days in correct order (oldest to newest) using UTC
     const getLast7Days = () => {
       const days = [];
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      today.setUTCHours(0, 0, 0, 0);
       
       for (let i = 6; i >= 0; i--) {
         const date = new Date(today);
-        date.setDate(date.getDate() - i);
+        date.setUTCDate(date.getUTCDate() - i);
         days.push(date);
       }
       return days;
@@ -804,23 +812,26 @@ const getProjectWeeklySummary = async (integratorId) => {
 
     const projectIds = projects.map((project) => project._id);
 
-    // Calculate date range for last 7 days (inclusive of today)
+    // Calculate date range for last 7 days (inclusive of today) using UTC
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
     const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // 7 days = today + 6 previous days
+    sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 6); // 7 days = today + 6 previous days
+    const tomorrow = new Date(today);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
     // Get last 7 days of trends (rolling window)
+    // Using UTC timezone in MongoDB to match our UTC date calculations in Node.js
     const tasksByDay = await Task.aggregate([
       {
         $match: {
           project: { $in: projectIds },
-          createdAt: { $gte: sevenDaysAgo, $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) }
+          createdAt: { $gte: sevenDaysAgo, $lt: tomorrow }
         }
       },
       {
         $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'UTC' } },
           count: { $sum: 1 }
         }
       },
@@ -831,26 +842,21 @@ const getProjectWeeklySummary = async (integratorId) => {
       {
         $match: {
           _id: { $in: projectIds },
-          createdAt: { $gte: sevenDaysAgo, $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) }
+          createdAt: { $gte: sevenDaysAgo, $lt: tomorrow }
         }
       },
       {
         $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'UTC' } },
           count: { $sum: 1 }
         }
       },
       { $sort: { '_id': 1 } }
     ]);
 
-    // Build date map for last 7 days
+    // Get last 7 days with correct formatting
     const last7Days = getLast7Days();
-    const dateMap = {};
-    last7Days.forEach((date) => {
-      const dateStr = date.toISOString().split('T')[0];
-      dateMap[dateStr] = 0;
-    });
-
+    
     // Initialize result arrays with 0 for all 7 days
     const formattedProjects = Array(7).fill(0);
     const formattedTasks = Array(7).fill(0);
@@ -858,7 +864,7 @@ const getProjectWeeklySummary = async (integratorId) => {
     // Fill in actual data from aggregation
     projectsByDay.forEach((item) => {
       const index = last7Days.findIndex(
-        (d) => d.toISOString().split('T')[0] === item._id
+        (d) => dateToUTCString(d) === item._id
       );
       if (index !== -1) {
         formattedProjects[index] = item.count;
@@ -867,7 +873,7 @@ const getProjectWeeklySummary = async (integratorId) => {
 
     tasksByDay.forEach((item) => {
       const index = last7Days.findIndex(
-        (d) => d.toISOString().split('T')[0] === item._id
+        (d) => dateToUTCString(d) === item._id
       );
       if (index !== -1) {
         formattedTasks[index] = item.count;
