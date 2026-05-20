@@ -5,6 +5,7 @@ import User from '../models/user';
 import Task from '../models/task';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
+import { PROJECT_STATUS, TASK_STATUS } from '../constants/statuses';
 const { logger } = require('../utils/logger');
 
 mongoConnect();
@@ -151,7 +152,7 @@ const getMyProjects = async (userId) => {
       const activeTasks = project.tasks; // keep all tasks
 
       const totalTasks = activeTasks.length;
-      const completedTasks = activeTasks.filter(t => t.status === 'Completed').length;
+      const completedTasks = activeTasks.filter(t => t.status === TASK_STATUS.COMPLETED).length;
 
       const progress = totalTasks > 0
         ? Math.round((completedTasks / totalTasks) * 10000) / 100
@@ -170,7 +171,7 @@ const getMyProjects = async (userId) => {
           overdue = dueInDays < 0;
         }
 
-        if (task.status === 'Completed') {
+        if (task.status === TASK_STATUS.COMPLETED) {
           statusLabel = 'Completed';
         } else if (overdue) {
           statusLabel = 'Delayed';
@@ -209,7 +210,7 @@ const getMyProjects = async (userId) => {
 };
 
 
-const getUserProjects = async (userId, excludeProjectStatuses = ['Completed', 'Cancelled']) => {
+const getUserProjects = async (userId, excludeProjectStatuses = [PROJECT_STATUS.COMPLETED, PROJECT_STATUS.CANCELED]) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       throw new Error('Invalid user ID');
@@ -304,11 +305,11 @@ const getUserProjects = async (userId, excludeProjectStatuses = ['Completed', 'C
 
     const result = projects.map(project => {
       const activeTasks = project.tasks.filter(
-        t => !['Cancelled', 'Archived'].includes(t.status)
+        t => ![PROJECT_STATUS.CANCELED, 'Archived'].includes(t.status)
       );
 
       const totalTasks = activeTasks.length;
-      const completedTasks = activeTasks.filter(t => t.status === 'Completed').length;
+      const completedTasks = activeTasks.filter(t => t.status === TASK_STATUS.COMPLETED).length;
       const progress = totalTasks > 0
         ? Math.round((completedTasks / totalTasks) * 10000) / 100
         : 0;
@@ -325,7 +326,7 @@ const getUserProjects = async (userId, excludeProjectStatuses = ['Completed', 'C
           overdue = dueInDays < 0;
         }
 
-        if (task.status === 'Completed') {
+        if (task.status === TASK_STATUS.COMPLETED) {
           statusLabel = 'Completed';
         } else if (overdue) {
           statusLabel = 'Delayed';
@@ -450,12 +451,12 @@ const getUserProjectById = async (projectId) => {
     const today = new Date();
     const project = projectResult[0];
     const activeTasks = project.tasks.filter(
-      (t) => !['Cancelled', 'Archived'].includes(t.status)
+      (t) => ![PROJECT_STATUS.CANCELED, 'Archived'].includes(t.status)
     );
 
     const totalTasks = activeTasks.length;
     const completedTasks = activeTasks.filter(
-      (t) => t.status === 'Completed'
+      (t) => t.status === TASK_STATUS.COMPLETED
     ).length;
     const progress =
       totalTasks > 0
@@ -474,7 +475,7 @@ const getUserProjectById = async (projectId) => {
         overdue = dueInDays < 0;
       }
 
-      if (task.status === 'Completed') {
+      if (task.status === TASK_STATUS.COMPLETED) {
         statusLabel = 'Completed';
       } else if (overdue) {
         statusLabel = 'Delayed';
@@ -718,7 +719,7 @@ const getProjectSummaryByIntegrator = async (integratorId) => {
               $filter: {
                 input: '$tasks',
                 as: 'task',
-                cond: { $eq: ['$$task.status', 'Completed'] }
+                cond: { $eq: ['$$task.status', TASK_STATUS.COMPLETED] }
               }
             }
           }
@@ -780,6 +781,14 @@ const getProjectWeeklySummary = async (integratorId) => {
 
     const projectIds = projects.map((project) => project._id);
 
+    // NOTE: This aggregation groups by calendar day-of-week (1=Sun, 7=Sat)
+    // across ALL historical data, not by actual calendar weeks.
+    // Current behavior: Shows aggregated count for each weekday
+    // Example: Monday (value 2) = total projects created on ANY Monday (cumulative)
+    // 
+    // If you need actual rolling weekly trends (last 7 days), refactor to:
+    // - Use $dateToString with %Y-week format OR
+    // - Calculate date ranges for actual week boundaries
     const tasksByDay = await Task.aggregate([
       { $match: { project: { $in: projectIds } } },
       {

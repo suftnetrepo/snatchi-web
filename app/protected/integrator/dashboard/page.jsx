@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { Card } from 'react-bootstrap';
 import { getAggregate } from '../../../../utils/helpers';
 import { useProjectDashboard } from '../../../../hooks/useProjectDashboard';
+import { PROJECT_STATUS } from '../../../../app/api/constants/statuses';
 import {
   ProjectAnalysis,
   TotalInvested,
@@ -22,16 +23,37 @@ const Dashboard = () => {
     handleAggregate();
   }, []);
 
+  // DIAGNOSTIC: Log dashboard data for debugging
+  // TODO: Remove this logging before production
+  useEffect(() => {
+    if (data?.statuses) {
+      const statusMap = data.statuses.reduce((acc, s) => {
+        acc[s.status] = s.count;
+        return acc;
+      }, {});
+      console.log('[Dashboard] Project status aggregates:', statusMap);
+      console.log('[Dashboard] Total projects:', data.totalProjects);
+    }
+  }, [data]);
+
   const RenderChart = () => {
-    const { handleChartAggregate, data } = useProjectDashboard();
+    const { handleChartAggregate, data: chartData } = useProjectDashboard();
     useEffect(() => {
       handleChartAggregate();
     }, []);
 
+    // DIAGNOSTIC: Log chart data for debugging
+    // TODO: Remove this logging before production
+    useEffect(() => {
+      if (chartData?.projects) {
+        console.log('[Dashboard Charts] Weekly summary - Projects:', chartData.projects, 'Tasks:', chartData.tasks);
+      }
+    }, [chartData]);
+
     return (
       <div className="card-body">
         <h5 className="card-title mb-2"></h5>
-        <div>{data && <ProjectAnalysis data={data} />}</div>
+        <div>{chartData && <ProjectAnalysis data={chartData} />}</div>
       </div>
     );
   };
@@ -90,7 +112,7 @@ const Dashboard = () => {
                   </div>
                   <div>
                     <span className="d-block">Completed</span>
-                    <span className="fs-16 fw-semibold">{getAggregate(data?.statuses, 'Completed')}</span>
+                    <span className="fs-16 fw-semibold">{getAggregate(data?.statuses, PROJECT_STATUS.COMPLETED)}</span>
                   </div>
                 </div>
                 <div>
@@ -116,7 +138,7 @@ const Dashboard = () => {
                   <div>
                     <span className="d-block">In Progress</span>
                     <span className="fs-16 fw-semibold">
-                      {getAggregate(data?.statuses, 'Progress')}
+                      {getAggregate(data?.statuses, PROJECT_STATUS.PROGRESS)}
                       <i className="ti ti-arrow-narrow-up ms-1 text-success"></i>
                     </span>
                   </div>
@@ -144,7 +166,7 @@ const Dashboard = () => {
                   <div>
                     <span className="d-block">Pending</span>
                     <span className="fs-16 fw-semibold">
-                      {getAggregate(data?.statuses, 'Pending')}
+                      {getAggregate(data?.statuses, PROJECT_STATUS.PENDING)}
                       <i className="ti ti-arrow-narrow-up ms-1 text-success"></i>
                     </span>
                   </div>

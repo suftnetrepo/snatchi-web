@@ -17,12 +17,27 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
+/**
+ * SPARKLINE CHART COMPONENTS
+ * 
+ * NOTE: These charts currently display PLACEHOLDER data
+ * TODO: Connect to real aggregation metrics:
+ * - NumberofInvested: Real count of invested items
+ * - Portfoliovalue: Real portfolio valuation
+ * - Returnsrate: Real returns calculation
+ * - TotalInvested: Real investment totals
+ * 
+ * For now, these render empty/minimal data to avoid
+ * displaying misleading analytics to users.
+ */
+
 const NumberofInvested = () => {
+  // PLACEHOLDER: Replace with real data from aggregation
   const [chartConfig] = useState({
     series: [
       {
         name: 'Value',
-        data: [20, 14, 19, 10, 23, 20, 22, 9, 12]
+        data: []  // PLACEHOLDER: Should be connected to real metrics
       }
     ],
     options: {
@@ -75,11 +90,12 @@ const NumberofInvested = () => {
 };
 
 const Portfoliovalue = () => {
+  // PLACEHOLDER: Replace with real data from aggregation
   const [chartConfig] = useState({
     series: [
       {
         name: 'Value',
-        data: [20, 14, 19, 10, 23, 20, 22, 9, 12]
+        data: []  // PLACEHOLDER: Should be connected to real metrics
       }
     ],
     options: {
@@ -132,11 +148,12 @@ const Portfoliovalue = () => {
 };
 
 const Returnsrate = () => {
+  // PLACEHOLDER: Replace with real data from aggregation
   const [chartConfig] = useState({
     series: [
       {
         name: 'Value',
-        data: [20, 14, 19, 10, 23, 20, 22, 9, 12]
+        data: []  // PLACEHOLDER: Should be connected to real metrics
       }
     ],
     options: {
@@ -189,11 +206,12 @@ const Returnsrate = () => {
 };
 
 const TotalInvested = () => {
+  // PLACEHOLDER: Replace with real data from aggregation
   const [chartConfig, setChartConfig] = useState({
     series: [
       {
         name: 'Value',
-        data: [20, 14, 19, 10, 23, 20, 22, 9, 12]
+        data: []  // PLACEHOLDER: Should be connected to real metrics
       }
     ],
     options: {
@@ -248,17 +266,21 @@ const TotalInvested = () => {
 };
 
 const ProjectAnalysis = ({ data }) => {
+  // Fallback to empty arrays if no data provided
+  const projects = data?.projects || [];
+  const tasks = data?.tasks || [];
+  
   const [chartData, setChartData] = useState({
     series: [
       {
         name: 'Projects',
         type: 'column',
-        data: data?.projects
+        data: projects
       },
       {
         name: 'Tasks',
         type: 'column',
-        data: data?.tasks
+        data: tasks
       }
     ],
     options: {
@@ -348,8 +370,10 @@ const ProjectAnalysis = ({ data }) => {
 };
 
 const UserAggregates = ({ data }) => {
-  const dataSeries = data?.map((item) => parseInt(item.count));
-  const dataLabels = data?.map((item) => item.role);
+  // Fallback to empty arrays if no data provided
+  const safeData = data || [];
+  const dataSeries = safeData.map((item) => parseInt(item.count)) || [];
+  const dataLabels = safeData.map((item) => item.role) || [];
 
   const [chartData] = useState({
     series: dataSeries,
