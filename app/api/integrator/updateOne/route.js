@@ -2,7 +2,6 @@ import { updateIntegrator } from '../../services/integrator';
 import { v2 as cloudinary } from 'cloudinary';
 import { logger } from '../../utils/logger';
 import { getUserSession } from '@/utils/generateToken';
-import { enforceSubscriptionStatus } from '../../middleware/subscription-check';
 const { NextResponse } = require('next/server');
 
 cloudinary.config({
@@ -23,11 +22,7 @@ export const POST = async (req) => {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Enforce subscription status
-    const subscriptionCheck = await enforceSubscriptionStatus(user?.integrator);
-    if (!subscriptionCheck.isActive) {
-      return subscriptionCheck.response;
-    }
+    // TODO: Re-enable subscription enforcement after billing rollout is complete.
 
     let result = null;
     const formData = await req.formData();

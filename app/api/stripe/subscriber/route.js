@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { logger } from '../../utils/logger';
-import { pricingList } from '../../../src/data/pricing';
+import { pricingList } from '../../../../src/data/pricing';
 import { rateLimitMiddleware, recordFailedCheckout, clearRateLimit } from '../../middleware/rate-limiter';
 const { NextResponse } = require('next/server');
 

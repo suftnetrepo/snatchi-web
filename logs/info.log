@@ -1,0 +1,8 @@
+{"name":"jsl-snatchi","hostname":"iMac.broadband","pid":70950,"level":40,"msg":"Customer already exists for email: kabel@yahoo.com","time":"2026-05-20T10:08:11.048Z","v":0}
+{"name":"jsl-snatchi","hostname":"iMac.broadband","pid":70950,"level":40,"msg":"Customer already exists for email: kabel@yahoo.com","time":"2026-05-20T10:11:19.460Z","v":0}
+{"name":"jsl-snatchi","hostname":"iMac.broadband","pid":70950,"level":30,"msg":"Rate limit cleared for customer cus_UYDAEoBkKgCB4z","time":"2026-05-20T10:11:22.725Z","v":0}
+{"name":"jsl-snatchi","hostname":"iMac.broadband","pid":70950,"level":40,"msg":"Customer already exists for email: kabel@yahoo.com","time":"2026-05-20T10:21:00.807Z","v":0}
+{"name":"jsl-snatchi","hostname":"iMac.broadband","pid":70950,"level":40,"msg":"Duplicate subscription attempt for customer cus_UYDAEoBkKgCB4z","time":"2026-05-20T10:21:03.375Z","v":0}
+{"name":"jsl-snatchi","hostname":"iMac.broadband","pid":70950,"level":40,"msg":"Failed checkout for customer cus_UYDAEoBkKgCB4z: Customer already has an active subscription. Remaining attempts: 2","time":"2026-05-20T10:21:03.375Z","v":0}
+{"name":"jsl-snatchi","hostname":"iMac.broadband","pid":70950,"level":30,"msg":"Rate limit cleared for customer cus_UYDiqcRvXuLsZc","time":"2026-05-20T10:22:53.577Z","v":0}
+{"name":"jsl-snatchi","hostname":"iMac.broadband","pid":70950,"level":30,"msg":"Rate limit cleared for customer cus_UYDq2HdXiJuDnF","time":"2026-05-20T10:30:55.583Z","v":0}

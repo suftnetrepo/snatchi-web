@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { logger } from '../../utils/logger';
+import { logger } from '../utils/logger';
 
 // Simple in-memory rate limiter for checkout endpoint
 // Key: customerId:endpoint, Value: { count, resetTime }

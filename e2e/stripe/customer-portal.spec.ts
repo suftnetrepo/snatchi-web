@@ -1,9 +1,5 @@
 import { test, expect } from '@playwright/test';
 import {
-  verifyPortalButtonExists,
-  verifySubscriptionStatus,
-  verifySubscriptionPlan,
-  verifyTrialCountdown,
   verifyNoDeprecatedEndpoints,
   getSubscriptionDetailsFromPage,
 } from '../helpers/stripe';
