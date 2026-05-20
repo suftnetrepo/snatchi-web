@@ -775,55 +775,109 @@ const getProjectWeeklySummary = async (integratorId) => {
 
     const projects = await Project.find({ integrator: integratorId }).select('_id createdAt').lean();
 
+    // Helper: Format date as "Mon 20" format for display
+    const formatDateLabel = (date) => {
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const dayName = dayNames[date.getDay()];
+      const day = date.getDate();
+      return `${dayName} ${day}`;
+    };
+
+    // Helper: Get last 7 days in correct order (oldest to newest)
+    const getLast7Days = () => {
+      const days = [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        days.push(date);
+      }
+      return days;
+    };
+
     if (projects.length === 0) {
-      return { projects: [], tasks: [], days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
+      const emptyDays = getLast7Days().map(formatDateLabel);
+      return { projects: [], tasks: [], days: emptyDays };
     }
 
     const projectIds = projects.map((project) => project._id);
 
-    // NOTE: This aggregation groups by calendar day-of-week (1=Sun, 7=Sat)
-    // across ALL historical data, not by actual calendar weeks.
-    // Current behavior: Shows aggregated count for each weekday
-    // Example: Monday (value 2) = total projects created on ANY Monday (cumulative)
-    // 
-    // If you need actual rolling weekly trends (last 7 days), refactor to:
-    // - Use $dateToString with %Y-week format OR
-    // - Calculate date ranges for actual week boundaries
+    // Calculate date range for last 7 days (inclusive of today)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // 7 days = today + 6 previous days
+
+    // Get last 7 days of trends (rolling window)
     const tasksByDay = await Task.aggregate([
-      { $match: { project: { $in: projectIds } } },
+      {
+        $match: {
+          project: { $in: projectIds },
+          createdAt: { $gte: sevenDaysAgo, $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) }
+        }
+      },
       {
         $group: {
-          _id: { $dayOfWeek: '$createdAt' },
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
           count: { $sum: 1 }
         }
-      }
+      },
+      { $sort: { '_id': 1 } }
     ]);
 
     const projectsByDay = await Project.aggregate([
-      { $match: { _id: { $in: projectIds } } },
+      {
+        $match: {
+          _id: { $in: projectIds },
+          createdAt: { $gte: sevenDaysAgo, $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) }
+        }
+      },
       {
         $group: {
-          _id: { $dayOfWeek: '$createdAt' },
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
           count: { $sum: 1 }
         }
-      }
+      },
+      { $sort: { '_id': 1 } }
     ]);
 
-    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    // Build date map for last 7 days
+    const last7Days = getLast7Days();
+    const dateMap = {};
+    last7Days.forEach((date) => {
+      const dateStr = date.toISOString().split('T')[0];
+      dateMap[dateStr] = 0;
+    });
+
+    // Initialize result arrays with 0 for all 7 days
     const formattedProjects = Array(7).fill(0);
     const formattedTasks = Array(7).fill(0);
 
+    // Fill in actual data from aggregation
     projectsByDay.forEach((item) => {
-      const dayIndex = item._id - 1;
-      formattedProjects[dayIndex] = item.count;
+      const index = last7Days.findIndex(
+        (d) => d.toISOString().split('T')[0] === item._id
+      );
+      if (index !== -1) {
+        formattedProjects[index] = item.count;
+      }
     });
 
     tasksByDay.forEach((item) => {
-      const dayIndex = item._id - 1;
-      formattedTasks[dayIndex] = item.count;
+      const index = last7Days.findIndex(
+        (d) => d.toISOString().split('T')[0] === item._id
+      );
+      if (index !== -1) {
+        formattedTasks[index] = item.count;
+      }
     });
 
-    return { projects: formattedProjects, tasks: formattedTasks, days: daysOfWeek };
+    // Format day labels as "Mon 20" for display
+    const dayLabels = last7Days.map(formatDateLabel);
+
+    return { projects: formattedProjects, tasks: formattedTasks, days: dayLabels };
   } catch (error) {
     logger.error('Error fetching project analysis data:', error);
     throw new Error('Error fetching project analysis data');
