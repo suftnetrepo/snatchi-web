@@ -23,32 +23,11 @@ const Dashboard = () => {
     handleAggregate();
   }, []);
 
-  // DIAGNOSTIC: Log dashboard data for debugging
-  // TODO: Remove this logging before production
-  useEffect(() => {
-    if (data?.statuses) {
-      const statusMap = data.statuses.reduce((acc, s) => {
-        acc[s.status] = s.count;
-        return acc;
-      }, {});
-      console.log('[Dashboard] Project status aggregates:', statusMap);
-      console.log('[Dashboard] Total projects:', data.totalProjects);
-    }
-  }, [data]);
-
   const RenderChart = () => {
     const { handleChartAggregate, data: chartData } = useProjectDashboard();
     useEffect(() => {
       handleChartAggregate();
     }, []);
-
-    // DIAGNOSTIC: Log chart data for debugging
-    // TODO: Remove this logging before production
-    useEffect(() => {
-      if (chartData?.projects) {
-        console.log('[Dashboard Charts] Weekly summary - Projects:', chartData.projects, 'Tasks:', chartData.tasks);
-      }
-    }, [chartData]);
 
     return (
       <div className="card-body">
