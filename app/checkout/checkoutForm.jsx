@@ -2,26 +2,25 @@ import React, { useEffect } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
 /**
+ * Stripe Payment Confirmation API
+ * 
+ * IMPORTANT: CardElement vs PaymentElement requires different APIs:
+ * - CardElement (current) → Use confirmCardPayment()
+ * - PaymentElement (future)  → Use confirmPayment()
+ * 
+ * DO NOT MIX: confirmPayment() requires PaymentElement and will fail with CardElement
+ * 
  * TODO: PaymentElement Migration
+ * Current: CardElement + confirmCardPayment() (secure, production-ready, single card only)
+ * Future: PaymentElement + confirmPayment() (200+ payment methods, enhanced UX)
+ * Status: Planned for Phase 2 (2-4 weeks)
  * 
- * Current: CardElement + confirmPayment() API (modern, secure, production-ready)
- * Future: PaymentElement + confirmPayment() API (enhanced UX, 200+ payment methods)
- * 
- * Status: Holding for Phase 2 stability (2-4 weeks)
- * Plan: See STRIPE_PAYMENTELEMENT_MIGRATION_PLAN.md for full details
- * 
- * Why not now:
- * - Current implementation is secure and modern
- * - Need to stabilize Phase 2 features first
- * - PaymentElement migration has UX/testing impact
- * - Better to rollout when production is stable
- * 
- * When migrating:
- * 1. Replace CardElement with PaymentElement
- * 2. Update confirmPayment parameters
+ * When migrating to PaymentElement:
+ * 1. Replace <CardElement /> with <PaymentElement />
+ * 2. Update confirmCardPayment() → confirmPayment({ elements, ... })
  * 3. Remove CardElement styling (PaymentElement manages its own)
- * 4. Full QA testing (especially SCA/3DS and mobile)
- * 5. Monitor conversion metrics in production
+ * 4. Full QA testing (SCA/3DS, mobile, international cards)
+ * 5. Monitor conversion metrics post-launch
  */
 
 export default function CheckoutForm({ subscription, handleError, handleSuccess, fields }) {
@@ -35,20 +34,29 @@ export default function CheckoutForm({ subscription, handleError, handleSuccess,
       }
 
       try {
-        // Use modern confirmPayment API instead of deprecated confirmCardPayment
-        const { error, paymentIntent } = await stripe.confirmPayment({
-          elements,
-          clientSecret: subscription.clientSecret,
-          confirmParams: {
-            return_url: `${window.location.origin}/checkout/success`,
-            payment_method_data: {
+        // Get CardElement for payment processing
+        const cardElement = elements.getElement(CardElement);
+        
+        if (!cardElement) {
+          handleError('Payment form not ready');
+          return;
+        }
+
+        // Use confirmCardPayment() for CardElement
+        // (confirmPayment() is only for PaymentElement)
+        const { error, paymentIntent } = await stripe.confirmCardPayment(
+          subscription.clientSecret,
+          {
+            payment_method: {
+              card: cardElement,
               billing_details: {
-                // Billing details auto-collected from CardElement
-              }
-            }
-          },
-          redirect: 'if_required' // Only redirect if SCA/3DS required
-        });
+                name: `${fields.first_name} ${fields.last_name}`,
+                email: fields.email,
+                phone: fields.mobile,
+              },
+            },
+          }
+        );
 
         if (error) {
           handleError(error?.message);
