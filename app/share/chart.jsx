@@ -268,7 +268,7 @@ const TotalInvested = () => {
 const ProjectAnalysis = ({ data }) => {
   // Fallback to empty arrays if no data provided
   const projects = data?.projects || [];
-  const tasks = data?.tasks || [];
+  const dayLabels = data?.days || ['Sun 18', 'Mon 19', 'Tue 20', 'Wed 21', 'Thu 22', 'Fri 23', 'Sat 24'];
   
   const [chartData, setChartData] = useState({
     series: [
@@ -276,11 +276,6 @@ const ProjectAnalysis = ({ data }) => {
         name: 'Projects',
         type: 'column',
         data: projects
-      },
-      {
-        name: 'Tasks',
-        type: 'column',
-        data: tasks
       }
     ],
     options: {
@@ -289,7 +284,7 @@ const ProjectAnalysis = ({ data }) => {
           show: false
         },
         height: 280,
-        type: 'line',
+        type: 'column',
         stacked: false,
         fontFamily: 'Poppins, Arial, sans-serif'
       },
@@ -301,39 +296,23 @@ const ProjectAnalysis = ({ data }) => {
         enabled: false
       },
       xaxis: {
-        categories: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        categories: dayLabels
       },
-      yaxis: [
-        {
-          show: true,
-          axisTicks: {
-            show: true
-          },
-          axisBorder: {
-            show: false,
-            color: '#4eb6d0'
-          },
-          labels: {
-            style: {
-              colors: '#4eb6d0'
-            }
-          }
+      yaxis: {
+        show: true,
+        axisTicks: {
+          show: true
         },
-        {
-          opposite: true,
-          axisTicks: {
-            show: true
-          },
-          axisBorder: {
-            show: false
-          },
-          labels: {
-            style: {
-              colors: '#00E396'
-            }
+        axisBorder: {
+          show: false,
+          color: '#4eb6d0'
+        },
+        labels: {
+          style: {
+            colors: '#4eb6d0'
           }
         }
-      ],
+      },
       tooltip: {
         enabled: true
       },
@@ -348,17 +327,16 @@ const ProjectAnalysis = ({ data }) => {
         }
       },
       stroke: {
-        width: [0, 0, 1.5],
-        curve: 'straight',
-        dashArray: [0, 0, 0]
+        width: 0,
+        curve: 'straight'
       },
       plotOptions: {
         bar: {
-          columnWidth: '35%',
+          columnWidth: '45%',
           borderRadius: 3
         }
       },
-      colors: ['rgb(132, 90, 223)', '#ededed', '#23b7e5']
+      colors: ['rgb(132, 90, 223)']
     }
   });
 

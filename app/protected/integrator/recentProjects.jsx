@@ -12,8 +12,6 @@ const RecentProjects = () => {
 	const [project, setProject] = useState({});
 	const { handleRecent, handleSelect, recent, data } = useProjectDashboard();
 
-	console.log("........data", data)
-
 	useEffect(() => {
 		handleRecent();
 	}, []);
@@ -30,7 +28,7 @@ const RecentProjects = () => {
 						<th>Name</th>
 						<th>Start Date</th>
 						<th>End Date</th>
-						<th>Tasks</th>
+
 						<th>Progress</th>
 						<th>Status</th>
 					</tr>
@@ -51,7 +49,6 @@ const RecentProjects = () => {
 							</td>
 							<td>{dateFormatted(item.startDate)}</td>
 							<td>{dateFormatted(item.endDate)}</td>
-							<td>{item.tasks}</td>
 							<td>
 								<div className="d-flex row align-items-center">
 									<ProgressBar value={item.progress ?? item.percentage ?? 0} max={100} />
