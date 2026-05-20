@@ -460,6 +460,370 @@ const cancelTrial = async (event) => {
   }
 };
 
+/**
+ * Handle Stripe Connect account.updated events
+ * Updates integrator's Connect account status based on Stripe account state
+ * Called when account onboarding progresses or requirements change
+ */
+const handleConnectAccountUpdated = async (event) => {
+  try {
+    const Integrator = require('../models/integrator').default || require('../models/integrator');
+    const { mapStripeConnectStatus } = await import('../services/stripeConnectService');
+    
+    const account = event.data.object;
+    const accountId = account.id;
+
+    if (!accountId) {
+      throw new Error('Missing account ID in Connect account update');
+    }
+
+    logger.info('Processing account.updated webhook', {
+      accountId,
+      chargesEnabled: account.charges_enabled,
+      payoutsEnabled: account.payouts_enabled
+    });
+
+    // Find integrator by Connect account ID
+    const integrator = await Integrator.findOne({ stripeConnectAccountId: accountId });
+
+    if (!integrator) {
+      logger.warn('Integrator not found for Connect account update', {
+        accountId
+      });
+      // Still return success - don't want Stripe to retry
+      return;
+    }
+
+    // Map Stripe status to our enum
+    const mappedStatus = await mapStripeConnectStatus(account);
+
+    // Update integrator Connect fields
+    integrator.connectAccountStatus = mappedStatus;
+    integrator.chargesEnabled = account.charges_enabled;
+    integrator.payoutsEnabled = account.payouts_enabled;
+    integrator.bankAccountOnFile = account.external_accounts?.data?.length > 0 || false;
+
+    // Mark onboarding as completed if verified
+    if (mappedStatus === 'verified' && !integrator.connectOnboardingCompletedAt) {
+      integrator.connectOnboardingCompletedAt = new Date();
+    }
+
+    // Capture rejection or restriction reasons
+    if (account.requirements?.past_due?.length > 0) {
+      integrator.connectRejectReason = account.requirements.past_due.join(', ');
+      integrator.connectAccountStatus = 'verification_failed';
+    }
+
+    if (account.requirements?.currently_due?.length > 0) {
+      integrator.connectAccountStatus = 'requirements_pending';
+    }
+
+    // Save updated integrator
+    await integrator.save();
+
+    logger.info('Integrator Connect status updated successfully', {
+      integratorId: integrator._id,
+      accountId,
+      status: integrator.connectAccountStatus,
+      chargesEnabled: integrator.chargesEnabled,
+      payoutsEnabled: integrator.payoutsEnabled
+    });
+
+    // TODO: Send email to integrator when status changes
+    // (in Phase 2, add email notifications)
+
+  } catch (error) {
+    logger.error('Error handling Connect account update', {
+      error: error.message,
+      accountId: event.data.object?.id,
+      stack: error.stack
+    });
+    throw error; // Re-throw so webhook handler can record failure
+  }
+};
+
+/**
+ * Handle payment_intent.succeeded webhook
+ * Called when charge succeeds
+ * Creates transfer to receiving integrator
+ */
+const handlePaymentIntentSucceeded = async (event) => {
+  try {
+    const Payment = require('../models/payment');
+    const Scheduler = require('../models/scheduler');
+    const { createTransferToReceivingIntegrator } = await import('../services/stripeMarketplaceService');
+
+    const paymentIntent = event.data.object;
+    const chargeId = paymentIntent.charges.data[0]?.id;
+
+    if (!chargeId) {
+      logger.warn('Payment intent succeeded but no charge found', {
+        paymentIntentId: paymentIntent.id
+      });
+      return;
+    }
+
+    logger.info('Processing payment_intent.succeeded event', {
+      paymentIntentId: paymentIntent.id,
+      chargeId,
+      amount: paymentIntent.amount
+    });
+
+    // Find payment in database
+    const payment = await Payment.findOne({ paymentIntentId: paymentIntent.id });
+
+    if (!payment) {
+      logger.warn('Payment not found for succeeded intent', {
+        paymentIntentId: paymentIntent.id
+      });
+      return;
+    }
+
+    // Update payment status
+    payment.paymentStatus = 'succeeded';
+    payment.chargeId = chargeId;
+    payment.paymentSucceededAt = new Date();
+    payment.transferStatus = 'pending';
+
+    // Create transfer to receiving integrator
+    try {
+      const transfer = await createTransferToReceivingIntegrator({
+        chargeId,
+        receivingIntegratorConnectId: payment.receivingIntegrator.toString(),
+        netAmount: payment.netAmount
+      });
+
+      payment.transferId = transfer.id;
+      payment.transferStatus = 'created';
+      payment.transferInitiatedAt = new Date();
+
+      logger.info('Transfer created for succeeded payment', {
+        paymentIntentId: paymentIntent.id,
+        transferId: transfer.id,
+        netAmount: payment.netAmount
+      });
+    } catch (transferError) {
+      logger.error('Failed to create transfer for succeeded payment', {
+        error: transferError.message,
+        paymentIntentId: paymentIntent.id
+      });
+      // Don't throw - we want to mark payment as succeeded even if transfer fails initially
+      // Transfer can be manually triggered later
+    }
+
+    await payment.save();
+
+    // Update scheduler status
+    if (payment.scheduler) {
+      await Scheduler.findByIdAndUpdate(
+        payment.scheduler,
+        {
+          paymentStatus: 'succeeded',
+          paymentSucceededAt: new Date(),
+          transferStatus: payment.transferStatus,
+          transferId: payment.transferId,
+          transferInitiatedAt: payment.transferInitiatedAt
+        }
+      );
+    }
+
+    logger.info('Payment marked as succeeded', {
+      paymentId: payment._id,
+      paymentIntentId: paymentIntent.id
+    });
+  } catch (error) {
+    logger.error('Error handling payment_intent.succeeded', {
+      error: error.message,
+      paymentIntentId: event.data.object?.id,
+      stack: error.stack
+    });
+    throw error;
+  }
+};
+
+/**
+ * Handle payment_intent.payment_failed webhook
+ * Called when charge fails
+ */
+const handlePaymentIntentFailed = async (event) => {
+  try {
+    const Payment = require('../models/payment');
+    const Scheduler = require('../models/scheduler');
+
+    const paymentIntent = event.data.object;
+
+    logger.info('Processing payment_intent.payment_failed event', {
+      paymentIntentId: paymentIntent.id,
+      lastPaymentError: paymentIntent.last_payment_error
+    });
+
+    // Find payment in database
+    const payment = await Payment.findOne({ paymentIntentId: paymentIntent.id });
+
+    if (!payment) {
+      logger.warn('Payment not found for failed intent', {
+        paymentIntentId: paymentIntent.id
+      });
+      return;
+    }
+
+    // Update payment with failure info
+    payment.paymentStatus = 'failed';
+    payment.chargeFailureCode = paymentIntent.last_payment_error?.code;
+    payment.chargeFailureMessage = paymentIntent.last_payment_error?.message;
+    payment.chargeFailureAttempts = (payment.chargeFailureAttempts || 0) + 1;
+    payment.chargeLastFailureAt = new Date();
+    payment.failedAt = new Date();
+
+    await payment.save();
+
+    // Update scheduler
+    if (payment.scheduler) {
+      await Scheduler.findByIdAndUpdate(
+        payment.scheduler,
+        {
+          paymentStatus: 'failed',
+          status: 'Declined' // Set booking back to declined
+        }
+      );
+    }
+
+    logger.info('Payment marked as failed', {
+      paymentId: payment._id,
+      failureCode: payment.chargeFailureCode,
+      failureAttempts: payment.chargeFailureAttempts
+    });
+
+    // TODO: Send email to paying integrator about payment failure
+  } catch (error) {
+    logger.error('Error handling payment_intent.payment_failed', {
+      error: error.message,
+      paymentIntentId: event.data.object?.id,
+      stack: error.stack
+    });
+    throw error;
+  }
+};
+
+/**
+ * Handle transfer.created webhook
+ * Called when transfer is created
+ */
+const handleTransferCreated = async (event) => {
+  try {
+    const Payment = require('../models/payment');
+    const transfer = event.data.object;
+
+    logger.info('Processing transfer.created event', {
+      transferId: transfer.id,
+      destination: transfer.destination,
+      amount: transfer.amount
+    });
+
+    // Find payment by transfer ID
+    const payment = await Payment.findOne({ transferId: transfer.id });
+
+    if (!payment) {
+      logger.warn('Payment not found for created transfer', {
+        transferId: transfer.id
+      });
+      return;
+    }
+
+    payment.transferStatus = 'in_transit';
+    await payment.save();
+
+    logger.info('Transfer status updated to in_transit', {
+      paymentId: payment._id,
+      transferId: transfer.id
+    });
+  } catch (error) {
+    logger.error('Error handling transfer.created', {
+      error: error.message,
+      transferId: event.data.object?.id,
+      stack: error.stack
+    });
+    throw error;
+  }
+};
+
+/**
+ * Handle transfer.paid webhook
+ * Called when transfer is paid to receiving integrator
+ */
+const handleTransferPaid = async (event) => {
+  try {
+    const Payment = require('../models/payment');
+    const Scheduler = require('../models/scheduler');
+    const Integrator = require('../models/integrator');
+
+    const transfer = event.data.object;
+
+    logger.info('Processing transfer.paid event', {
+      transferId: transfer.id,
+      destination: transfer.destination,
+      amount: transfer.amount
+    });
+
+    // Find payment by transfer ID
+    const payment = await Payment.findOne({ transferId: transfer.id });
+
+    if (!payment) {
+      logger.warn('Payment not found for paid transfer', {
+        transferId: transfer.id
+      });
+      return;
+    }
+
+    payment.transferStatus = 'paid';
+    payment.transferPaidAt = new Date();
+    await payment.save();
+
+    // Update scheduler
+    if (payment.scheduler) {
+      await Scheduler.findByIdAndUpdate(
+        payment.scheduler,
+        {
+          transferStatus: 'paid',
+          transferPaidAt: new Date()
+        }
+      );
+    }
+
+    // Update receiving integrator totals
+    const receivingIntegrator = await Integrator.findById(payment.receivingIntegrator);
+    if (receivingIntegrator) {
+      receivingIntegrator.totalPaymentsReceived = (receivingIntegrator.totalPaymentsReceived || 0) + 1;
+      receivingIntegrator.totalAmountReceived = (receivingIntegrator.totalAmountReceived || 0) + payment.netAmount;
+      await receivingIntegrator.save();
+    }
+
+    // Update paying integrator totals
+    const payingIntegrator = await Integrator.findById(payment.payingIntegrator);
+    if (payingIntegrator) {
+      payingIntegrator.totalPaymentsMade = (payingIntegrator.totalPaymentsMade || 0) + 1;
+      payingIntegrator.totalAmountPaid = (payingIntegrator.totalAmountPaid || 0) + payment.grossAmount;
+      payingIntegrator.totalPlatformFeesDeducted = (payingIntegrator.totalPlatformFeesDeducted || 0) + payment.platformFeeAmount;
+      await payingIntegrator.save();
+    }
+
+    logger.info('Transfer paid and integrator totals updated', {
+      paymentId: payment._id,
+      transferId: transfer.id,
+      netAmount: payment.netAmount
+    });
+
+    // TODO: Send confirmation emails to both integrators
+  } catch (error) {
+    logger.error('Error handling transfer.paid', {
+      error: error.message,
+      transferId: event.data.object?.id,
+      stack: error.stack
+    });
+    throw error;
+  }
+};
+
 export {
   trialWillEnd,
   cancelTrial,
@@ -468,5 +832,10 @@ export {
   updateSubscription,
   invoicePaymentFailed,
   setDefaultPaymentMethod,
-  invoicePaymentSuccess
+  invoicePaymentSuccess,
+  handleConnectAccountUpdated,
+  handlePaymentIntentSucceeded,
+  handlePaymentIntentFailed,
+  handleTransferCreated,
+  handleTransferPaid
 };

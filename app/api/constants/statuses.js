@@ -41,6 +41,16 @@ export const WEBHOOK_STATUS = {
   FAILED: 'failed'
 };
 
+// Stripe Connect account statuses - used in integrator.js model
+export const INTEGRATOR_CONNECT_STATUS = {
+  NOT_STARTED: 'not_started',
+  ONBOARDING_STARTED: 'onboarding_started',
+  VERIFIED: 'verified',
+  RESTRICTED: 'restricted',
+  REQUIREMENTS_PENDING: 'requirements_pending',
+  VERIFICATION_FAILED: 'verification_failed'
+};
+
 /**
  * Get display label for a status value
  * @param {string} status - Status value (e.g., 'Pending', 'Progress', 'Completed')

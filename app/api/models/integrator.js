@@ -169,6 +169,49 @@ const IntegratorSchema = new mongoose.Schema(
       type: String,
       required: false,
       default: ''
+    },
+    // Stripe Connect fields for receiving payments from other integrators
+    stripeConnectAccountId: {
+      type: String,
+      trim: true,
+      default: '',
+      sparse: true
+    },
+    connectAccountStatus: {
+      type: String,
+      enum: ['not_started', 'onboarding_started', 'verified', 'restricted', 'requirements_pending', 'verification_failed'],
+      default: 'not_started'
+    },
+    connectOnboardingStartedAt: {
+      type: Date,
+      required: false
+    },
+    connectOnboardingCompletedAt: {
+      type: Date,
+      required: false
+    },
+    connectRejectReason: {
+      type: String,
+      default: '',
+      max: 500
+    },
+    chargesEnabled: {
+      type: Boolean,
+      default: false
+    },
+    payoutsEnabled: {
+      type: Boolean,
+      default: false
+    },
+    bankAccountOnFile: {
+      type: Boolean,
+      default: false
+    },
+    platformFeePercentage: {
+      type: Number,
+      default: 10,
+      min: 0,
+      max: 100
     }    
   },
   { timestamps: true }

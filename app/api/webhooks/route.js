@@ -15,7 +15,12 @@ const {
   updateSubscription,
   createSubscription,
   cancelSubscription,
-  updateStatus
+  updateStatus,
+  handleConnectAccountUpdated,
+  handlePaymentIntentSucceeded,
+  handlePaymentIntentFailed,
+  handleTransferCreated,
+  handleTransferPaid
 } = require('../services/webHooksService');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' });
@@ -85,6 +90,11 @@ export async function POST(req) {
       'invoice.payment_failed': invoicePaymentFailed,
       'customer.source.updated': updateStatus,
       'customer.subscription.trial_will_end': trialWillEnd,
+      'account.updated': handleConnectAccountUpdated,
+      'payment_intent.succeeded': handlePaymentIntentSucceeded,
+      'payment_intent.payment_failed': handlePaymentIntentFailed,
+      'transfer.created': handleTransferCreated,
+      'transfer.paid': handleTransferPaid
     };
 
     // Check for duplicate event using deduplication middleware
