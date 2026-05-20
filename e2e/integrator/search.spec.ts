@@ -159,7 +159,8 @@ test.describe('Integrator Search', () => {
     await page.goto('/protected/integrator/search');
     
     const currentUrl = page.url();
-    expect(currentUrl).toContain('search') || expect(currentUrl).toContain('login');
+    const isValid = currentUrl.includes('search') || currentUrl.includes('login');
+    expect(isValid).toBe(true);
   });
 
   test('search loads without hanging', async ({ page }) => {

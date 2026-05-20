@@ -33,7 +33,8 @@ test.describe('Integrator Dashboard', () => {
     // If auth is required, should redirect
     // If not, page should load
     const currentUrl = page.url();
-    expect(currentUrl).toContain('dashboard') || expect(currentUrl).toContain('login');
+    const isValid = currentUrl.includes('dashboard') || currentUrl.includes('login');
+    expect(isValid).toBe(true);
   });
 
   test('dashboard displays main content area', async ({ page }) => {
@@ -105,6 +106,7 @@ test.describe('Integrator Dashboard', () => {
     
     const currentUrl = page.url();
     // Should either be on dashboard or redirected to login (not subscription error)
-    expect(currentUrl).toContain('dashboard') || expect(currentUrl).toContain('login');
+    const isValid = currentUrl.includes('dashboard') || currentUrl.includes('login');
+    expect(isValid).toBe(true);
   });
 });

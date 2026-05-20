@@ -170,7 +170,8 @@ test.describe('Integrator Users', () => {
     await page.goto('/protected/integrator/user');
     
     const currentUrl = page.url();
-    expect(currentUrl).toContain('user') || expect(currentUrl).toContain('login');
+    const isValid = currentUrl.includes('user') || currentUrl.includes('login');
+    expect(isValid).toBe(true);
   });
 
   test('users page loads without hanging', async ({ page }) => {

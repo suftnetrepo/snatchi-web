@@ -132,7 +132,8 @@ test.describe('Integrator Invoices', () => {
     await page.goto('/protected/integrator/invoice');
     
     const currentUrl = page.url();
-    expect(currentUrl).toContain('invoice') || expect(currentUrl).toContain('login');
+    const isValid = currentUrl.includes('invoice') || currentUrl.includes('login');
+    expect(isValid).toBe(true);
   });
 
   test('invoices page loads without hanging', async ({ page }) => {

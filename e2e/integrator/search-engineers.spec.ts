@@ -165,7 +165,8 @@ test.describe('Integrator Search Engineers', () => {
     await page.goto('/protected/integrator/search-engineers');
     
     const currentUrl = page.url();
-    expect(currentUrl).toContain('search-engineers') || expect(currentUrl).toContain('login');
+    const isValid = currentUrl.includes('search-engineers') || currentUrl.includes('login');
+    expect(isValid).toBe(true);
   });
 
   test('search-engineers loads without hanging', async ({ page }) => {

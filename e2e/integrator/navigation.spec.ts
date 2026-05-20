@@ -203,7 +203,8 @@ test.describe('Integrator Navigation', () => {
       
       // Should load page or redirect to login
       const currentUrl = page.url();
-      expect(currentUrl).toContain('integrator') || expect(currentUrl).toContain('login');
+      const isValid = currentUrl.includes('integrator') || currentUrl.includes('login');
+      expect(isValid).toBe(true);
     }
   });
 

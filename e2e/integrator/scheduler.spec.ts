@@ -121,7 +121,8 @@ test.describe('Integrator Scheduler', () => {
     await page.goto('/protected/integrator/scheduler');
     
     const currentUrl = page.url();
-    expect(currentUrl).toContain('scheduler') || expect(currentUrl).toContain('login');
+    const isValid = currentUrl.includes('scheduler') || currentUrl.includes('login');
+    expect(isValid).toBe(true);
   });
 
   test('scheduler loads without critical errors', async ({ page }) => {

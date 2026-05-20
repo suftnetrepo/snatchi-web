@@ -154,7 +154,8 @@ test.describe('Integrator Settings', () => {
     await page.goto('/protected/integrator/settings');
     
     const currentUrl = page.url();
-    expect(currentUrl).toContain('settings') || expect(currentUrl).toContain('login');
+    const isValid = currentUrl.includes('settings') || currentUrl.includes('login');
+    expect(isValid).toBe(true);
   });
 
   test('settings loads without hanging', async ({ page }) => {

@@ -104,7 +104,8 @@ test.describe('Integrator Fence', () => {
     await page.goto('/protected/integrator/fence');
     
     const currentUrl = page.url();
-    expect(currentUrl).toContain('fence') || expect(currentUrl).toContain('login');
+    const isValid = currentUrl.includes('fence') || currentUrl.includes('login');
+    expect(isValid).toBe(true);
   });
 
   test('fence loads without hanging', async ({ page }) => {
