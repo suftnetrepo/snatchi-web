@@ -13,6 +13,7 @@ import {
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
+import { enforceSubscriptionStatus } from '../middleware/subscription-check';
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUD_NAME,
@@ -26,6 +27,12 @@ export const GET = async (req) => {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Enforce subscription status
+    const subscriptionCheck = await enforceSubscriptionStatus(user?.integrator);
+    if (!subscriptionCheck.isActive) {
+      return subscriptionCheck.response;
     }
 
     const url = new URL(req.url);
@@ -98,6 +105,13 @@ export const DELETE = async (req) => {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Enforce subscription status
+    const subscriptionCheck = await enforceSubscriptionStatus(user?.integrator);
+    if (!subscriptionCheck.isActive) {
+      return subscriptionCheck.response;
+    }
+
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
 
@@ -116,6 +130,13 @@ export const PUT = async (req) => {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Enforce subscription status
+    const subscriptionCheck = await enforceSubscriptionStatus(user?.integrator);
+    if (!subscriptionCheck.isActive) {
+      return subscriptionCheck.response;
+    }
+
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     const action = url.searchParams.get('action');
@@ -192,6 +213,13 @@ export const POST = async (req) => {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Enforce subscription status
+    const subscriptionCheck = await enforceSubscriptionStatus(user?.integrator);
+    if (!subscriptionCheck.isActive) {
+      return subscriptionCheck.response;
+    }
+
     const body = await req.json();
 
     const result = await createUser(user?.integrator, body);

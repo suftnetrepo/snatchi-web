@@ -51,7 +51,7 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
   };
 
   return (
-    <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '40%', backgroundColor: 'white' }}>
+    <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
       <div className="d-flex flex-row justify-content-between align-items-center p-7">
         <div className="d-flex flex-column justify-content-start align-items-start">
           {!success ? (<>

@@ -146,7 +146,6 @@ const useScheduler = (engineerId: string) => {
             schedule.startDate instanceof Date ? schedule.startDate.toISOString().split('T')[0] : schedule.startDate;
 
           const start = buildScheduleDateTime(startDateStr, schedule.startTime);
-
           const end = buildScheduleDateTime(startDateStr, schedule.endTime);
 
           return {
@@ -196,12 +195,21 @@ const useScheduler = (engineerId: string) => {
           status: item.status,
         }));
 
+        const seenEngineers = new Set<string>();
+        const deduplicatedData = transformedData.filter((engineer) => {
+          if (seenEngineers.has(engineer.engineerId)) {
+            return false;
+          }
+          seenEngineers.add(engineer.engineerId);
+          return true;
+        });
+
         updateState({
-          data: transformedData as any,
+          data: deduplicatedData as any,
           loading: false,
           success: true
         });
-        return transformedData;
+        return deduplicatedData;
       } else {
         handleError(response.errorMessage || 'Failed to fetch project schedules.');
         return [];

@@ -27,8 +27,9 @@ async function getByUser(user_id) {
       query.engineer = user_id;
     }
 
-    // Only return future schedules
+    // Only return future schedules and those starting today
     const now = new Date();
+    now.setHours(0, 0, 0, 0); // Set to start of current day
 
     query.startDate = { $gte: now };
 
@@ -47,18 +48,6 @@ async function add(body) {
   }
 
   const { startDate, endDate, startTime, endTime, ...rest } = body;
-  
-  // Check if engineer is already scheduled for this project
-  if (rest.engineer && rest.project) {
-    const existingSchedule = await Scheduler.findOne({
-      engineer: rest.engineer,
-      project: rest.project
-    });
-    
-    if (existingSchedule) {
-      throw new Error('Engineer is already scheduled for this project');
-    }
-  }
   
   // Extract time from dates if startTime/endTime not provided
   const derivedStartTime = startTime || extractTimeFromDate(startDate);

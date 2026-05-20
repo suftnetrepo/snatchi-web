@@ -8,7 +8,20 @@
     "build": "next build",
     "build-local": "NODE_ENV=local next build",
     "start": "next start",
-    "sass": "sass --no-source-map src/assets/scss:public/css"
+    "sass": "sass --no-source-map src/assets/scss:public/css",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:stripe": "playwright test e2e/stripe",
+    "test:e2e:checkout": "playwright test e2e/stripe/checkout.spec.ts",
+    "test:e2e:portal": "playwright test e2e/stripe/customer-portal.spec.ts",
+    "test:e2e:access": "playwright test e2e/stripe/subscription-access.spec.ts",
+    "test:e2e:integrator": "playwright test e2e/integrator",
+    "test:e2e:integrator:ui": "playwright test e2e/integrator --ui",
+    "test:e2e:integrator:debug": "playwright test e2e/integrator --debug",
+    "test:e2e:integrator:navigation": "playwright test e2e/integrator/navigation.spec.ts",
+    "test:e2e:integrator:dashboard": "playwright test e2e/integrator/dashboard.spec.ts"
   },
   "dependencies": {
     "@aldabil/react-scheduler": "^3.1.2",
@@ -16,7 +29,6 @@
     "@daypilot/daypilot-lite-react": "^4.4.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@faker-js/faker": "^9.2.0",
     "@formatjs/intl-localematcher": "^0.5.4",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-brands-svg-icons": "^6.6.0",
@@ -136,6 +148,8 @@
     "zod-i18n-map": "^2.27.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.4.0",
+    "@playwright/test": "^1.60.0",
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.2",
     "@types/bootstrap": "^5.2.0",

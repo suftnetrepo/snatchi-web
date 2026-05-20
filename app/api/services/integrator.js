@@ -204,9 +204,15 @@ async function updateIntegrator(id, body) {
 async function updateIntegratorStatus(stripeCustomerId, body) {
 
   try {
+    // Normalize status to lowercase if provided
+    const updateData = { ...body };
+    if (updateData.status) {
+      updateData.status = updateData.status.toLowerCase();
+    }
+
     const updated = await Integrator.findOneAndUpdate(
       { stripeCustomerId: stripeCustomerId },
-      body, 
+      updateData, 
       { new: true } 
     );
 
@@ -216,7 +222,8 @@ async function updateIntegratorStatus(stripeCustomerId, body) {
 
     return updated;
   } catch (error) {
-    logger.error(error);   
+    logger.error(error);
+    throw error;  // Re-throw so caller is aware of the error
   }
 }
 

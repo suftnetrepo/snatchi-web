@@ -1,6 +1,11 @@
 import Stripe from 'stripe';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
+import { 
+  webhookDeduplicationMiddleware, 
+  recordWebhookEvent, 
+  markWebhookEventFailed 
+} from '../middleware/webhook-deduplication';
 
 const {
   invoicePaymentSuccess,
@@ -13,7 +18,7 @@ const {
   updateStatus
 } = require('../services/webHooksService');
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' });
 
 export const config = {
   api: {
@@ -82,11 +87,72 @@ export async function POST(req) {
       'customer.subscription.trial_will_end': trialWillEnd,
     };
 
-    if (handlers[event.type]) {
-      await handlers[event.type](event);
-      logger.info(`Successfully processed ${event.type} event`);
-    } else {
-      logger.warn(`Unhandled event type: ${event.type}`);
+    // Check for duplicate event using deduplication middleware
+    let deduplicationResult;
+    try {
+      deduplicationResult = await webhookDeduplicationMiddleware(req, event);
+    } catch (deduplicationError) {
+      logger.error('Deduplication check failed:', deduplicationError.message);
+      return NextResponse.json(
+        { error: 'Deduplication check failed' },
+        { status: 500 }
+      );
+    }
+
+    // If duplicate, return success without processing
+    if (deduplicationResult.isDuplicate) {
+      logger.warn(`Duplicate webhook event detected: ${event.id}`);
+      return NextResponse.json({ received: true, isDuplicate: true }, { status: 200 });
+    }
+
+    // Process the event
+    try {
+      if (handlers[event.type]) {
+        await handlers[event.type](event);
+        logger.info(`Successfully processed ${event.type} event: ${event.id}`);
+
+        // Record successful processing
+        await recordWebhookEvent(
+          deduplicationResult.stripeEventId,
+          deduplicationResult.eventType,
+          deduplicationResult.customerId,
+          deduplicationResult.subscriptionId,
+          event.data.object,
+          'completed'
+        );
+      } else {
+        logger.warn(`Unhandled event type: ${event.type}`);
+
+        // Record unhandled event
+        await recordWebhookEvent(
+          deduplicationResult.stripeEventId,
+          deduplicationResult.eventType,
+          deduplicationResult.customerId,
+          deduplicationResult.subscriptionId,
+          event.data.object,
+          'completed',
+          'Unhandled event type'
+        );
+      }
+    } catch (handlerError) {
+      logger.error(`Error processing ${event.type} event:`, handlerError);
+
+      // Record failed processing
+      try {
+        await markWebhookEventFailed(
+          deduplicationResult.stripeEventId,
+          handlerError.message,
+          0
+        );
+      } catch (recordError) {
+        logger.error('Failed to record error:', recordError);
+      }
+
+      // Return error to Stripe so it will retry
+      return NextResponse.json(
+        { error: 'Webhook processing failed', details: handlerError.message },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ received: true }, { status: 200 });

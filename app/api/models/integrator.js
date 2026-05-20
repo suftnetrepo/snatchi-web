@@ -174,6 +174,25 @@ const IntegratorSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
+// Normalize status to lowercase before saving
+IntegratorSchema.pre('save', function(next) {
+  if (this.status) {
+    this.status = this.status.toLowerCase();
+  }
+  next();
+});
+
+// Normalize status on update
+IntegratorSchema.pre('findOneAndUpdate', function(next) {
+  if (this._update.status) {
+    this._update.status = this._update.status.toLowerCase();
+  }
+  if (this._update.$set && this._update.$set.status) {
+    this._update.$set.status = this._update.$set.status.toLowerCase();
+  }
+  next();
+});
+
 IntegratorSchema.index({ 'address.location': '2dsphere' })
 IntegratorSchema.index({
   name: 'text',

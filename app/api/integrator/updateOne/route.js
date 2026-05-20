@@ -2,6 +2,7 @@ import { updateIntegrator } from '../../services/integrator';
 import { v2 as cloudinary } from 'cloudinary';
 import { logger } from '../../utils/logger';
 import { getUserSession } from '@/utils/generateToken';
+import { enforceSubscriptionStatus } from '../../middleware/subscription-check';
 const { NextResponse } = require('next/server');
 
 cloudinary.config({
@@ -20,6 +21,12 @@ export const POST = async (req) => {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Enforce subscription status
+    const subscriptionCheck = await enforceSubscriptionStatus(user?.integrator);
+    if (!subscriptionCheck.isActive) {
+      return subscriptionCheck.response;
     }
 
     let result = null;
