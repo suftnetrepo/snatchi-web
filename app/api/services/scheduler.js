@@ -193,4 +193,23 @@ async function getByProjectDateRange(projectId) {
   }
 }
 
-export { remove, add, getByUser, update, updateByStatus, getByProjectDateRange };
+async function getAllSchedules(integratorId) {
+  try {
+    if (!mongoose.isValidObjectId(integratorId)) {
+      throw new Error(JSON.stringify([{ field: 'integratorId', message: 'Invalid MongoDB ObjectId' }]));
+    }
+
+    const result = await Scheduler.find({ integrator: integratorId })
+      .populate('engineer', 'first_name last_name email')
+      .populate('project', 'name')
+      .populate('payingIntegrator', 'name')
+      .populate('receivingIntegratorId', 'name');
+
+    return { data: result };
+  } catch (error) {
+    logger.error(error);
+    throw new Error('An unexpected server error occurred.');
+  }
+}
+
+export { remove, add, getByUser, update, updateByStatus, getByProjectDateRange, getAllSchedules };

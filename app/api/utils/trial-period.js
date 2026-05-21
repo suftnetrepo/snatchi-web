@@ -1,5 +1,5 @@
 import { logger } from '../utils/logger';
-import { pricingList } from '../../src/data/pricing';
+import { pricingList } from '../../../src/data/pricing';
 
 /**
  * Trial period configuration

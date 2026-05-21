@@ -22,7 +22,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/auth';
 import { logger } from '../../../utils/logger';
-import { connectDb } from '../../../../utils/connectDb';
+import { mongoConnect } from '../../../../../utils/connectDb';
 import Payment from '../../../models/payment';
 import Stripe from 'stripe';
 
@@ -46,7 +46,7 @@ export async function POST(req) {
       );
     }
 
-    await connectDb();
+    await mongoConnect();
 
     // Retrieve payment from database
     const payment = await Payment.findOne({ paymentIntentId });

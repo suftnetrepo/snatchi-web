@@ -1,15 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    esmExternals: false,
-    middleware: {
-      // Use the Node.js runtime for middleware
-      runtime: 'nodejs'
-    },
-    serverComponentsExternalPackages: ['mongoose', 'mongodb', 'mjml'],
-    serverExternalPackages: ['mjml']
-  },
-
   eslint: {
     ignoreDuringBuilds: true
   },

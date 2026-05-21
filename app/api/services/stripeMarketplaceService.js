@@ -186,12 +186,11 @@ export const createCrossIntegratorPaymentIntent = async (params) => {
         serviceType: 'engineer_booking'
       },
       // Idempotency key prevents duplicate charges on network retry
-      idempotency_key: `payment_${payingIntegrator._id}_${scheduler._id}_${Date.now()}`,
-      // On-behalf-of for Stripe Connect
-      on_behalf_of: receivingIntegrator.stripeConnectAccountId,
-      transfer_data: {
-        destination: receivingIntegrator.stripeConnectAccountId
-      }
+      idempotency_key: `payment_${payingIntegrator._id}_${scheduler._id}_${Date.now()}`
+      // NOTE: Model 2 - Separate Charges & Transfers Architecture
+      // Charge created on platform account (Snatchi)
+      // Manual transfer via webhook after payment_intent.succeeded
+      // Platform automatically retains: grossAmount - netAmount = platformFeeAmount
     });
 
     logger.info('Payment intent created successfully', {
@@ -253,12 +252,24 @@ export const confirmCrossIntegratorPayment = async (paymentIntentId) => {
 
 /**
  * Create a transfer to receiving integrator's Connect account
- * Called after charge succeeds
+ * Part of Model 2: Separate Charges & Transfers architecture
+ * 
+ * Flow:
+ * 1. Charge created on platform account for FULL amount (grossAmount)
+ * 2. Platform receives payment and retains platform fee
+ * 3. This function transfers NET amount to receiving integrator's Express account
+ * 4. Receiving integrator can then withdraw to their bank account
+ * 
+ * Example (£100 charge, 10% platform fee):
+ * - Charge: £100 on platform account
+ * - Transfer: £90 to receiving integrator (this function)
+ * - Platform retains: £10 (automatic, no transfer needed)
+ * 
  * @param {Object} params
- *   - chargeId: Stripe Charge ID
- *   - receivingIntegratorConnectId: Receiving integrator's Connect account
- *   - netAmount: Amount to transfer (after platform fee)
- * @returns {Object} Stripe Transfer
+ *   - chargeId: Stripe Charge ID (the charge that was just created)
+ *   - receivingIntegratorConnectId: Receiving integrator's Express Connect account ID
+ *   - netAmount: Amount to transfer (after platform fee deduction)
+ * @returns {Object} Stripe Transfer object with id, status, destination
  */
 export const createTransferToReceivingIntegrator = async (params) => {
   try {

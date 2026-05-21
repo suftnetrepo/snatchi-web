@@ -28,7 +28,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/auth';
 import { logger } from '../../../utils/logger';
-import { connectDb } from '../../../../../utils/connectDb';
+import { mongoConnect } from '../../../../../utils/connectDb';
 import Payment from '../../../models/payment';
 
 export async function GET(req) {
@@ -53,7 +53,7 @@ export async function GET(req) {
     const limit = Math.min(parseInt(searchParams.get('limit')) || 20, 100);
     const offset = parseInt(searchParams.get('offset')) || 0;
 
-    await connectDb();
+    await mongoConnect();
 
     const query = {
       payingIntegrator: payingIntegratorId,

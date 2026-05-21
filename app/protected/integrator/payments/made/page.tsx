@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import styles from './made.module.css';
+import styles from '../made.module.css';
 
 interface Payment {
   _id: string;

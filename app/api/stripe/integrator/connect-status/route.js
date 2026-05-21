@@ -7,12 +7,12 @@
  */
 
 import { NextResponse } from 'next/server';
-import Integrator from '../../../models/integrator';
+import Integrator from '@/_/api/models/integrator';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/auth';
 import { logger } from '../../../utils/logger';
 import { getIntegratorConnectStatus, mapStripeConnectStatus } from '../../../services/stripeConnectService';
-import { connectDb } from '../../../../../utils/connectDb';
+import { mongoConnect } from '../../../../../utils/connectDb';
 
 export async function GET(req) {
   try {
@@ -48,7 +48,7 @@ export async function GET(req) {
       );
     }
 
-    await connectDb();
+    await mongoConnect();
 
     const integrator = await Integrator.findById(integratorId);
     if (!integrator) {
@@ -64,7 +64,12 @@ export async function GET(req) {
 
     // If no Connect account yet, return not started status
     if (!integrator.stripeConnectAccountId) {
+      logger.info('Integrator has not started Connect onboarding', {
+        integratorId,
+        userId: session.user.id
+      });
       return NextResponse.json({
+        success: true,
         status: 'not_started',
         accountId: null,
         chargesEnabled: false,
@@ -77,6 +82,10 @@ export async function GET(req) {
     }
 
     // Fetch current status from Stripe
+    logger.info('Fetching Stripe account status', {
+      integratorId,
+      stripeAccountId: integrator.stripeConnectAccountId
+    });
     const stripeAccount = await getIntegratorConnectStatus(integrator.stripeConnectAccountId);
 
     // Map Stripe status to our enum
@@ -102,6 +111,7 @@ export async function GET(req) {
     });
 
     return NextResponse.json({
+      success: true,
       status: mappedStatus,
       accountId: integrator.stripeConnectAccountId,
       chargesEnabled: stripeAccount.charges_enabled,
@@ -119,11 +129,17 @@ export async function GET(req) {
   } catch (error) {
     logger.error('Connect status retrieval failed', {
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
+      userId: session?.user?.id,
+      integratorId: session?.user?.integrator_id
     });
 
     return NextResponse.json(
-      { error: 'Failed to retrieve Connect status' },
+      { 
+        success: false,
+        error: 'Failed to retrieve Connect status',
+        status: 'error'
+      },
       { status: 500 }
     );
   }

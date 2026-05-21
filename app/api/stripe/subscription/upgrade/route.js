@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { logger } from '../../../utils/logger';
-import { pricingList } from '../../../../src/data/pricing';
+import { pricingList } from '../../../../../src/data/pricing';
 
 // Validate price ID
 function isValidPriceId(priceId) {

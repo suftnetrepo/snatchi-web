@@ -1,0 +1,90 @@
+.successContainer {
+  max-width: 600px;
+  margin: 60px auto;
+  padding: 30px;
+  text-align: center;
+}
+
+.successIcon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 30px;
+  background-color: #28a745;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: white;
+}
+
+.successMessage {
+  font-size: 24px;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 15px;
+}
+
+.successDetails {
+  font-size: 16px;
+  color: #6c757d;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.orderInfo {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 4px;
+  margin-bottom: 30px;
+  text-align: left;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.infoLabel {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.infoValue {
+  color: #212529;
+  font-weight: 600;
+}
+
+.continueButton {
+  display: inline-block;
+  padding: 12px 24px;
+  background-color: #28a745;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.continueButton:hover {
+  background-color: #218838;
+}
+
+.supportLink {
+  display: block;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.supportLink a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.supportLink a:hover {
+  text-decoration: underline;
+}

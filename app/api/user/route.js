@@ -22,7 +22,11 @@ cloudinary.config({
 
 export const GET = async (req) => {
   try {
+
+    
     const user = await getUserSession(req);
+
+    console.log('User session in GET /api/user:', user);
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

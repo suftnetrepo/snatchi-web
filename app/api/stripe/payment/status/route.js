@@ -21,7 +21,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/auth';
 import { logger } from '../../../utils/logger';
-import { connectDb } from '../../../../utils/connectDb';
+import { mongoConnect } from '../../../../../utils/connectDb';
 import Payment from '../../../models/payment';
 
 export async function GET(req) {
@@ -44,7 +44,7 @@ export async function GET(req) {
       );
     }
 
-    await connectDb();
+    await mongoConnect();
 
     let payment;
     if (paymentIntentId) {

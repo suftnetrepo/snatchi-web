@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { auth } from '../../../auth';
+import { authOptions } from '@/auth';
 import { logger } from '../../utils/logger';
 import Integrator from '../../models/integrator';
 import { connectDb } from '../../../../utils/connectDb';
@@ -8,7 +8,7 @@ import { connectDb } from '../../../../utils/connectDb';
 export async function GET(req) {
   try {
     // Check authentication
-    const session = await getServerSession(auth);
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },

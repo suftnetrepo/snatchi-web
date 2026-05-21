@@ -127,22 +127,22 @@
   white-space: nowrap;
 }
 
-.['badge-succeeded'] {
+.badge-succeeded {
   background-color: #d1fae5;
   color: #065f46;
 }
 
-.['badge-pending'] {
+.badge-pending {
   background-color: #fef3c7;
   color: #92400e;
 }
 
-.['badge-failed'] {
+.badge-failed {
   background-color: #fee2e2;
   color: #991b1b;
 }
 
-.['badge-cancelled'] {
+.badge-cancelled {
   background-color: #e5e7eb;
   color: #374151;
 }

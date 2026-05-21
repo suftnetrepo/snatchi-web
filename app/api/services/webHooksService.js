@@ -6,6 +6,7 @@ const { DATE_FORMAT_DD_MM_YYYY_HH_mm_ss_sz, DATE_FORMAT_dd_MMM_YYYY } = require(
 const { sendBrevoEmail } = require('../../../lib/mail');
 const { compileEmailTemplate } = require('../templates/compile-email-template');
 const { logger } = require('../utils/logger');
+const { alertLog } = require('./alertLogging');
 import { emailTemplates } from '../../email';
 import Stripe from 'stripe';
 import { mapStripeStatusToSnatchi } from '../utils/stripe-status-mapper';
@@ -586,7 +587,34 @@ const handlePaymentIntentSucceeded = async (event) => {
     payment.transferStatus = 'pending';
 
     // Create transfer to receiving integrator
+    // Model 2: Separate Charges & Transfers
+    // Platform automatically retains: grossAmount - netAmount = platformFeeAmount
     try {
+      // Safety Check 1: Verify charge amount matches expected
+      if (paymentIntent.amount !== payment.grossAmount) {
+        throw new Error(
+          `Charge amount mismatch: expected ${payment.grossAmount}, got ${paymentIntent.amount}`
+        );
+      }
+
+      // Safety Check 2: Verify currency matches
+      if (paymentIntent.currency !== payment.currency) {
+        throw new Error(
+          `Currency mismatch: expected ${payment.currency}, got ${paymentIntent.currency}`
+        );
+      }
+
+      // Safety Check 3: Verify transfer not already created (idempotency)
+      if (payment.transferId) {
+        logger.warn('Transfer already created for this payment', {
+          paymentIntentId: paymentIntent.id,
+          existingTransferId: payment.transferId
+        });
+        // Still save and return - treat as successful
+        await payment.save();
+        return;
+      }
+
       const transfer = await createTransferToReceivingIntegrator({
         chargeId,
         receivingIntegratorConnectId: payment.receivingIntegrator.toString(),
@@ -599,16 +627,37 @@ const handlePaymentIntentSucceeded = async (event) => {
 
       logger.info('Transfer created for succeeded payment', {
         paymentIntentId: paymentIntent.id,
+        chargeId: chargeId,
         transferId: transfer.id,
-        netAmount: payment.netAmount
+        grossAmount: payment.grossAmount,
+        platformFeeAmount: payment.platformFeeAmount,
+        netAmount: payment.netAmount,
+        platformRetained: payment.grossAmount - payment.netAmount
       });
     } catch (transferError) {
       logger.error('Failed to create transfer for succeeded payment', {
         error: transferError.message,
-        paymentIntentId: paymentIntent.id
+        paymentIntentId: paymentIntent.id,
+        chargeId: chargeId,
+        netAmount: payment.netAmount,
+        receivingIntegratorId: payment.receivingIntegrator
       });
+
+      // Alert logging
+      if (transferError.code === 'insufficient_funds') {
+        alertLog.insufficientFunds(payment._id, payment.netAmount);
+      } else if (transferError.code === 'account_closed') {
+        alertLog.transferToDisabledAccount(payment._id, payment.receivingIntegrator.stripeConnectAccountId, ['account_closed']);
+      } else {
+        alertLog.failedTransfer(payment._id, transferError, {
+          receivingIntegratorId: payment.receivingIntegrator._id
+        });
+      }
+
       // Don't throw - we want to mark payment as succeeded even if transfer fails initially
-      // Transfer can be manually triggered later
+      // Transfer can be manually triggered later via admin function
+      // Mark as pending_retry so we can retry this transfer
+      payment.transferStatus = 'pending_retry';
     }
 
     await payment.save();
@@ -707,7 +756,7 @@ const handlePaymentIntentFailed = async (event) => {
 
 /**
  * Handle transfer.created webhook
- * Called when transfer is created
+ * Called when transfer is created and in transit to destination
  */
 const handleTransferCreated = async (event) => {
   try {
@@ -730,12 +779,33 @@ const handleTransferCreated = async (event) => {
       return;
     }
 
+    // Safety Check: Verify transfer amount matches expected net amount
+    if (transfer.amount !== payment.netAmount) {
+      logger.warn('Transfer amount mismatch', {
+        transferId: transfer.id,
+        expectedAmount: payment.netAmount,
+        actualAmount: transfer.amount
+      });
+      // Continue anyway - could be partial transfer
+    }
+
+    // Safety Check: Verify destination is correct
+    if (transfer.destination !== payment.receivingIntegrator.stripeConnectAccountId) {
+      logger.error('Transfer destination mismatch', {
+        transferId: transfer.id,
+        expectedDestination: payment.receivingIntegrator.stripeConnectAccountId,
+        actualDestination: transfer.destination
+      });
+      // Still update but log error for investigation
+    }
+
     payment.transferStatus = 'in_transit';
     await payment.save();
 
     logger.info('Transfer status updated to in_transit', {
       paymentId: payment._id,
-      transferId: transfer.id
+      transferId: transfer.id,
+      amount: transfer.amount
     });
   } catch (error) {
     logger.error('Error handling transfer.created', {
@@ -749,7 +819,8 @@ const handleTransferCreated = async (event) => {
 
 /**
  * Handle transfer.paid webhook
- * Called when transfer is paid to receiving integrator
+ * Called when transfer is paid to receiving integrator's bank account
+ * This marks the completion of the payment lifecycle
  */
 const handleTransferPaid = async (event) => {
   try {
@@ -775,6 +846,15 @@ const handleTransferPaid = async (event) => {
       return;
     }
 
+    // Safety Check: Verify transfer amount
+    if (transfer.amount !== payment.netAmount) {
+      logger.warn('Paid transfer amount mismatch', {
+        transferId: transfer.id,
+        expectedAmount: payment.netAmount,
+        actualAmount: transfer.amount
+      });
+    }
+
     payment.transferStatus = 'paid';
     payment.transferPaidAt = new Date();
     await payment.save();
@@ -790,13 +870,21 @@ const handleTransferPaid = async (event) => {
       );
     }
 
-    // Update receiving integrator totals
+    // Update receiving integrator totals (for analytics/reporting)
     const receivingIntegrator = await Integrator.findById(payment.receivingIntegrator);
     if (receivingIntegrator) {
       receivingIntegrator.totalPaymentsReceived = (receivingIntegrator.totalPaymentsReceived || 0) + 1;
       receivingIntegrator.totalAmountReceived = (receivingIntegrator.totalAmountReceived || 0) + payment.netAmount;
       await receivingIntegrator.save();
     }
+
+    logger.info('Payment lifecycle complete - transfer paid to receiving integrator', {
+      paymentId: payment._id,
+      transferId: transfer.id,
+      amount: payment.netAmount,
+      platformFeeRetained: payment.platformFeeAmount,
+      receivingIntegratorId: payment.receivingIntegrator
+    });
 
     // Update paying integrator totals
     const payingIntegrator = await Integrator.findById(payment.payingIntegrator);

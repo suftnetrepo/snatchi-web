@@ -1,10 +1,10 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
-import User from '@/api/models/user';
-import { mongoConnect } from './utils/connectDb';
+import User from './app/api/models/user.js';
+import { mongoConnect } from './utils/connectDb.js';
 
-export const { auth, handlers, signIn, signOut } = NextAuth({
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -77,4 +77,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   pages: {
     signIn: '/login'
   }
-});
+};
+
+export const { auth, signIn, signOut } = NextAuth(authOptions);

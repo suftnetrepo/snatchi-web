@@ -27,9 +27,9 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/auth';
 import { logger } from '../../../utils/logger';
-import { connectDb } from '../../../../utils/connectDb';
+import { mongoConnect } from '../../../../../utils/connectDb';
 import Scheduler from '../../../models/scheduler';
-import Integrator from '../../../models/integrator';
+import Integrator from '@/_/api/models/integrator';
 import User from '../../../models/user';
 import Payment from '../../../models/payment';
 import {
@@ -75,7 +75,7 @@ export async function POST(req) {
       );
     }
 
-    await connectDb();
+    await mongoConnect();
 
     // Fetch scheduler
     const scheduler = await Scheduler.findById(schedulerId);

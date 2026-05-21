@@ -39,17 +39,17 @@
   letter-spacing: 0.5px;
 }
 
-.['status-succeeded'] {
+.status-succeeded {
   background-color: #d1fae5;
   color: #065f46;
 }
 
-.['status-pending'] {
+.status-pending {
   background-color: #fef3c7;
   color: #92400e;
 }
 
-.['status-failed'] {
+.status-failed {
   background-color: #fee2e2;
   color: #991b1b;
 }

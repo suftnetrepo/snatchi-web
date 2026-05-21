@@ -8,7 +8,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import Integrator from '../../../models/integrator';
+import Integrator from '@/_/api/models/integrator';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/auth';
 import { logger } from '../../../utils/logger';
@@ -17,7 +17,7 @@ import {
   createIntegratorAccountLink,
   mapStripeConnectStatus
 } from '../../../services/stripeConnectService';
-import { connectDb } from '../../../../../utils/connectDb';
+import { mongoConnect } from '../../../../../utils/connectDb';
 
 export async function POST(req) {
   try {
@@ -56,7 +56,7 @@ export async function POST(req) {
       );
     }
 
-    await connectDb();
+    await mongoConnect();
 
     // Fetch integrator
     const integrator = await Integrator.findById(integratorId);

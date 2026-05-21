@@ -5,7 +5,7 @@ import { connectDB } from '@/utils/connectDb';
 import User from '@/app/api/models/user';
 import Integrator from '@/app/api/models/integrator';
 import Scheduler from '@/app/api/models/scheduler';
-import logger from '@/app/api/services/loggerService';
+import { logger } from '@/app/api/utils/logger';
 
 /**
  * GET /api/stripe/payment/data
