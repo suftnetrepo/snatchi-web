@@ -27,10 +27,16 @@ export const SCHEDULER_STATUS = {
   PENDING: 'Pending',
   DECLINED: 'Declined',
   ACCEPTED: 'Accepted',
+  APPROVED: 'Approved',
+  AWAITING_PAYMENT: 'AwaitingPayment',
   PAID: 'Paid',
+  READY_TO_START: 'ReadyToStart',
+  IN_PROGRESS: 'InProgress',
   COMPLETED: 'Completed',
   CANCELLED: 'Cancelled',
-  PROGRESS: 'Progress'
+  PAYMENT_FAILED: 'PaymentFailed',
+  PROGRESS: 'Progress',
+  READY: 'Ready'
 };
 
 // Stripe webhook processing statuses - used in stripeWebhookEvent.js model
@@ -64,10 +70,40 @@ export const getStatusLabel = (status) => {
     'Canceled': 'Canceled',
     'Declined': 'Declined',
     'Accepted': 'Accepted',
+    'Approved': 'Approved',
+    'AwaitingPayment': 'Approved - Awaiting Payment',
     'Paid': 'Paid',
+    'ReadyToStart': 'Paid - Ready to Start',
+    'InProgress': 'In Progress',
     'Cancelled': 'Cancelled'
   };
   return labels[status] || status;
+};
+
+export const normalizeSchedulerStatus = (status) => {
+  if (status === SCHEDULER_STATUS.PROGRESS) {
+    return SCHEDULER_STATUS.IN_PROGRESS;
+  }
+
+  if (status === SCHEDULER_STATUS.READY) {
+    return SCHEDULER_STATUS.READY_TO_START;
+  }
+
+  return status;
+};
+
+export const isSchedulerInProgress = (status) => {
+  const normalizedStatus = normalizeSchedulerStatus(status);
+  return normalizedStatus === SCHEDULER_STATUS.IN_PROGRESS;
+};
+
+export const isSchedulerAwaitingPayment = (schedule) => {
+  const normalizedStatus = normalizeSchedulerStatus(schedule?.status);
+  return (
+    (normalizedStatus === SCHEDULER_STATUS.APPROVED || normalizedStatus === SCHEDULER_STATUS.AWAITING_PAYMENT) &&
+    (!schedule?.paymentStatus || schedule.paymentStatus === 'pending') &&
+    Number(schedule?.estimatedAmount || 0) > 0
+  );
 };
 
 /**

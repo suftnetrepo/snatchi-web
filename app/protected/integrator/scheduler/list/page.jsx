@@ -4,6 +4,8 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Table } from '@/components/elements/table/table';
 import { Button } from 'react-bootstrap';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { MdDelete, MdPayment } from 'react-icons/md';
 import { TiEdit } from 'react-icons/ti';
 import DeleteConfirmation from '@/components/elements/ConfirmDialogue';
@@ -12,6 +14,16 @@ import { dateFormatted, getStatusColorCode } from '@/utils/helpers';
 import Tooltip from '@mui/material/Tooltip';
 import { useSession } from 'next-auth/react';
 import { useSchedulerList } from '@/hooks/useSchedulerList';
+import { PaymentModal } from '../../components/PaymentModal';
+import {
+  SCHEDULER_STATUS,
+  normalizeSchedulerStatus,
+  isSchedulerAwaitingPayment,
+  isSchedulerInProgress,
+  getStatusLabel
+} from '@/app/api/constants/statuses';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
 const SchedulerList = () => {
   const router = useRouter();
@@ -19,17 +31,85 @@ const SchedulerList = () => {
   const { data: session } = useSession();
   const filter = searchParams.get('filter') || 'all';
 
-  const { schedules, loading, error, fetchSchedules, handleDelete, handleStatusChange } = useSchedulerList();
+  const {
+    schedules,
+    loading,
+    error,
+    fetchSchedules,
+    handleDelete,
+    handleStatusChange,
+    clearError,
+    currentUserId,
+    currentIntegratorId,
+    isReceivingIntegratorSchedule,
+    isPayingIntegratorSchedule,
+    hasVerifiedReceivingIntegrator,
+    isSelfPaymentSchedule
+  } = useSchedulerList();
+  const [uiError, setUiError] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
 
   useEffect(() => {
     fetchSchedules(filter);
-  }, [filter]);
+  }, [filter, currentUserId, currentIntegratorId, session?.user?.role]);
 
   const handlePayment = (schedule) => {
     setSelectedSchedule(schedule);
     setShowPaymentModal(true);
+  };
+
+  const isEngineerSchedule = (schedule) => schedule.engineer?._id === currentUserId;
+  const isBookingIntegratorSchedule = (schedule) =>
+    (schedule.integrator?._id || schedule.integrator) === currentIntegratorId;
+
+  const canPay = (schedule) =>
+    session?.user?.role === 'integrator' &&
+    isPayingIntegratorSchedule(schedule) &&
+    !isSelfPaymentSchedule(schedule) &&
+    hasVerifiedReceivingIntegrator(schedule) &&
+    isSchedulerAwaitingPayment(schedule);
+
+  const canApprove = (schedule) =>
+    session?.user?.role === 'integrator' &&
+    normalizeSchedulerStatus(schedule.status) === SCHEDULER_STATUS.ACCEPTED &&
+    isReceivingIntegratorSchedule(schedule);
+
+  const canStartSchedule = (schedule) => {
+    const normalizedStatus = normalizeSchedulerStatus(schedule.status);
+    return (
+      normalizedStatus === SCHEDULER_STATUS.READY_TO_START &&
+      (isEngineerSchedule(schedule) ||
+        (session?.user?.role === 'integrator' &&
+          [isReceivingIntegratorSchedule(schedule), isPayingIntegratorSchedule(schedule)].some(Boolean)))
+    );
+  };
+
+  const canCompleteSchedule = (schedule) =>
+    isSchedulerInProgress(schedule.status) &&
+    (isEngineerSchedule(schedule) ||
+      (session?.user?.role === 'integrator' &&
+        [isReceivingIntegratorSchedule(schedule), isPayingIntegratorSchedule(schedule)].some(Boolean)));
+
+  const getStatusDisplay = (schedule) => {
+    const normalizedStatus = normalizeSchedulerStatus(schedule.status);
+
+    if (normalizedStatus === SCHEDULER_STATUS.ACCEPTED) {
+      return 'Awaiting Integrator Approval';
+    }
+
+    if (
+      normalizedStatus === SCHEDULER_STATUS.APPROVED ||
+      normalizedStatus === SCHEDULER_STATUS.AWAITING_PAYMENT
+    ) {
+      return 'Approved - Awaiting Payment';
+    }
+
+    if (normalizedStatus === SCHEDULER_STATUS.READY_TO_START) {
+      return 'Paid - Ready to Start';
+    }
+
+    return getStatusLabel(normalizedStatus);
   };
 
   const columns = useMemo(
@@ -60,7 +140,7 @@ const SchedulerList = () => {
         accessor: 'status',
         Cell: ({ value, row }) => (
           <div className="d-flex justify-content-start align-items-center">
-            <span className={`badge ${getStatusColorCode(value)}`}>{value}</span>
+            <span className={`badge ${getStatusColorCode(value)}`}>{getStatusDisplay(row.original)}</span>
           </div>
         )
       },
@@ -88,10 +168,39 @@ const SchedulerList = () => {
         className: 'text-center actions-cell',
         Cell: ({ row }) => (
           <div className="d-flex justify-content-center align-items-center gap-2">
-            {/* Pay for Service button - show for awaiting payment */}
-            {row.original.status === 'Accepted' &&
-              (!row.original.paymentStatus || row.original.paymentStatus === 'pending') &&
-              row.original.estimatedAmount > 0 && (
+            {session?.user?.role === 'engineer' &&
+              normalizeSchedulerStatus(row.original.status) === SCHEDULER_STATUS.PENDING &&
+              isEngineerSchedule(row.original) && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="success"
+                    onClick={() => handleStatusChange(row.original._id, SCHEDULER_STATUS.ACCEPTED)}
+                  >
+                    Accept
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline-danger"
+                    onClick={() => handleStatusChange(row.original._id, SCHEDULER_STATUS.DECLINED)}
+                  >
+                    Decline
+                  </Button>
+                </>
+              )}
+
+            {canApprove(row.original) && (
+                <Button
+                  size="sm"
+                  variant="outline-primary"
+                  onClick={() => handleStatusChange(row.original._id, SCHEDULER_STATUS.APPROVED)}
+                >
+                  Approve Job
+                </Button>
+              )}
+
+            {/* Pay for Service button - show only after approval */}
+            {canPay(row.original) && (
                 <Tooltip title="Pay for Service" arrow>
                   <span className="p-0">
                     <MdPayment
@@ -105,46 +214,49 @@ const SchedulerList = () => {
                 </Tooltip>
               )}
 
-            {/* Status change - allow Progress for Accepted, Completed for Progress */}
-            {(row.original.status === 'Accepted' || row.original.status === 'Progress') && (
-              <Tooltip title="Change Status" arrow>
-                <select
-                  className="form-select form-select-sm"
-                  style={{ width: '120px' }}
-                  value={row.original.status}
-                  onChange={(e) => handleStatusChange(row.original._id, e.target.value)}
-                  data-testid="scheduler-status-action"
-                >
-                  <option value={row.original.status}>{row.original.status}</option>
-                  {row.original.status === 'Accepted' && (
-                    <option value="Progress">Move to Progress</option>
-                  )}
-                  {(row.original.status === 'Progress' || row.original.status === 'In Progress') && (
-                    <option value="Completed">Mark Completed</option>
-                  )}
-                </select>
-              </Tooltip>
+            {canStartSchedule(row.original) && (
+              <Button
+                size="sm"
+                variant="outline-success"
+                data-testid="scheduler-status-action"
+                onClick={() => handleStatusChange(row.original._id, SCHEDULER_STATUS.IN_PROGRESS)}
+              >
+                Start Job
+              </Button>
+            )}
+
+            {canCompleteSchedule(row.original) && (
+              <Button
+                size="sm"
+                variant="outline-secondary"
+                data-testid="scheduler-status-action"
+                onClick={() => handleStatusChange(row.original._id, SCHEDULER_STATUS.COMPLETED)}
+              >
+                Mark Completed
+              </Button>
             )}
 
             {/* Delete button */}
-            <Tooltip title="Delete Schedule" arrow>
-              <span className="p-0">
-                <DeleteConfirmation
-                  onConfirm={async () => {
-                    handleDelete(row.original._id);
-                  }}
-                  onCancel={() => {}}
-                  itemId={row.original._id}
-                >
-                  <MdDelete size={24} className="pointer" />
-                </DeleteConfirmation>
-              </span>
-            </Tooltip>
+            {session?.user?.role === 'integrator' && isBookingIntegratorSchedule(row.original) && (
+              <Tooltip title="Delete Schedule" arrow>
+                <span className="p-0">
+                  <DeleteConfirmation
+                    onConfirm={async () => {
+                      handleDelete(row.original._id);
+                    }}
+                    onCancel={() => {}}
+                    itemId={row.original._id}
+                  >
+                    <MdDelete size={24} className="pointer" />
+                  </DeleteConfirmation>
+                </span>
+              </Tooltip>
+            )}
           </div>
         )
       }
     ],
-    [schedules]
+    [schedules, session, currentUserId, currentIntegratorId]
   );
 
   return (
@@ -153,8 +265,10 @@ const SchedulerList = () => {
         <div className="card-body">
           <h3 className="card-title ms-2 mb-2">
             {filter === 'accepted' && 'Accepted Schedules'}
+            {filter === 'awaiting-approval' && 'Schedules Awaiting Integrator Approval'}
             {filter === 'in-progress' && 'In Progress Schedules'}
             {filter === 'awaiting-payment' && 'Schedules Awaiting Payment'}
+            {filter === 'ready-to-start' && 'Schedules Ready to Start'}
             {!filter || filter === 'all' ? 'All Schedules' : ''}
           </h3>
 
@@ -177,6 +291,14 @@ const SchedulerList = () => {
                 Accepted
               </Button>
               <Button
+                variant={filter === 'awaiting-approval' ? 'primary' : 'outline-primary'}
+                size="sm"
+                onClick={() => router.push('/protected/integrator/scheduler/list?filter=awaiting-approval')}
+                data-testid="scheduler-filter-awaiting-approval"
+              >
+                Awaiting Approval
+              </Button>
+              <Button
                 variant={filter === 'in-progress' ? 'primary' : 'outline-primary'}
                 size="sm"
                 onClick={() => router.push('/protected/integrator/scheduler/list?filter=in-progress')}
@@ -191,6 +313,14 @@ const SchedulerList = () => {
                 data-testid="scheduler-filter-awaiting-payment"
               >
                 Awaiting Payment
+              </Button>
+              <Button
+                variant={filter === 'ready-to-start' ? 'primary' : 'outline-primary'}
+                size="sm"
+                onClick={() => router.push('/protected/integrator/scheduler/list?filter=ready-to-start')}
+                data-testid="scheduler-filter-ready-to-start"
+              >
+                Ready To Start
               </Button>
             </div>
           </div>
@@ -213,46 +343,27 @@ const SchedulerList = () => {
         </div>
       </div>
       {!loading && <span className="overlay__block" />}
-      {error && <ErrorDialogue showError={error} onClose={() => setError('')} />}
+      {(error || uiError) && <ErrorDialogue showError={error || uiError} onClose={() => {
+        clearError();
+        setUiError('');
+      }} />}
 
-      {/* Payment Modal - placeholder for future implementation */}
       {showPaymentModal && selectedSchedule && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Pay for Service</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowPaymentModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <p>
-                  <strong>Service:</strong> {selectedSchedule.title}
-                </p>
-                <p>
-                  <strong>Amount:</strong> £{selectedSchedule.estimatedAmount?.toFixed(2)}
-                </p>
-                <p>
-                  <strong>Receiving Integrator:</strong>{' '}
-                  {selectedSchedule.receivingIntegratorId?.name || 'Unknown'}
-                </p>
-                <button className="btn btn-primary w-100">Proceed to Payment</button>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowPaymentModal(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Elements stripe={stripePromise}>
+          <PaymentModal
+            schedulerId={selectedSchedule._id}
+            engineerId={selectedSchedule.engineer?._id}
+            amount={Math.round((selectedSchedule.estimatedAmount || 0) * 100)}
+            receivingIntegratorId={selectedSchedule.receivingIntegratorId?._id || selectedSchedule.receivingIntegratorId}
+            isOpen={showPaymentModal}
+            onClose={() => setShowPaymentModal(false)}
+            onSuccess={() => {
+              setShowPaymentModal(false);
+              fetchSchedules(filter);
+            }}
+            onError={setUiError}
+          />
+        </Elements>
       )}
     </>
   );

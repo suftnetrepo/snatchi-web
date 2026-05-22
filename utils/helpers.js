@@ -384,12 +384,21 @@ const truncate = (str, max = 100) => (str?.length > max ? str.slice(0, max) + 'â
 const getStatusColorCode = (status) => {
   const colors = {
     canceled: 'bg-danger',
+    cancelled: 'bg-danger',
     unpaid: 'bg-warning',
     inactive: 'bg-info',
     active: 'bg-primary',
     past_due: 'bg-secondary',
     progress: 'bg-warning',
+    inprogress: 'bg-warning',
     pending: 'bg-info',
+    accepted: 'bg-primary',
+    approved: 'bg-secondary',
+    awaitingpayment: 'bg-warning',
+    paid: 'bg-success',
+    readytostart: 'bg-success',
+    paymentfailed: 'bg-danger',
+    declined: 'bg-danger',
     completed: 'bg-secondary'
   };
 

@@ -1,6 +1,22 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
+const schedulerStatuses = [
+  'Pending',
+  'Declined',
+  'Accepted',
+  'Approved',
+  'AwaitingPayment',
+  'Paid',
+  'ReadyToStart',
+  'InProgress',
+  'Completed',
+  'Cancelled',
+  'PaymentFailed',
+  'Progress',
+  'Ready'
+];
+
 const schedulerSchema = new mongoose.Schema(
   {
     integrator: { type: Schema.Types.ObjectId, ref: 'Integrator', required: true },
@@ -29,7 +45,7 @@ const schedulerSchema = new mongoose.Schema(
     },  
     status: {
       type: String,
-      enum: ['Pending', 'Declined', 'Accepted', 'Paid', 'Completed', 'Cancelled', 'Progress'],
+      enum: schedulerStatuses,
       required: true
     },
      description: {
@@ -103,6 +119,53 @@ const schedulerSchema = new mongoose.Schema(
     transferPaidAt: {
       type: Date,
       required: false
+    },
+    acceptedAt: {
+      type: Date,
+      required: false
+    },
+    approvedAt: {
+      type: Date,
+      required: false
+    },
+    awaitingPaymentAt: {
+      type: Date,
+      required: false
+    },
+    paidAt: {
+      type: Date,
+      required: false
+    },
+    readyToStartAt: {
+      type: Date,
+      required: false
+    },
+    startedAt: {
+      type: Date,
+      required: false
+    },
+    completedAt: {
+      type: Date,
+      required: false
+    },
+    cancelledAt: {
+      type: Date,
+      required: false
+    },
+    approvedByIntegrator: {
+      type: Schema.Types.ObjectId,
+      ref: 'Integrator',
+      required: false
+    },
+    approvedByUser: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: false
+    },
+    approvalNotes: {
+      type: String,
+      trim: true,
+      default: ''
     }
   },
   { timestamps: true }

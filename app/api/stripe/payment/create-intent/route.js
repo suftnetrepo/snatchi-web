@@ -24,8 +24,6 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/auth';
 import { logger } from '../../../utils/logger';
 import { mongoConnect } from '../../../../../utils/connectDb';
 import Scheduler from '../../../models/scheduler';
@@ -37,24 +35,33 @@ import {
   validateReceivingIntegrator,
   createCrossIntegratorPaymentIntent
 } from '../../../services/stripeMarketplaceService';
+import {
+  normalizeActor,
+  getScheduleReceivingIntegratorId,
+  getSchedulePayingIntegratorId,
+  buildPaymentPendingUpdate
+} from '../../../services/scheduler';
+import { SCHEDULER_STATUS, normalizeSchedulerStatus } from '../../../constants/statuses';
+import { getUserSession } from '@/utils/generateToken';
 
 export async function POST(req) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getUserSession(req);
+    const actor = normalizeActor(session);
 
-    if (!session || !session.user) {
+    if (!session) {
       logger.warn('Unauthorized payment intent creation - no session');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     // Security: Only integrators can create payments
-    if (session.user.role !== 'integrator') {
+    if (actor.role !== 'integrator') {
       logger.warn('Non-integrator attempted to create payment', {
-        userId: session.user.id,
-        role: session.user.role
+        userId: actor.userId,
+        role: actor.role
       });
       return NextResponse.json(
-        { error: 'Only integrators can make payments' },
+        { success: false, error: 'Only integrators can make payments' },
         { status: 403 }
       );
     }
@@ -63,14 +70,14 @@ export async function POST(req) {
 
     if (!schedulerId || !amount) {
       return NextResponse.json(
-        { error: 'schedulerId and amount are required' },
+        { success: false, error: 'schedulerId and amount are required' },
         { status: 400 }
       );
     }
 
     if (amount <= 0) {
       return NextResponse.json(
-        { error: 'Amount must be greater than 0' },
+        { success: false, error: 'Amount must be greater than 0' },
         { status: 400 }
       );
     }
@@ -81,23 +88,60 @@ export async function POST(req) {
     const scheduler = await Scheduler.findById(schedulerId);
     if (!scheduler) {
       logger.warn('Scheduler not found', { schedulerId });
-      return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Booking not found' }, { status: 404 });
+    }
+
+    const normalizedStatus = normalizeSchedulerStatus(scheduler.status);
+
+    if (normalizedStatus === SCHEDULER_STATUS.ACCEPTED) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Schedule must be approved by the engineer's integrator before payment."
+        },
+        { status: 400 }
+      );
+    }
+
+    if (![SCHEDULER_STATUS.APPROVED, SCHEDULER_STATUS.AWAITING_PAYMENT].includes(normalizedStatus)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Schedule cannot be paid while in status ${scheduler.status}.`
+        },
+        { status: 400 }
+      );
     }
 
     // Paying integrator (who is making this payment request)
-    const payingIntegratorId = session.user.integrator_id;
+    const payingIntegratorId = actor.integratorId;
+    const expectedPayingIntegratorId = getSchedulePayingIntegratorId(scheduler);
+
+    if (!payingIntegratorId || expectedPayingIntegratorId !== payingIntegratorId.toString()) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Only the booking integrator can pay for this schedule.'
+        },
+        { status: 403 }
+      );
+    }
+
     const payingIntegrator = await Integrator.findById(payingIntegratorId);
     if (!payingIntegrator) {
       logger.warn('Paying integrator not found', { payingIntegratorId });
       return NextResponse.json(
-        { error: 'Your integrator account not found' },
+        { success: false, error: 'Your integrator account not found' },
         { status: 404 }
       );
     }
 
     if (!payingIntegrator.stripeCustomerId) {
       return NextResponse.json(
-        { error: 'Your Stripe payment setup is incomplete. Please check subscription settings.' },
+        {
+          success: false,
+          error: 'Your Stripe payment setup is incomplete. Please check subscription settings.'
+        },
         { status: 400 }
       );
     }
@@ -106,7 +150,7 @@ export async function POST(req) {
     const engineer = await User.findById(scheduler.engineer);
     if (!engineer) {
       logger.warn('Engineer not found', { engineerId: scheduler.engineer });
-      return NextResponse.json({ error: 'Engineer not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Engineer not found' }, { status: 404 });
     }
 
     // Receiving integrator (engineer's owner - who receives payment)
@@ -117,7 +161,21 @@ export async function POST(req) {
     } catch (error) {
       logger.error('Cannot determine receiving integrator', { error: error.message });
       return NextResponse.json(
-        { error: error.message },
+        { success: false, error: error.message },
+        { status: 400 }
+      );
+    }
+
+    const scheduledReceivingIntegratorId = getScheduleReceivingIntegratorId(scheduler);
+    if (
+      scheduledReceivingIntegratorId &&
+      scheduledReceivingIntegratorId !== receivingIntegratorId.toString()
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Receiving integrator does not match the engineer owner for this schedule.'
+        },
         { status: 400 }
       );
     }
@@ -126,7 +184,7 @@ export async function POST(req) {
     if (!receivingIntegrator) {
       logger.warn('Receiving integrator not found', { receivingIntegratorId });
       return NextResponse.json(
-        { error: 'Engineer integrator not found' },
+        { success: false, error: 'Engineer integrator not found' },
         { status: 404 }
       );
     }
@@ -140,7 +198,7 @@ export async function POST(req) {
         error: error.message
       });
       return NextResponse.json(
-        { error: error.message },
+        { success: false, error: error.message },
         { status: 400 }
       );
     }
@@ -149,7 +207,28 @@ export async function POST(req) {
     if (payingIntegratorId === receivingIntegratorId.toString()) {
       logger.warn('Attempted self-payment', { integratorId: payingIntegratorId });
       return NextResponse.json(
-        { error: 'Cannot pay yourself. Book engineers from other companies.' },
+        { success: false, error: 'Cannot pay yourself. Book engineers from other companies.' },
+        { status: 400 }
+      );
+    }
+
+    const existingPayment = await Payment.findOne({ scheduler: schedulerId });
+    if (existingPayment?.paymentStatus === 'succeeded') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'A successful payment already exists for this schedule.'
+        },
+        { status: 400 }
+      );
+    }
+
+    if (existingPayment && ['pending', 'succeeded'].includes(existingPayment.paymentStatus)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Payment has already been initiated for this schedule.'
+        },
         { status: 400 }
       );
     }
@@ -178,7 +257,7 @@ export async function POST(req) {
         schedulerId
       });
       return NextResponse.json(
-        { error: 'Failed to create payment. ' + error.message },
+        { success: false, error: 'Failed to create payment. ' + error.message },
         { status: 500 }
       );
     }
@@ -189,7 +268,7 @@ export async function POST(req) {
     const netAmount = amount - platformFeeAmount;
 
     // Create Payment document
-    const payment = await Payment.create({
+    const paymentPayload = {
       payingIntegrator: payingIntegratorId,
       receivingIntegrator: receivingIntegratorId,
       engineer: scheduler.engineer,
@@ -205,21 +284,24 @@ export async function POST(req) {
       paymentStatus: 'pending',
       paymentInitiatedAt: new Date(),
       notes: `Engineer: ${engineer.first_name} ${engineer.last_name}`
-    });
+    };
+
+    const payment = existingPayment
+      ? await Payment.findByIdAndUpdate(existingPayment._id, paymentPayload, { new: true, runValidators: true })
+      : await Payment.create(paymentPayload);
 
     // Update scheduler with payment tracking
     const updatedScheduler = await Scheduler.findByIdAndUpdate(
       schedulerId,
-      {
-        payingIntegrator: payingIntegratorId,
+      buildPaymentPendingUpdate({
+        schedule: scheduler,
+        payingIntegratorId,
         receivingIntegratorId,
         estimatedAmount: amount,
         platformFeeAmount,
         receiverAmount: netAmount,
-        paymentIntentId: paymentIntent.id,
-        paymentStatus: 'pending',
-        paymentInitiatedAt: new Date()
-      },
+        paymentIntentId: paymentIntent.id
+      }),
       { new: true }
     );
 
@@ -266,7 +348,7 @@ export async function POST(req) {
     });
 
     return NextResponse.json(
-      { error: 'Failed to create payment intent' },
+      { success: false, error: 'Failed to create payment intent' },
       { status: 500 }
     );
   }

@@ -1,12 +1,16 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/auth';
 import { NextResponse } from 'next/server';
-import { connectDB } from '@/utils/connectDb';
+import { mongoConnect } from '@/utils/connectDb';
 import User from '@/app/api/models/user';
 import Integrator from '@/app/api/models/integrator';
 import Scheduler from '@/app/api/models/scheduler';
 import { logger } from '@/app/api/utils/logger';
-
+import {
+  normalizeActor,
+  getScheduleReceivingIntegratorId,
+  getSchedulePayingIntegratorId
+} from '@/app/api/services/scheduler';
+import { getUserSession } from '@/utils/generateToken';
+import { validateReceivingIntegrator } from '@/app/api/services/stripeMarketplaceService';
 /**
  * GET /api/stripe/payment/data
  * 
@@ -19,13 +23,18 @@ import { logger } from '@/app/api/utils/logger';
  */
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getUserSession(req);
+    const actor = normalizeActor(session);
 
-    if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    await connectDB();
+    if (actor.role !== 'integrator') {
+      return NextResponse.json({ success: false, error: 'Only integrators can access payment data' }, { status: 403 });
+    }
+
+    await mongoConnect();
 
     const { searchParams } = new URL(req.url);
     const schedulerId = searchParams.get('schedulerId');
@@ -34,7 +43,7 @@ export async function GET(req: Request) {
 
     if (!schedulerId || !engineerId || !receivingIntegratorId) {
       return NextResponse.json(
-        { error: 'Missing required parameters' },
+        { success: false, error: 'Missing required parameters' },
         { status: 400 }
       );
     }
@@ -42,7 +51,7 @@ export async function GET(req: Request) {
     // Fetch engineer
     const engineer = await User.findById(engineerId).select('first_name last_name');
     if (!engineer) {
-      return NextResponse.json({ error: 'Engineer not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Engineer not found' }, { status: 404 });
     }
 
     // Fetch receiving integrator
@@ -51,18 +60,18 @@ export async function GET(req: Request) {
     );
     if (!receivingIntegrator) {
       return NextResponse.json(
-        { error: 'Receiving integrator not found' },
+        { success: false, error: 'Receiving integrator not found' },
         { status: 404 }
       );
     }
 
     // Fetch paying integrator
-    const payingIntegrator = await Integrator.findById(session.user.integrator_id).select(
+    const payingIntegrator = await Integrator.findById(actor.integratorId).select(
       'name stripeCustomerId'
     );
     if (!payingIntegrator) {
       return NextResponse.json(
-        { error: 'Paying integrator not found' },
+        { success: false, error: 'Paying integrator not found' },
         { status: 404 }
       );
     }
@@ -70,13 +79,49 @@ export async function GET(req: Request) {
     // Fetch scheduler
     const scheduler = await Scheduler.findById(schedulerId);
     if (!scheduler) {
-      return NextResponse.json({ error: 'Scheduler not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Scheduler not found' }, { status: 404 });
+    }
+
+    const schedulePayingIntegratorId = getSchedulePayingIntegratorId(scheduler);
+    const scheduleReceivingIntegratorId = getScheduleReceivingIntegratorId(scheduler);
+
+    if (!actor.integratorId || actor.integratorId.toString() !== schedulePayingIntegratorId) {
+      return NextResponse.json(
+        { success: false, error: 'Only the paying integrator can access this payment data' },
+        { status: 403 }
+      );
+    }
+
+    if (scheduleReceivingIntegratorId !== receivingIntegratorId) {
+      return NextResponse.json(
+        { success: false, error: 'Receiving integrator does not match this schedule' },
+        { status: 400 }
+      );
+    }
+
+    if (scheduleReceivingIntegratorId === schedulePayingIntegratorId) {
+      return NextResponse.json(
+        { success: false, error: 'Cannot create self-payment for this schedule' },
+        { status: 400 }
+      );
+    }
+
+    try {
+      validateReceivingIntegrator(receivingIntegrator);
+    } catch (error) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: error instanceof Error ? error.message : 'Receiving integrator is not payment ready'
+        },
+        { status: 400 }
+      );
     }
 
     logger.info('Payment data loaded for modal', {
       engineerId,
       receivingIntegratorId,
-      payingIntegratorId: session.user.integrator_id,
+      payingIntegratorId: actor.integratorId,
     });
 
     return NextResponse.json({
@@ -104,7 +149,7 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(
-      { error: 'Failed to load payment data' },
+      { success: false, error: 'Failed to load payment data' },
       { status: 500 }
     );
   }

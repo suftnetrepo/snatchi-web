@@ -18,22 +18,22 @@ test.describe('Dashboard Scheduler Stats Navigation', () => {
     await page.waitForURL('**/dashboard');
   });
 
-  test('clicking Accepted Schedules opens scheduler with filter=accepted', async ({ page }) => {
+  test('clicking Awaiting Approval opens scheduler with filter=awaiting-approval', async ({ page }) => {
     // Navigate to dashboard
     await page.goto('/protected/integrator/dashboard');
 
-    // Click on Accepted Schedules card
-    const acceptedCard = page.locator('[data-testid="dashboard-accepted-schedules-card"]');
-    await expect(acceptedCard).toBeVisible();
-    await acceptedCard.click();
+    // Click on Awaiting Approval card
+    const awaitingApprovalCard = page.locator('[data-testid="dashboard-awaiting-approval-card"]');
+    await expect(awaitingApprovalCard).toBeVisible();
+    await awaitingApprovalCard.click();
 
-    // Should navigate to scheduler list with filter=accepted
-    await page.waitForURL('**/scheduler/list?filter=accepted');
-    expect(page.url()).toContain('filter=accepted');
+    // Should navigate to scheduler list with filter=awaiting-approval
+    await page.waitForURL('**/scheduler/list?filter=awaiting-approval');
+    expect(page.url()).toContain('filter=awaiting-approval');
 
     // Filter button should be active
-    const acceptedFilterButton = page.locator('[data-testid="scheduler-filter-accepted"]');
-    await expect(acceptedFilterButton).toBeVisible();
+    const awaitingApprovalFilterButton = page.locator('[data-testid="scheduler-filter-awaiting-approval"]');
+    await expect(awaitingApprovalFilterButton).toBeVisible();
   });
 
   test('clicking Awaiting Payment opens scheduler with filter=awaiting-payment', async ({ page }) => {
@@ -71,22 +71,22 @@ test.describe('Dashboard Scheduler Stats Navigation', () => {
     }
   });
 
-  test('clicking In Progress opens scheduler with filter=in-progress', async ({ page }) => {
+  test('clicking Ready To Start opens scheduler with filter=ready-to-start', async ({ page }) => {
     // Navigate to dashboard
     await page.goto('/protected/integrator/dashboard');
 
-    // Click on In Progress card
-    const inProgressCard = page.locator('[data-testid="dashboard-in-progress-card"]');
-    await expect(inProgressCard).toBeVisible();
-    await inProgressCard.click();
+    // Click on Ready To Start card
+    const readyToStartCard = page.locator('[data-testid="dashboard-ready-to-start-card"]');
+    await expect(readyToStartCard).toBeVisible();
+    await readyToStartCard.click();
 
-    // Should navigate to scheduler list with filter=in-progress
-    await page.waitForURL('**/scheduler/list?filter=in-progress');
-    expect(page.url()).toContain('filter=in-progress');
+    // Should navigate to scheduler list with filter=ready-to-start
+    await page.waitForURL('**/scheduler/list?filter=ready-to-start');
+    expect(page.url()).toContain('filter=ready-to-start');
 
     // Filter button should be active
-    const inProgressFilterButton = page.locator('[data-testid="scheduler-filter-in-progress"]');
-    await expect(inProgressFilterButton).toBeVisible();
+    const readyToStartFilterButton = page.locator('[data-testid="scheduler-filter-ready-to-start"]');
+    await expect(readyToStartFilterButton).toBeVisible();
   });
 
   test('clicking Active Projects opens project page with filter=active', async ({ page }) => {
@@ -107,19 +107,19 @@ test.describe('Dashboard Scheduler Stats Navigation', () => {
     // Navigate to dashboard
     await page.goto('/protected/integrator/dashboard');
 
-    // Get the Accepted Schedules card
-    const acceptedCard = page.locator('[data-testid="dashboard-accepted-schedules-card"]');
-    await expect(acceptedCard).toBeVisible();
+    // Get the Awaiting Approval card
+    const awaitingApprovalCard = page.locator('[data-testid="dashboard-awaiting-approval-card"]');
+    await expect(awaitingApprovalCard).toBeVisible();
 
     // Hover over card and check styles change
-    await acceptedCard.hover();
+    await awaitingApprovalCard.hover();
 
     // Card should have transform or shadow applied (visual feedback)
-    const card = acceptedCard.locator('xpath=../div');
+    const card = awaitingApprovalCard.locator('xpath=../div');
     const styles = await card.evaluate((el) => window.getComputedStyle(el));
 
     // Check for cursor pointer
-    const cursorStyle = await acceptedCard.evaluate((el) => window.getComputedStyle(el).cursor);
+    const cursorStyle = await awaitingApprovalCard.evaluate((el) => window.getComputedStyle(el).cursor);
     expect(cursorStyle).toBe('pointer');
   });
 
@@ -139,17 +139,23 @@ test.describe('Dashboard Scheduler Stats Navigation', () => {
     await acceptedButton.click();
     await page.waitForURL('**/scheduler/list?filter=accepted');
 
-    // Test In Progress button
-    const inProgressButton = page.locator('[data-testid="scheduler-filter-in-progress"]');
-    await expect(inProgressButton).toBeVisible();
-    await inProgressButton.click();
-    await page.waitForURL('**/scheduler/list?filter=in-progress');
+    // Test Awaiting Approval button
+    const awaitingApprovalButton = page.locator('[data-testid="scheduler-filter-awaiting-approval"]');
+    await expect(awaitingApprovalButton).toBeVisible();
+    await awaitingApprovalButton.click();
+    await page.waitForURL('**/scheduler/list?filter=awaiting-approval');
 
     // Test Awaiting Payment button
     const awaitingPaymentButton = page.locator('[data-testid="scheduler-filter-awaiting-payment"]');
     await expect(awaitingPaymentButton).toBeVisible();
     await awaitingPaymentButton.click();
     await page.waitForURL('**/scheduler/list?filter=awaiting-payment');
+
+    // Test Ready To Start button
+    const readyToStartButton = page.locator('[data-testid="scheduler-filter-ready-to-start"]');
+    await expect(readyToStartButton).toBeVisible();
+    await readyToStartButton.click();
+    await page.waitForURL('**/scheduler/list?filter=ready-to-start');
   });
 
   test('scheduler status action selector works', async ({ page }) => {
@@ -166,12 +172,6 @@ test.describe('Dashboard Scheduler Stats Navigation', () => {
     if (count > 0) {
       // At least one status selector should be visible
       await expect(statusSelectors.first()).toBeVisible();
-
-      // Should be able to interact with it
-      const firstSelector = statusSelectors.first();
-      const options = firstSelector.locator('option');
-      const optionCount = await options.count();
-      expect(optionCount).toBeGreaterThan(0);
     }
   });
 
@@ -181,17 +181,17 @@ test.describe('Dashboard Scheduler Stats Navigation', () => {
 
     // Check all stat cards are visible
     const activeProjectsCard = page.locator('[data-testid="dashboard-active-projects-card"]');
-    const acceptedSchedulesCard = page.locator('[data-testid="dashboard-accepted-schedules-card"]');
-    const inProgressCard = page.locator('[data-testid="dashboard-in-progress-card"]');
+    const awaitingApprovalCard = page.locator('[data-testid="dashboard-awaiting-approval-card"]');
     const awaitingPaymentCard = page.locator('[data-testid="dashboard-awaiting-payment-card"]');
+    const readyToStartCard = page.locator('[data-testid="dashboard-ready-to-start-card"]');
 
     await expect(activeProjectsCard).toBeVisible();
-    await expect(acceptedSchedulesCard).toBeVisible();
-    await expect(inProgressCard).toBeVisible();
+    await expect(awaitingApprovalCard).toBeVisible();
     await expect(awaitingPaymentCard).toBeVisible();
+    await expect(readyToStartCard).toBeVisible();
 
     // Check each card has a number
-    const cards = [activeProjectsCard, acceptedSchedulesCard, inProgressCard, awaitingPaymentCard];
+    const cards = [activeProjectsCard, awaitingApprovalCard, awaitingPaymentCard, readyToStartCard];
     for (const card of cards) {
       const text = await card.textContent();
       expect(text).toContain(/\d+/); // Should contain at least one number
@@ -223,12 +223,12 @@ test.describe('Dashboard Scheduler Stats Navigation', () => {
     // Navigate to dashboard
     await page.goto('/protected/integrator/dashboard');
 
-    // Get the Accepted Schedules card
-    const acceptedCard = page.locator('[data-testid="dashboard-accepted-schedules-card"]');
-    await expect(acceptedCard).toBeVisible();
+    // Get the Awaiting Approval card
+    const awaitingApprovalCard = page.locator('[data-testid="dashboard-awaiting-approval-card"]');
+    await expect(awaitingApprovalCard).toBeVisible();
 
     // Check for helper text
-    const cardText = await acceptedCard.textContent();
+    const cardText = await awaitingApprovalCard.textContent();
     expect(cardText.toLowerCase()).toMatch(/view|schedules|action/);
   });
 

@@ -1,14 +1,57 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { zat } from '@/utils/api';
 import { VERBS } from '@/config';
 import { SCHEDULER } from '@/utils/apiUrl';
+import {
+  SCHEDULER_STATUS,
+  normalizeSchedulerStatus,
+  isSchedulerAwaitingPayment,
+  isSchedulerInProgress
+} from '@/app/api/constants/statuses';
 
 export const useSchedulerList = () => {
+  const { data: session } = useSession();
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const currentUserId = session?.user?.id || null;
+  const currentIntegratorId = session?.user?.integrator || session?.user?.integrator_id || null;
+
+  const isReceivingIntegratorSchedule = (schedule) =>
+    (schedule.receivingIntegratorId?._id || schedule.receivingIntegratorId) === currentIntegratorId;
+
+  const isPayingIntegratorSchedule = (schedule) =>
+    (schedule.payingIntegrator?._id || schedule.payingIntegrator || schedule.integrator) ===
+    currentIntegratorId;
+
+  const hasVerifiedReceivingIntegrator = (schedule) => {
+    const receivingIntegrator = schedule.receivingIntegratorId;
+
+    if (!receivingIntegrator || typeof receivingIntegrator !== 'object') {
+      return false;
+    }
+
+    return (
+      receivingIntegrator.connectAccountStatus === 'verified' &&
+      receivingIntegrator.chargesEnabled &&
+      receivingIntegrator.payoutsEnabled &&
+      !!receivingIntegrator.stripeConnectAccountId
+    );
+  };
+
+  const isSelfPaymentSchedule = (schedule) =>
+    isPayingIntegratorSchedule(schedule) && isReceivingIntegratorSchedule(schedule);
+
+  const isReadyToStart = (schedule) =>
+    normalizeSchedulerStatus(schedule.status) === SCHEDULER_STATUS.READY_TO_START;
+
+  const isAwaitingApproval = (schedule) =>
+    normalizeSchedulerStatus(schedule.status) === SCHEDULER_STATUS.ACCEPTED &&
+    isReceivingIntegratorSchedule(schedule);
 
   const fetchSchedules = async (filter = 'all') => {
     setLoading(true);
@@ -24,21 +67,21 @@ export const useSchedulerList = () => {
 
         // Apply filtering based on query parameter
         if (filter === 'accepted') {
-          filtered = filtered.filter(s => s.status === 'Accepted');
-          // Add filter test selector
-          if (filtered.length === 0) {
-            filtered = response.data; // For test purposes, show all if none accepted
-          }
+          filtered = filtered.filter(s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.ACCEPTED);
+        } else if (filter === 'awaiting-approval') {
+          filtered = filtered.filter(isAwaitingApproval);
         } else if (filter === 'in-progress') {
-          filtered = filtered.filter(s => s.status === 'Progress' || s.status === 'In Progress');
-          // Add filter test selector
+          filtered = filtered.filter(isSchedulerInProgress);
         } else if (filter === 'awaiting-payment') {
-          filtered = filtered.filter(s =>
-            s.status === 'Accepted' &&
-            (!s.paymentStatus || s.paymentStatus === 'pending') &&
-            s.estimatedAmount > 0
+          filtered = filtered.filter(
+            s =>
+              isPayingIntegratorSchedule(s) &&
+              !isSelfPaymentSchedule(s) &&
+              hasVerifiedReceivingIntegrator(s) &&
+              isSchedulerAwaitingPayment(s)
           );
-          // Add filter test selector
+        } else if (filter === 'ready-to-start') {
+          filtered = filtered.filter(isReadyToStart);
         }
 
         setSchedules(filtered);
@@ -67,28 +110,35 @@ export const useSchedulerList = () => {
 
   const handleStatusChange = async (scheduleId, newStatus) => {
     try {
-      const schedule = schedules.find(s => s._id === scheduleId);
-      const params = new URLSearchParams({
-        id: scheduleId,
-        action: 'status'
+      const response = await fetch(`/api/scheduler/${scheduleId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
       });
-      const response = await zat(
-        SCHEDULER.updateOne,
-        { ...schedule, status: newStatus },
-        VERBS.PUT,
-        params
-      );
-      if (response.success) {
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update schedule status');
+      }
+
+      const updatedSchedule = data.data;
+
+      if (data.success) {
         setSchedules(
           schedules.map(s =>
-            s._id === scheduleId ? { ...s, status: newStatus } : s
+            s._id === scheduleId ? updatedSchedule : s
           )
         );
       }
     } catch (err) {
-      setError('Failed to update schedule status');
+      setError(err.message || 'Failed to update schedule status');
     }
   };
+
+  const clearError = () => setError('');
 
   return {
     schedules,
@@ -96,6 +146,13 @@ export const useSchedulerList = () => {
     error,
     fetchSchedules,
     handleDelete,
-    handleStatusChange
+    handleStatusChange,
+    clearError,
+    currentUserId,
+    currentIntegratorId,
+    isReceivingIntegratorSchedule,
+    isPayingIntegratorSchedule,
+    hasVerifiedReceivingIntegrator,
+    isSelfPaymentSchedule
   };
 };

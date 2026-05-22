@@ -4,6 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import styles from './PaymentModal.module.css';
 
+const parseResponseBody = async (response: Response) => {
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
+};
+
 interface PaymentModalProps {
   schedulerId: string;
   engineerId: string;
@@ -53,10 +58,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       try {
         setLoading(true);
         const response = await fetch(`/api/stripe/payment/data?schedulerId=${schedulerId}&engineerId=${engineerId}&receivingIntegratorId=${receivingIntegratorId}`);
+        const data = await parseResponseBody(response);
         
-        if (!response.ok) throw new Error('Failed to load payment data');
-        
-        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data?.error || 'Failed to load payment data');
+        }
+
         setModalData(data);
       } catch (err) {
         onError(err instanceof Error ? err.message : 'Failed to load payment data');
@@ -81,12 +88,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         }),
       });
 
+      const data = await parseResponseBody(response);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create payment intent');
+        throw new Error(data?.error || data?.details || 'Failed to create payment intent');
       }
 
-      const data = await response.json();
       setPaymentIntentId(data.paymentIntentId);
       setClientSecret(data.clientSecret);
       return data;
@@ -137,6 +144,22 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         setCardError(result.error.message || 'Payment failed');
         onError(result.error.message || 'Payment failed');
       } else if (result.paymentIntent?.status === 'succeeded') {
+        const confirmResponse = await fetch('/api/stripe/payment/confirm', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            paymentIntentId: result.paymentIntent.id
+          })
+        });
+
+        const confirmData = await parseResponseBody(confirmResponse);
+
+        if (!confirmResponse.ok) {
+          throw new Error(confirmData?.error || 'Failed to confirm payment');
+        }
+
         onSuccess(paymentIntentId || result.paymentIntent.id);
         onClose();
       } else if (result.paymentIntent?.status === 'requires_action') {

@@ -24,24 +24,28 @@ import { authOptions } from '@/auth';
 import { logger } from '../../../utils/logger';
 import { mongoConnect } from '../../../../../utils/connectDb';
 import Payment from '../../../models/payment';
+import Scheduler from '../../../models/scheduler';
+import { normalizeActor, buildPaymentSucceededUpdate } from '../../../services/scheduler';
+import { getUserSession } from '@/utils/generateToken';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' });
 
 export async function POST(req) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getUserSession(req);
+    const actor = normalizeActor(session);
 
-    if (!session || !session.user) {
+    if (!session) {
       logger.warn('Unauthorized payment confirmation - no session');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const { paymentIntentId } = await req.json();
 
     if (!paymentIntentId) {
       return NextResponse.json(
-        { error: 'paymentIntentId is required' },
+        { success: false, error: 'paymentIntentId is required' },
         { status: 400 }
       );
     }
@@ -52,17 +56,17 @@ export async function POST(req) {
     const payment = await Payment.findOne({ paymentIntentId });
     if (!payment) {
       logger.warn('Payment not found', { paymentIntentId });
-      return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Payment not found' }, { status: 404 });
     }
 
     // Verify user is the paying integrator
-    if (payment.payingIntegrator.toString() !== session.user.integrator_id) {
+    if (payment.payingIntegrator.toString() !== actor.integratorId) {
       logger.warn('User attempting to confirm payment they did not create', {
         paymentIntentId,
-        userId: session.user.id
+        userId: actor.userId
       });
       return NextResponse.json(
-        { error: 'Unauthorized to confirm this payment' },
+        { success: false, error: 'Unauthorized to confirm this payment' },
         { status: 403 }
       );
     }
@@ -81,6 +85,20 @@ export async function POST(req) {
       payment.chargeId = paymentIntent.charges.data[0]?.id;
       payment.paymentSucceededAt = new Date();
       await payment.save();
+
+      if (payment.scheduler) {
+        const scheduler = await Scheduler.findById(payment.scheduler);
+        if (scheduler) {
+          await Scheduler.findByIdAndUpdate(
+            payment.scheduler,
+            buildPaymentSucceededUpdate(scheduler, {
+              transferStatus: payment.transferStatus,
+              transferId: payment.transferId,
+              transferInitiatedAt: payment.transferInitiatedAt
+            })
+          );
+        }
+      }
 
       logger.info('Payment already succeeded', { paymentIntentId });
 
@@ -141,7 +159,7 @@ export async function POST(req) {
     });
 
     return NextResponse.json(
-      { error: 'Failed to confirm payment' },
+      { success: false, error: 'Failed to confirm payment' },
       { status: 500 }
     );
   }

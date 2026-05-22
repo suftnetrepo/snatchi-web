@@ -11,6 +11,7 @@ import { emailTemplates } from '../../email';
 import Stripe from 'stripe';
 import { mapStripeStatusToSnatchi } from '../utils/stripe-status-mapper';
 import { enrichSubscriptionWithTrialData, isInTrial, getDaysRemainingInTrial, formatTrialStatus } from '../utils/trial-period';
+import { buildPaymentSucceededUpdate, buildPaymentFailedUpdate } from './scheduler';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' });
 
@@ -571,7 +572,10 @@ const handlePaymentIntentSucceeded = async (event) => {
     });
 
     // Find payment in database
-    const payment = await Payment.findOne({ paymentIntentId: paymentIntent.id });
+    const payment = await Payment.findOne({ paymentIntentId: paymentIntent.id }).populate(
+      'receivingIntegrator',
+      'stripeConnectAccountId _id'
+    );
 
     if (!payment) {
       logger.warn('Payment not found for succeeded intent', {
@@ -617,7 +621,7 @@ const handlePaymentIntentSucceeded = async (event) => {
 
       const transfer = await createTransferToReceivingIntegrator({
         chargeId,
-        receivingIntegratorConnectId: payment.receivingIntegrator.toString(),
+        receivingIntegratorConnectId: payment.receivingIntegrator?.stripeConnectAccountId,
         netAmount: payment.netAmount
       });
 
@@ -664,16 +668,18 @@ const handlePaymentIntentSucceeded = async (event) => {
 
     // Update scheduler status
     if (payment.scheduler) {
+      const scheduler = await Scheduler.findById(payment.scheduler);
+
+      if (scheduler) {
       await Scheduler.findByIdAndUpdate(
         payment.scheduler,
-        {
-          paymentStatus: 'succeeded',
-          paymentSucceededAt: new Date(),
-          transferStatus: payment.transferStatus,
-          transferId: payment.transferId,
-          transferInitiatedAt: payment.transferInitiatedAt
-        }
+          buildPaymentSucceededUpdate(scheduler, {
+            transferStatus: payment.transferStatus,
+            transferId: payment.transferId,
+            transferInitiatedAt: payment.transferInitiatedAt
+          })
       );
+      }
     }
 
     logger.info('Payment marked as succeeded', {
@@ -728,13 +734,11 @@ const handlePaymentIntentFailed = async (event) => {
 
     // Update scheduler
     if (payment.scheduler) {
-      await Scheduler.findByIdAndUpdate(
-        payment.scheduler,
-        {
-          paymentStatus: 'failed',
-          status: 'Declined' // Set booking back to declined
-        }
-      );
+      const scheduler = await Scheduler.findById(payment.scheduler);
+
+      if (scheduler) {
+        await Scheduler.findByIdAndUpdate(payment.scheduler, buildPaymentFailedUpdate(scheduler));
+      }
     }
 
     logger.info('Payment marked as failed', {

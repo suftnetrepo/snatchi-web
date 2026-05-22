@@ -3,9 +3,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Card } from 'react-bootstrap';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { getAggregate } from '@/utils/helpers';
 import { useProjectDashboard } from '@/hooks/useProjectDashboard';
-import { PROJECT_STATUS } from '@/app/api/constants/statuses';
+import {
+  PROJECT_STATUS,
+  SCHEDULER_STATUS,
+  normalizeSchedulerStatus,
+  isSchedulerAwaitingPayment
+} from '@/app/api/constants/statuses';
 import {
   ProjectAnalysis,
   TotalInvested,
@@ -22,14 +28,17 @@ import { SCHEDULER } from '@/utils/apiUrl';
 
 const Dashboard = () => {
   const router = useRouter();
+  const { data: session } = useSession();
   const { handleAggregate, data } = useProjectDashboard();
   const [schedulerStats, setSchedulerStats] = useState({
-    accepted: 0,
-    inProgress: 0,
-    awaitingPayment: 0
+    awaitingApproval: 0,
+    awaitingPayment: 0,
+    readyToStart: 0
   });
   const [activeProjects, setActiveProjects] = useState(0);
   const [hasInitialized, setHasInitialized] = useState(false);
+
+  const currentIntegratorId = session?.user?.integrator || session?.user?.integrator_id || null;
 
   // Memoize fetchSchedulerStats to prevent infinite loops
   const fetchSchedulerStats = useCallback(async () => {
@@ -41,30 +50,43 @@ const Dashboard = () => {
       
       if (response.success && response.data) {
         const schedules = response.data;
+
+        const isReceivingIntegratorSchedule = (schedule) =>
+          (schedule.receivingIntegratorId?._id || schedule.receivingIntegratorId) === currentIntegratorId;
+
+        const isPayingIntegratorSchedule = (schedule) =>
+          (schedule.payingIntegrator?._id || schedule.payingIntegrator || schedule.integrator) ===
+          currentIntegratorId;
         
-        // Count accepted schedules
-        const acceptedCount = schedules.filter(s => s.status === 'Accepted').length;
-        
-        // Count in-progress schedules
-        const inProgressCount = schedules.filter(s => s.status === 'Progress' || s.status === 'In Progress').length;
-        
-        // Count awaiting payment: Accepted + (pending/empty paymentStatus) + (estimatedAmount > 0)
+        const awaitingApprovalCount = schedules.filter(
+          s =>
+            normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.ACCEPTED &&
+            isReceivingIntegratorSchedule(s)
+        ).length;
+
         const awaitingPaymentCount = schedules.filter(s => 
-          s.status === 'Accepted' &&
-          (!s.paymentStatus || s.paymentStatus === 'pending') &&
-          s.estimatedAmount > 0
+          isPayingIntegratorSchedule(s) &&
+          (s.receivingIntegratorId?._id || s.receivingIntegratorId) !== currentIntegratorId &&
+          s.receivingIntegratorId?.connectAccountStatus === 'verified' &&
+          s.receivingIntegratorId?.chargesEnabled &&
+          s.receivingIntegratorId?.payoutsEnabled &&
+          isSchedulerAwaitingPayment(s)
+        ).length;
+
+        const readyToStartCount = schedules.filter(
+          s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.READY_TO_START
         ).length;
         
         setSchedulerStats({
-          accepted: acceptedCount,
-          inProgress: inProgressCount,
-          awaitingPayment: awaitingPaymentCount
+          awaitingApproval: awaitingApprovalCount,
+          awaitingPayment: awaitingPaymentCount,
+          readyToStart: readyToStartCount
         });
       }
     } catch (error) {
       console.error('Failed to fetch scheduler stats:', error);
     }
-  }, []);
+  }, [currentIntegratorId]);
 
   // Memoize calculateActiveProjects to prevent infinite loops
   const calculateActiveProjects = useCallback(() => {
@@ -78,11 +100,16 @@ const Dashboard = () => {
   useEffect(() => {
     if (!hasInitialized) {
       handleAggregate();
-      fetchSchedulerStats();
       setHasInitialized(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasInitialized]);
+
+  useEffect(() => {
+    if (currentIntegratorId) {
+      fetchSchedulerStats();
+    }
+  }, [currentIntegratorId, fetchSchedulerStats]);
 
   // Update active projects when data changes
   useEffect(() => {
@@ -175,23 +202,13 @@ const Dashboard = () => {
         />
 
         <StatCard
-          title="Schedules Accepted"
-          count={schedulerStats.accepted}
-          icon="bi bi-check-circle"
+          title="Awaiting Approval"
+          count={schedulerStats.awaitingApproval}
+          icon="bi bi-hourglass-split"
           color="secondary"
-          testId="dashboard-accepted-schedules-card"
-          onClick={() => router.push('/protected/integrator/scheduler/list?filter=accepted')}
-          helperText="View schedules"
-        />
-
-        <StatCard
-          title="In Progress"
-          count={schedulerStats.inProgress}
-          icon="bi bi-bootstrap-reboot"
-          color="warning"
-          testId="dashboard-in-progress-card"
-          onClick={() => router.push('/protected/integrator/scheduler/list?filter=in-progress')}
-          helperText="View schedules"
+          testId="dashboard-awaiting-approval-card"
+          onClick={() => router.push('/protected/integrator/scheduler/list?filter=awaiting-approval')}
+          helperText="Review engineer bookings"
         />
 
         <StatCard
@@ -202,6 +219,16 @@ const Dashboard = () => {
           testId="dashboard-awaiting-payment-card"
           onClick={() => router.push('/protected/integrator/scheduler/list?filter=awaiting-payment')}
           helperText="Take action"
+        />
+
+        <StatCard
+          title="Ready To Start"
+          count={schedulerStats.readyToStart}
+          icon="bi bi-play-circle"
+          color="warning"
+          testId="dashboard-ready-to-start-card"
+          onClick={() => router.push('/protected/integrator/scheduler/list?filter=ready-to-start')}
+          helperText="Start scheduled work"
         />
       </div>
       <div className="row ms-1 me-1 mt-4 d-flex justify-content-between align-items-center">
