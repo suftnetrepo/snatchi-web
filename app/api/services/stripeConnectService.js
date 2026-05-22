@@ -24,20 +24,20 @@ export const createIntegratorExpressAccount = async (integrator) => {
 
     const account = await stripe.accounts.create({
       type: 'express',
-      country: integrator.address?.country_code || 'GB',
+      country: integrator.country || integrator.address?.country_code || 'GB',
       email: integrator.email,
       capabilities: {
-        transfers: { requested: true },
-        card_payments: { requested: true }
+        card_payments: { requested: true },
+        transfers: { requested: true }
       },
+      business_type: 'company',
       business_profile: {
         name: integrator.name,
-        support_phone: integrator.mobile,
-        support_email: integrator.email,
-        url: process.env.NEXT_PUBLIC_APP_URL || 'https://snatchi.app'
+        product_description: 'Engineer service marketplace payments'
       },
-      tos_acceptance: {
-        service_agreement: 'recipient'
+      metadata: {
+        integratorId: integrator._id.toString(),
+        platform: 'snatchi'
       }
     });
 
@@ -52,7 +52,11 @@ export const createIntegratorExpressAccount = async (integrator) => {
       error: error.message,
       integratorId: integrator._id
     });
-    throw error;
+
+    const stripeError = new Error('Stripe Connect account creation failed');
+    stripeError.details = error.message;
+    stripeError.cause = error;
+    throw stripeError;
   }
 };
 
@@ -67,15 +71,30 @@ export const createIntegratorAccountLink = async (stripeAccountId) => {
       accountId: stripeAccountId
     });
 
+    const baseUrl = (
+      process.env.NEXTAUTH_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      'http://localhost:3000'
+    ).trim().replace(/\/+$/, '');
+
+    if (!/^https?:\/\//.test(baseUrl)) {
+      throw new Error('Invalid app base URL. NEXTAUTH_URL or NEXT_PUBLIC_APP_URL must start with http:// or https://');
+    }
+
+    const refreshUrl = `${baseUrl}/protected/integrator/settings?tab=receive-payments&connect=refresh`;
+    const returnUrl = `${baseUrl}/protected/integrator/settings?tab=receive-payments&connect=return`;
+
     const accountLink = await stripe.accountLinks.create({
       account: stripeAccountId,
       type: 'account_onboarding',
-      refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/subscription?refresh=true`,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/subscription?connected=true`
+      refresh_url: refreshUrl,
+      return_url: returnUrl
     });
 
     logger.info('Account link created successfully', {
       accountId: stripeAccountId,
+      refreshUrl,
+      returnUrl,
       expiresAt: accountLink.expires_at
     });
 

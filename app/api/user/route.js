@@ -23,16 +23,11 @@ cloudinary.config({
 export const GET = async (req) => {
   try {
 
-    
     const user = await getUserSession(req);
-
-    console.log('User session in GET /api/user:', user);
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    // TODO: Re-enable subscription enforcement after billing rollout is complete.
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
@@ -77,8 +72,6 @@ export const GET = async (req) => {
       const page = parseInt(url.searchParams.get('page') || '1', 10);
       const limit = parseInt(url.searchParams.get('limit') || '10', 10);
 
-      console.log('searchQuery', searchQuery);
-
       const result = await searchUsersByMultipleCriteria({
         searchQuery,
         page,
@@ -102,8 +95,6 @@ export const DELETE = async (req) => {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    // TODO: Re-enable subscription enforcement after billing rollout is complete.
 
     const url = new URL(req.url);
     const id = url.searchParams.get('id');

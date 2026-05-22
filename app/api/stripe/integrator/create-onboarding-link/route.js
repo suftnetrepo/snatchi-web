@@ -9,40 +9,42 @@
 
 import { NextResponse } from 'next/server';
 import Integrator from '@/_/api/models/integrator';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/auth';
 import { logger } from '../../../utils/logger';
+import { getUserSession } from '@/utils/generateToken';
 import {
   createIntegratorExpressAccount,
-  createIntegratorAccountLink,
-  mapStripeConnectStatus
+  createIntegratorAccountLink
 } from '../../../services/stripeConnectService';
 import { mongoConnect } from '../../../../../utils/connectDb';
 
 export async function POST(req) {
+  let session = null;
+
   try {
-    const session = await getServerSession(authOptions);
+    session = await getUserSession(req);
 
     // Verify user is authenticated
-    if (!session || !session.user) {
+    if (!session) {
       logger.warn('Unauthorized Connect onboarding attempt - no session');
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    const userId = session.user.id;
-    const integratorId = session.user.integrator_id || req.body?.integratorId;
+    const userId = session.id || session.sub || session.user?.id || null;
+    const sessionRole = session.role || session.user?.role || null;
+    const sessionIntegratorId = session.integrator || session.integrator_id || session.user?.integrator || session.user?.integrator_id || null;
+    const integratorId = sessionIntegratorId;
 
     // Verify user has integrator role
-    if (session.user.role !== 'integrator') {
+    if (sessionRole !== 'integrator') {
       logger.warn('Unauthorized Connect onboarding - invalid role', {
         userId,
-        role: session.user.role
+        role: sessionRole
       });
       return NextResponse.json(
-        { error: 'Only integrators can create Connect accounts' },
+        { success: false, error: 'Only integrators can create Connect accounts' },
         { status: 403 }
       );
     }
@@ -51,7 +53,7 @@ export async function POST(req) {
     if (!integratorId) {
       logger.warn('Missing integrator ID for Connect onboarding', { userId });
       return NextResponse.json(
-        { error: 'Integrator ID is required' },
+        { success: false, error: 'Integrator ID is required' },
         { status: 400 }
       );
     }
@@ -66,21 +68,21 @@ export async function POST(req) {
         integratorId
       });
       return NextResponse.json(
-        { error: 'Integrator not found' },
+        { success: false, error: 'Integrator not found' },
         { status: 404 }
       );
     }
 
     // Verify user owns this integrator (security check)
-    // This would be verified by comparing session.user.integrator_id
-    if (session.user.integrator_id !== integratorId.toString()) {
+    // This would be verified by comparing session.integrator
+    if (sessionIntegratorId !== integratorId.toString()) {
       logger.warn('User attempting to create Connect account for different integrator', {
         userId,
-        sessionIntegratorId: session.user.integrator_id,
+        sessionIntegratorId,
         requestedIntegratorId: integratorId
       });
       return NextResponse.json(
-        { error: 'Cannot create Connect account for other integrators' },
+        { success: false, error: 'Cannot create Connect account for other integrators' },
         { status: 403 }
       );
     }
@@ -130,11 +132,18 @@ export async function POST(req) {
   } catch (error) {
     logger.error('Connect onboarding creation failed', {
       error: error.message,
-      stack: error.stack
+      details: error.details || null,
+      stack: error.stack,
+      userId: session?.id || session?.sub || session?.user?.id || null,
+      integratorId: session?.integrator || session?.integrator_id || session?.user?.integrator || session?.user?.integrator_id || null
     });
 
     return NextResponse.json(
-      { error: 'Failed to create onboarding link' },
+      {
+        success: false,
+        error: error.message || 'Failed to create onboarding link',
+        details: error.details || null
+      },
       { status: 500 }
     );
   }

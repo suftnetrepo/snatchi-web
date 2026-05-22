@@ -2,7 +2,7 @@
 /**
  * GET /api/stripe/integrator/connect-status
  * Get current Stripe Connect status for the authenticated integrator
- * 
+ *
  * Returns account status, capabilities, and requirements
  */
 
@@ -10,42 +10,38 @@ import { NextResponse } from 'next/server';
 import Integrator from '@/_/api/models/integrator';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/auth';
+import { getUserSession } from '@/utils/generateToken';
 import { logger } from '../../../utils/logger';
 import { getIntegratorConnectStatus, mapStripeConnectStatus } from '../../../services/stripeConnectService';
 import { mongoConnect } from '../../../../../utils/connectDb';
 
 export async function GET(req) {
   try {
-    const session = await getServerSession(authOptions);
+    //const session = await getServerSession(authOptions);
 
-    if (!session || !session.user) {
+    const session = await getUserSession(req);
+
+    console.log('User session in GET /api/stripe/integrator/connect-status:', session);
+
+    if (!session) {
       logger.warn('Unauthorized status check - no session');
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (session.user.role !== 'integrator') {
+    if (session.role !== 'integrator') {
       logger.warn('Unauthorized status check - invalid role', {
-        userId: session.user.id,
-        role: session.user.role
+        userId: session.id,
+        role: session.role
       });
-      return NextResponse.json(
-        { error: 'Only integrators can check Connect status' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Only integrators can check Connect status' }, { status: 403 });
     }
 
-    const integratorId = session.user.integrator_id;
+    const integratorId = session.integrator;
     if (!integratorId) {
       logger.warn('Missing integrator ID for status check', {
-        userId: session.user.id
+        userId: session.id
       });
-      return NextResponse.json(
-        { error: 'Integrator ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Integrator ID is required' }, { status: 400 });
     }
 
     await mongoConnect();
@@ -53,20 +49,17 @@ export async function GET(req) {
     const integrator = await Integrator.findById(integratorId);
     if (!integrator) {
       logger.warn('Integrator not found for status check', {
-        userId: session.user.id,
+        userId: session.id,
         integratorId
       });
-      return NextResponse.json(
-        { error: 'Integrator not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Integrator not found' }, { status: 404 });
     }
 
     // If no Connect account yet, return not started status
     if (!integrator.stripeConnectAccountId) {
       logger.info('Integrator has not started Connect onboarding', {
         integratorId,
-        userId: session.user.id
+        userId: session.id
       });
       return NextResponse.json({
         success: true,
@@ -130,12 +123,12 @@ export async function GET(req) {
     logger.error('Connect status retrieval failed', {
       error: error.message,
       stack: error.stack,
-      userId: session?.user?.id,
-      integratorId: session?.user?.integrator_id
+      userId: session?.id,
+      integratorId: session?.integrator
     });
 
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: 'Failed to retrieve Connect status',
         status: 'error'

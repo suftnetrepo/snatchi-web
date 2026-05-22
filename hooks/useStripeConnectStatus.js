@@ -2,6 +2,20 @@
 
 import { useState } from 'react';
 
+const parseResponseBody = async (response) => {
+  const text = await response.text();
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Request failed with ${response.status}`);
+  }
+};
+
 export const useStripeConnectStatus = () => {
   const [connectStatus, setConnectStatus] = useState(null);
   const [connectLoading, setConnectLoading] = useState(false);
@@ -12,10 +26,12 @@ export const useStripeConnectStatus = () => {
       setConnectLoading(true);
       setConnectError(null);
       const response = await fetch('/api/stripe/integrator/connect-status');
+      const data = await parseResponseBody(response);
+
       if (!response.ok) {
-        throw new Error('Failed to fetch Connect status');
+        throw new Error(data?.error || `Request failed with ${response.status}`);
       }
-      const data = await response.json();
+
       setConnectStatus(data);
     } catch (err) {
       setConnectError(err.message);
@@ -31,11 +47,12 @@ export const useStripeConnectStatus = () => {
       const response = await fetch('/api/stripe/integrator/create-onboarding-link', {
         method: 'POST'
       });
+      const data = await parseResponseBody(response);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create onboarding link');
+        throw new Error(data?.error || `Request failed with ${response.status}`);
       }
-      const data = await response.json();
+
       if (data.onboardingUrl) {
         window.location.href = data.onboardingUrl;
       }
@@ -53,11 +70,12 @@ export const useStripeConnectStatus = () => {
       const response = await fetch('/api/stripe/integrator/refresh-onboarding', {
         method: 'POST'
       });
+      const data = await parseResponseBody(response);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to refresh onboarding');
+        throw new Error(data?.error || `Request failed with ${response.status}`);
       }
-      const data = await response.json();
+
       if (data.onboardingUrl) {
         window.location.href = data.onboardingUrl;
       }
