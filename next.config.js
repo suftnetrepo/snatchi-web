@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['mjml', 'uglify-js', 'bunyan'],
   eslint: {
     ignoreDuringBuilds: true
   },

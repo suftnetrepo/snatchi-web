@@ -6,21 +6,17 @@ import { emailTemplates } from '../../../email';
 import { compileEmailTemplate } from '../../templates/compile-email-template';
 import { NextResponse } from 'next/server';
 
-mongoConnect();
-
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    await mongoConnect();
 
-        console.log('Forgot password request for email:', body);
+    const body = await req.json();
 
     if (!body.email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
     const emailAddress = body.email.toLowerCase();
-
-    console.log('Forgot password request for email:', emailAddress);
 
     const user = await User.findOne({ email: emailAddress });
     if (!user) {
@@ -46,21 +42,17 @@ export async function POST(req: Request) {
     );
 
     const mailOptions = {
-      sender:{email:process.env.USER_NAME, name: 'Snatchi'},
-      to: [{email :emailAddress}],
+      sender: { email: process.env.USER_NAME, name: 'Snatchi' },
+      to: [{ email: emailAddress }],
       subject: 'Instructions for changing your Snatchi account password',
       textContent: template,
-      htmlContent :template
+      htmlContent: template
     };
-   
-    await sendBrevoEmail(mailOptions) 
+
+    await sendBrevoEmail(mailOptions);
     return NextResponse.json({ data: true }, { status: 200 });
-  } catch (err) {    
-    console.log('Error in forgot password route:', err);
-    
-    return NextResponse.json(
-      {
-        error: errorHandler(err) || 'An unknown error occurred'
-      }), { status: 500 };
+  } catch (err) {
+    console.error('Error in forgot password route:', err);
+    return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 });
   }
 }
