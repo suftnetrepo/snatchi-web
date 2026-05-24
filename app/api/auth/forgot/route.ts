@@ -52,10 +52,12 @@ export async function POST(req: Request) {
     await sendBrevoEmail(mailOptions);
 
     return NextResponse.json({ data: true }, { status: 200 });
-  } catch (err) {      
+  } catch (err) {  
+    
+    console.log(err)
     return NextResponse.json(
       {
-        error: errorHandler(err) || 'An unknown error occurred'
+        error: 'Something went wrong.'
       },
       { status: 500 }
     );

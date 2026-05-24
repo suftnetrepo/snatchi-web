@@ -7,25 +7,55 @@ import {
   updateProject,
   createProject,
   getProjectStatusAggregates,
-  getUserProjects, getUserProjectById, getMyProjects, getMyProjectAggregates
+  getUserProjects,
+  getUserProjectById,
+  getMyProjects,
+  getMyProjectAggregates
 } from '../services/project';
 import { logger } from '../utils/logger';
-const { NextResponse } = require('next/server');
+import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
 import { notifyAssignedUsers } from "../utils/format-project";
 
-export const GET = async (req) => {
-  console.time('GET /api/project');
-  try {
-    console.log('🔵 /api/project GET start', { timestamp: new Date().toISOString() });
-    
-    console.log('🔵 Getting user session...');
-    const user = await getUserSession(req);
-    console.log('🔵 User session obtained:', { userId: user?.id, integrator: user?.integrator });
+// Authentication middleware
+const authenticateUser = async (req) => {
+  const user = await getUserSession(req);
+  
+  if (!user) {
+    return { user: null, error: { message: 'Unauthorized', status: 401 } };
+  }
+  
+  return { user, error: null };
+};
 
-    if (!user) {
-      console.log('🔴 No user session');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+// Error response helper
+const errorResponse = (message, status = 500, error = null) => {
+  logger.error(error || message);
+  return NextResponse.json({ success: false, error: message }, { status });
+};
+
+// Success response helper
+const successResponse = (data, status = 200) => {
+  return NextResponse.json({ success: true, data }, { status });
+};
+
+// Parse pagination parameters from URL
+const parsePaginationParams = (url) => {
+  return {
+    sortField: url.searchParams.get('sortField'),
+    sortOrder: url.searchParams.get('sortOrder'),
+    searchQuery: url.searchParams.get('searchQuery'),
+    page: parseInt(url.searchParams.get('page') || '1', 10),
+    limit: parseInt(url.searchParams.get('limit') || '10', 10)
+  };
+};
+
+export const GET = async (req) => {
+  try {
+    const { user, error } = await authenticateUser(req);
+    
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
     // TODO: Re-enable subscription enforcement after billing rollout is complete.
@@ -33,16 +63,10 @@ export const GET = async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
-    console.log('🔵 Action:', action);
-
+    // Handle paginate action
     if (action === 'paginate') {
-      const sortField = url.searchParams.get('sortField');
-      const sortOrder = url.searchParams.get('sortOrder');
-      const searchQuery = url.searchParams.get('searchQuery');
-      const page = parseInt(url.searchParams.get('page') || '1', 10);
-      const limit = parseInt(url.searchParams.get('limit') || '10', 10);
-
-      console.log('🔵 Fetching projects with pagination...');
+      const { sortField, sortOrder, searchQuery, page, limit } = parsePaginationParams(url);
+      
       const { data, success, totalCount } = await getProjects({
         suid: user?.integrator,
         page,
@@ -51,88 +75,79 @@ export const GET = async (req) => {
         sortOrder,
         searchQuery
       });
-      console.log('🟢 Returning projects');
+      
       return NextResponse.json({ data, success, totalCount });
     }
 
+    // Handle userProjects action
     if (action === 'userProjects') {
       const id = url.searchParams.get('id');
-      console.log('🔵 Fetching user projects...');
       const { data } = await getUserProjects(id);
-      console.log('🟢 Returning user projects');
-      return NextResponse.json({ data, success: true });
+      return successResponse(data);
     }
 
+    // Handle getMyProjects action
     if (action === 'getMyProjects') {
       const id = url.searchParams.get('id');
-      console.log("🔵 Fetching my projects for user id:", id);
       const { data } = await getMyProjects(id);
-      console.log("🟢 Returning my projects");
-      return NextResponse.json({ data, success: true });
+      return successResponse(data);
     }
 
+    // Handle single action
     if (action === 'single') {
       const id = url.searchParams.get('id');
-      console.log('🔵 Fetching single project...');
       const { data } = await getProjectById(id);
-      console.log('🟢 Returning single project');
-      return NextResponse.json({ data, success: true });
+      return successResponse(data);
     }
 
+    // Handle getUserProjectById action
     if (action === 'getUserProjectById') {
       const id = url.searchParams.get('id');
-      console.log('🔵 Fetching user project by id...');
       const { data } = await getUserProjectById(id);
-      console.log('🟢 Returning user project by id');
-      return NextResponse.json({ data, success: true });
+      return successResponse(data);
     }
 
+    // Handle getMyProjectAggregates action
     if (action === 'getMyProjectAggregates') {
       const id = url.searchParams.get('id');
-      console.log('🔵 Fetching my project aggregates...');
       const { data } = await getMyProjectAggregates(id);
-      console.log('🟢 Returning my project aggregates');
-      return NextResponse.json({ data, success: true });
+      return successResponse(data);
     }
 
+    // Handle aggregate action
     if (action === 'aggregate') {
-      console.log('🔵 Fetching project status aggregates...');
       const aggregated = await getProjectStatusAggregates(user?.integrator);
-      console.log('🟢 Returning project status aggregates');
-      return NextResponse.json({ success: true, data: aggregated });
+      return successResponse(aggregated);
     }
 
+    // Handle recent action
     if (action === 'recent') {
-      console.log('🔵 Fetching project summary...');
       const aggregated = await getProjectSummaryByIntegrator(user?.integrator);
-      console.log('🟢 Returning project summary');
-      return NextResponse.json({ success: true, data: aggregated });
+      return successResponse(aggregated);
     }
 
+    // Handle chart action
     if (action === 'chart') {
-      console.log('🔵 Fetching project weekly summary...');
       const aggregated = await getProjectWeeklySummary(user?.integrator);
-      console.log('🟢 Returning project weekly summary');
-      return NextResponse.json({ success: true, data: aggregated });
+      return successResponse(aggregated);
     }
 
-    console.log('🔴 Invalid action:', action);
-    return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
+    // Invalid action
+    return NextResponse.json(
+      { success: false, error: 'Invalid action' }, 
+      { status: 400 }
+    );
   } catch (error) {
-    console.log('🔴 Error:', error.message);
-    logger.error(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  } finally {
-    console.timeEnd('GET /api/project');
+    return errorResponse(error.message, 500, error);
   }
 };
 
 export const DELETE = async (req) => {
   try {
-    const user = await getUserSession(req);
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { user, error } = await authenticateUser(req);
+    
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
     // TODO: Re-enable subscription enforcement after billing rollout is complete.
@@ -141,19 +156,18 @@ export const DELETE = async (req) => {
     const id = url.searchParams.get('id');
 
     const deleted = await removeProject(user?.integrator, id);
-    return NextResponse.json({ success: true, data: deleted });
+    return successResponse(deleted);
   } catch (error) {
-    logger.error(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return errorResponse(error.message, 500, error);
   }
 };
 
 export const PUT = async (req) => {
   try {
-    const user = await getUserSession(req);
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { user, error } = await authenticateUser(req);
+    
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
     // TODO: Re-enable subscription enforcement after billing rollout is complete.
@@ -164,32 +178,31 @@ export const PUT = async (req) => {
 
     const { notify } = body;
     const result = await updateProject(id, body);
+    
     if (result && notify) {
       notifyAssignedUsers(result);
     }
 
-    return NextResponse.json({ success: true, data: result });
+    return successResponse(result);
   } catch (error) {
-    logger.error(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return errorResponse(error.message, 500, error);
   }
 };
 
 export const POST = async (req) => {
   try {
-    const user = await getUserSession(req);
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { user, error } = await authenticateUser(req);
+    
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
     // TODO: Re-enable subscription enforcement after billing rollout is complete.
 
     const body = await req.json();
     const result = await createProject(user?.integrator, body);
-    return NextResponse.json({ success: true, data: result });
+    return successResponse(result);
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return errorResponse(error.message, 500, error);
   }
 };
