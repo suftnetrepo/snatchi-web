@@ -421,6 +421,99 @@ async function getAllSchedules(integratorId) {
   }
 }
 
+/**
+ * Expand a status value to include its legacy alias and canonical form so that
+ * queries match records stored under either value.
+ *   Progress -> ['Progress', 'InProgress']
+ *   Ready    -> ['Ready',    'ReadyToStart']
+ *   anything else -> [normalizedValue]
+ */
+const expandStatusAlias = (status) => {
+  const normalized = normalizeSchedulerStatus(status);
+  return normalized !== status ? [status, normalized] : [normalized];
+};
+
+/**
+ * Return schedules for a specific engineer, optionally filtered by date and/or
+ * status.  All three security tiers (engineer / integrator / admin) are
+ * enforced via the `actor` argument.
+ *
+ * @param {object} params
+ * @param {string}          params.engineerId  – required, Mongo ObjectId
+ * @param {string}          [params.date]      – YYYY-MM-DD; overlapping schedules
+ * @param {string|string[]} [params.status]    – single, comma-delimited, or array
+ * @param {object}          [params.actor]     – normalised session actor
+ */
+async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, actor = null }) {
+  // ── Validate engineerId ─────────────────────────────────────────────────
+  if (!engineerId) {
+    throw Object.assign(new Error('engineerId is required'), { statusCode: 400 });
+  }
+
+  if (!mongoose.isValidObjectId(engineerId)) {
+    throw Object.assign(new Error('Invalid engineerId'), { statusCode: 400 });
+  }
+
+  // ── Validate date format ─────────────────────────────────────────────────
+  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw Object.assign(new Error('Invalid date format. Use YYYY-MM-DD'), { statusCode: 400 });
+  }
+
+  // ── Security checks ──────────────────────────────────────────────────────
+  if (actor) {
+    if (actor.role === 'engineer') {
+      if (!actor.userId || actor.userId.toString() !== engineerId.toString()) {
+        throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
+      }
+    } else if (actor.role === 'integrator') {
+      if (!actor.integratorId) {
+        throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
+      }
+      const engineer = await User.findById(engineerId).select('integrator');
+      if (!engineer || engineer.integrator?.toString() !== actor.integratorId.toString()) {
+        throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
+      }
+    } else if (actor.role !== 'admin') {
+      throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
+    }
+  }
+
+  // ── Build query ──────────────────────────────────────────────────────────
+  const query = { engineer: engineerId };
+
+  if (date) {
+    const startOfDay = new Date(`${date}T00:00:00.000Z`);
+    const endOfDay = new Date(`${date}T23:59:59.999Z`);
+    // Schedule overlaps selected date: starts on/before EOD and ends on/after SOD
+    query.startDate = { $lte: endOfDay };
+    query.endDate = { $gte: startOfDay };
+  }
+
+  if (status) {
+    const rawStatuses = Array.isArray(status)
+      ? status
+      : String(status).split(',').map((s) => s.trim()).filter(Boolean);
+
+    // Expand each value to cover both legacy alias and canonical form
+    const statuses = [...new Set(rawStatuses.flatMap(expandStatusAlias))];
+    query.status = { $in: statuses };
+  }
+
+  try {
+    const result = await Scheduler.find(query)
+      .populate('engineer', 'first_name last_name email integrator')
+      .populate('project', 'name')
+      .populate('integrator', 'name')
+      .populate('payingIntegrator', 'name')
+      .populate('receivingIntegratorId', 'name');
+
+    return { data: result };
+  } catch (error) {
+    logger.error(error);
+    throw new Error('An unexpected server error occurred.');
+  }
+}
+
 export {
   remove,
   add,
@@ -429,6 +522,7 @@ export {
   updateByStatus,
   getByProjectDateRange,
   getAllSchedules,
+  getEngineerSchedulesByDateAndStatus,
   normalizeActor,
   getScheduleReceivingIntegratorId,
   getSchedulePayingIntegratorId,

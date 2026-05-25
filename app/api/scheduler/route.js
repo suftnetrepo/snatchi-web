@@ -1,4 +1,4 @@
-import { remove, update, add, updateByStatus, getByUser, getByProjectDateRange, getAllSchedules } from '../services/scheduler';
+import { remove, update, add, updateByStatus, getByUser, getByProjectDateRange, getAllSchedules, getEngineerSchedulesByDateAndStatus, normalizeActor } from '../services/scheduler';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
@@ -79,6 +79,35 @@ export const GET = async (req) => {
     const action = url.searchParams.get('action');
     const id = url.searchParams.get('id');
     const projectId = url.searchParams.get('projectId');
+
+    // Handle getEngineerSchedules action — date + status filtering
+    if (action === 'getEngineerSchedules') {
+      const engineerId = url.searchParams.get('engineerId');
+      const date = url.searchParams.get('date') || undefined;
+      const status = url.searchParams.get('status') || undefined;
+
+      if (!engineerId) {
+        return NextResponse.json(
+          { success: false, error: 'engineerId is required' },
+          { status: 400 }
+        );
+      }
+
+      if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid date format. Use YYYY-MM-DD' },
+          { status: 400 }
+        );
+      }
+
+      const actor = normalizeActor(user);
+      try {
+        const results = await getEngineerSchedulesByDateAndStatus({ engineerId, date, status, actor });
+        return successResponse(results.data);
+      } catch (err) {
+        return errorResponse(err.message, err.statusCode || 500, err);
+      }
+    }
 
     // Handle getByEngineer action
     if (action === 'getByEngineer') {
