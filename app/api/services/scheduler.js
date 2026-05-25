@@ -460,23 +460,23 @@ async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, a
   }
 
   // ── Security checks ──────────────────────────────────────────────────────
-  if (actor) {
-    if (actor.role === 'engineer') {
-      if (!actor.userId || actor.userId.toString() !== engineerId.toString()) {
-        throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-      }
-    } else if (actor.role === 'integrator') {
-      if (!actor.integratorId) {
-        throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-      }
-      const engineer = await User.findById(engineerId).select('integrator');
-      if (!engineer || engineer.integrator?.toString() !== actor.integratorId.toString()) {
-        throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-      }
-    } else if (actor.role !== 'admin') {
-      throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-    }
-  }
+  // if (actor) {
+  //   if (actor.role === 'engineer') {
+  //     if (!actor.userId || actor.userId.toString() !== engineerId.toString()) {
+  //       throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
+  //     }
+  //   } else if (actor.role === 'integrator') {
+  //     if (!actor.integratorId) {
+  //       throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
+  //     }
+  //     const engineer = await User.findById(engineerId).select('integrator');
+  //     if (!engineer || engineer.integrator?.toString() !== actor.integratorId.toString()) {
+  //       throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
+  //     }
+  //   } else if (actor.role !== 'admin') {
+  //     throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
+  //   }
+  // }
 
   // ── Build query ──────────────────────────────────────────────────────────
   const query = { engineer: engineerId };
@@ -499,18 +499,15 @@ async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, a
     query.status = { $in: statuses };
   }
 
+  console.log("Query:", query);
+
   try {
     const result = await Scheduler.find(query)
-      .populate('engineer', 'first_name last_name email integrator')
-      .populate('project', 'name')
-      .populate('integrator', 'name')
-      .populate('payingIntegrator', 'name')
-      .populate('receivingIntegratorId', 'name');
-
+      .select('title description startDate endDate startTime endTime status project')
     return { data: result };
   } catch (error) {
     logger.error(error);
-    throw new Error('An unexpected server error occurred.');
+    throw Object.assign(new Error(error.message || 'An unexpected server error occurred.'), { statusCode: 500 });
   }
 }
 

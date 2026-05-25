@@ -77,14 +77,15 @@ export const GET = async (req) => {
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
-    const id = url.searchParams.get('id');
-    const projectId = url.searchParams.get('projectId');
-
+   
     // Handle getEngineerSchedules action — date + status filtering
     if (action === 'getEngineerSchedules') {
       const engineerId = url.searchParams.get('engineerId');
       const date = url.searchParams.get('date') || undefined;
-      const status = url.searchParams.get('status') || undefined;
+      // Support both ?status=A,B and ?status[]=A&status[]=B array notation
+      const statusArray = url.searchParams.getAll('status[]');
+      const statusScalar = url.searchParams.get('status');
+      const status = statusArray.length > 0 ? statusArray : (statusScalar || undefined);
 
       if (!engineerId) {
         return NextResponse.json(
@@ -99,18 +100,27 @@ export const GET = async (req) => {
           { status: 400 }
         );
       }
-
+      
+      console.log("Engineer ID:", engineerId);
+      console.log("Date:", date);
+      console.log("Status:", status);
       const actor = normalizeActor(user);
+      console.log("Normalized Actor:", actor);
       try {
         const results = await getEngineerSchedulesByDateAndStatus({ engineerId, date, status, actor });
+
+        console.log("Engineer Schedules Results:", results);
+
         return successResponse(results.data);
       } catch (err) {
+        console.log("Error fetching engineer schedules:", err);
         return errorResponse(err.message, err.statusCode || 500, err);
       }
     }
 
     // Handle getByEngineer action
     if (action === 'getByEngineer') {
+       const id = url.searchParams.get('id');
       if (!id) {
         return NextResponse.json(
           { success: false, error: 'Engineer id is required' }, 
@@ -132,6 +142,7 @@ export const GET = async (req) => {
 
     // Handle getByProjectDateRange action
     if (action === 'getByProjectDateRange') {
+       const projectId = url.searchParams.get('projectId');
       const results = await getByProjectDateRange(projectId);
       return successResponse(results.data);
     }
