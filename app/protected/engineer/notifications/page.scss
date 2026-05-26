@@ -1,0 +1,224 @@
+// notification center page styles
+// app/protected/engineer/notifications/page.scss
+
+.notification-center-page {
+  min-height: 100vh;
+  background-color: var(--bs-body-bg, #fff);
+
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--bs-body-color, #333);
+  }
+}
+
+// Notification list container
+.notification-center-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  overflow: hidden;
+}
+
+// Individual notification item in center
+.notification-center-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 1.25rem;
+  background-color: white;
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  position: relative;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: var(--bs-gray-50, #f9fafb);
+  }
+
+  &.unread {
+    background-color: var(--bs-info-light, #cfe2ff);
+
+    &:hover {
+      background-color: var(--bs-info-lighter, #e7f1ff);
+    }
+  }
+
+  &.read {
+    opacity: 0.8;
+  }
+}
+
+// Icon
+.notification-center-item-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.05);
+  margin-right: 1rem;
+  font-size: 1.25rem;
+}
+
+// Content
+.notification-center-item-content {
+  flex: 1;
+  min-width: 0;
+  margin-right: 1rem;
+}
+
+.notification-center-item-title {
+  font-weight: 600;
+  color: var(--bs-body-color, #333);
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.notification-center-item-body {
+  font-size: 0.9375rem;
+  color: var(--bs-gray-700, #495057);
+  margin-bottom: 0.75rem;
+  white-space: normal;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+// Meta information
+.notification-center-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.notification-center-item-type {
+  display: inline-block;
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  color: var(--bs-gray-700, #495057);
+  font-weight: 500;
+}
+
+.notification-center-item-time {
+  color: var(--bs-gray-500, #9ca3af);
+}
+
+// Actions
+.notification-center-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+// Unread dot
+.notification-center-item-unread-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--bs-primary, #0d6efd);
+  flex-shrink: 0;
+}
+
+// Action buttons
+.btn-action {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: var(--bs-gray-500, #9ca3af);
+  transition: all 0.2s ease;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--bs-body-color, #333);
+  }
+
+  &:focus {
+    outline: 2px solid var(--bs-primary, #0d6efd);
+    outline-offset: 2px;
+  }
+
+  &.btn-archive {
+    color: var(--bs-primary, #0d6efd);
+
+    &:hover {
+      background-color: rgba(13, 110, 253, 0.1);
+    }
+  }
+
+  &.btn-delete {
+    color: var(--bs-danger, #dc3545);
+
+    &:hover {
+      background-color: rgba(220, 53, 69, 0.1);
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .notification-center-item {
+    padding: 1rem;
+
+    .notification-center-item-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 1rem;
+      margin-right: 0.75rem;
+    }
+  }
+
+  .notification-center-item-content {
+    margin-right: 0.5rem;
+  }
+
+  .notification-center-item-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .notification-center-page {
+    padding: 1rem 0.75rem;
+  }
+
+  .notification-center-item {
+    padding: 0.875rem;
+    flex-wrap: wrap;
+
+    .notification-center-item-icon {
+      width: 36px;
+      height: 36px;
+      font-size: 0.875rem;
+    }
+  }
+
+  .notification-center-item-content {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .notification-center-item-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

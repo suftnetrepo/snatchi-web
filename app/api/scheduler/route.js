@@ -3,6 +3,7 @@ import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
 import { sendUserNotification } from '../services/notify';
+import notificationEvents from '../services/notificationEvents';
 import User from '../models/user';
 
 // Authentication middleware
@@ -236,8 +237,34 @@ export const POST = async (req) => {
     const body = await req.json();
     const result = await add({ ...body, integrator: user?.integrator });
     
+    // Wire notification event: Booking created
     if (result) {
-      await sendPendingNotification(result._id, body);
+      try {
+        // Get full schedule with populated fields
+        const fullSchedule = await result
+          .populate('engineer', 'first_name last_name')
+          .populate('project', 'name location')
+          .populate('payingIntegrator', 'name')
+          .populate('receivingIntegratorId', 'name')
+          .execPopulate?.() || result;
+
+        await notificationEvents.bookingCreated({
+          scheduleId: result._id,
+          engineerId: fullSchedule.engineer?._id,
+          projectName: fullSchedule.project?.name || body.project,
+          siteLocation: fullSchedule.project?.location || body.location || '',
+          startDate: result.startDate,
+          endDate: result.endDate,
+          payingIntegratorName: fullSchedule.payingIntegrator?.name || '',
+          receivingIntegratorName: fullSchedule.receivingIntegratorId?.name || ''
+        });
+      } catch (notificationError) {
+        logger.error('Failed to send booking created notification', {
+          scheduleId: result._id,
+          error: notificationError.message
+        });
+        // Don't throw - booking is created even if notification fails
+      }
     }
     
     return successResponse(result);

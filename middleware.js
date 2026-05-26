@@ -78,6 +78,8 @@ export const config = {
     '/api/task_team/:path*',
     '/api/user/:path*',
     '/api/integrator/:path*',
-    '/api/invoice/:path*'
+    '/api/invoice/:path*',
+    '/api/notifications/:path*',
+    '/api/scheduler/:path*'
   ]
 };

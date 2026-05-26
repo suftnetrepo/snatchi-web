@@ -12,6 +12,7 @@ import Stripe from 'stripe';
 import { mapStripeStatusToSnatchi } from '../utils/stripe-status-mapper';
 import { enrichSubscriptionWithTrialData, isInTrial, getDaysRemainingInTrial, formatTrialStatus } from '../utils/trial-period';
 import { buildPaymentSucceededUpdate, buildPaymentFailedUpdate } from './scheduler';
+import notificationEvents from './notificationEvents';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' });
 
@@ -682,6 +683,35 @@ const handlePaymentIntentSucceeded = async (event) => {
       }
     }
 
+    // Wire notification event: Payment completed
+    try {
+      if (payment.scheduler) {
+        const scheduler = await Scheduler.findById(payment.scheduler)
+          .populate('engineer', '_id')
+          .populate('payingIntegrator', '_id')
+          .populate('receivingIntegratorId', '_id')
+          .populate('project', 'name');
+
+        if (scheduler) {
+          await notificationEvents.paymentCompleted({
+            scheduleId: scheduler._id,
+            paymentId: payment._id,
+            engineerId: scheduler.engineer?._id,
+            payingIntegratorId: scheduler.payingIntegrator?._id,
+            receivingIntegratorId: scheduler.receivingIntegratorId?._id,
+            projectName: scheduler.project?.name || 'Project',
+            amountPaid: payment.grossAmount
+          });
+        }
+      }
+    } catch (notificationError) {
+      logger.error('Failed to send payment completed notification', {
+        paymentId: payment._id,
+        error: notificationError.message
+      });
+      // Don't throw - payment is marked as succeeded even if notification fails
+    }
+
     logger.info('Payment marked as succeeded', {
       paymentId: payment._id,
       paymentIntentId: paymentIntent.id
@@ -739,6 +769,33 @@ const handlePaymentIntentFailed = async (event) => {
       if (scheduler) {
         await Scheduler.findByIdAndUpdate(payment.scheduler, buildPaymentFailedUpdate(scheduler));
       }
+    }
+
+    // Wire notification event: Payment failed
+    try {
+      if (payment.scheduler) {
+        const scheduler = await Scheduler.findById(payment.scheduler)
+          .populate('payingIntegrator', '_id')
+          .populate('project', 'name');
+
+        if (scheduler) {
+          const failureReason = payment.chargeFailureMessage || payment.chargeFailureCode || 'Unknown error';
+
+          await notificationEvents.paymentFailed({
+            scheduleId: scheduler._id,
+            paymentId: payment._id,
+            payingIntegratorId: scheduler.payingIntegrator?._id,
+            projectName: scheduler.project?.name || 'Project',
+            failureReason
+          });
+        }
+      }
+    } catch (notificationError) {
+      logger.error('Failed to send payment failed notification', {
+        paymentId: payment._id,
+        error: notificationError.message
+      });
+      // Don't throw - payment is marked as failed even if notification fails
     }
 
     logger.info('Payment marked as failed', {

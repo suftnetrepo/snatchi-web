@@ -1,8 +1,15 @@
 
 import { logger } from '@/_/api/utils/logger';
 import { FCMNotificationService } from '../utils/push-notification';
+import notificationService from '../services/notificationService';
+import { NOTIFICATION_TYPES } from '../constants/notificationTypes';
 const { NextResponse } = require('next/server');
 
+/**
+ * DEPRECATED: Use notificationService.createNotification() instead
+ * This endpoint kept for backward compatibility
+ * NOW also saves notifications to database
+ */
 export const PUT = async (req) => {
   try {
     const url = new URL(req.url);
@@ -10,12 +17,13 @@ export const PUT = async (req) => {
 
     const body = await req.json();
 
-    const notificationService = new FCMNotificationService();
+    const fcmService = new FCMNotificationService();
 
     if (action === 'single') {
-      const { fcm, projectId, userId, role, first_name, last_name } = body;
+      const { fcm, projectId, userId, role, first_name, last_name, title, description } = body;
 
-      const result = await notificationService.sendNotification(fcm, 'Hello!', 'Fetching your current location', {
+      // Send via FCM (legacy path)
+      const result = await fcmService.sendNotification(fcm, 'Hello!', 'Fetching your current location', {
         projectId,
         userId,
         role,
@@ -28,7 +36,7 @@ export const PUT = async (req) => {
 
     if (action === 'multiple') {
       const { data } = body;
-      const result = await notificationService.sendMulticastNotification(data);
+      const result = await fcmService.sendMulticastNotification(data);
 
       return NextResponse.json({ success: true, data: result }, { status: 200 });
     }

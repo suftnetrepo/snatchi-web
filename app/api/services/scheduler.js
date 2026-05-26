@@ -11,6 +11,7 @@ import {
   normalizeSchedulerStatus,
   isSchedulerInProgress
 } from '../constants/statuses';
+import notificationEvents from './notificationEvents';
 
 mongoConnect();
 
@@ -306,13 +307,16 @@ async function updateByStatus(id, user, body) {
 
     const schedule = await Scheduler.findById(id)
       .populate('engineer', 'first_name last_name email integrator')
-      .populate('project', 'name')
+      .populate('project', 'name location')
       .populate('payingIntegrator', 'name')
       .populate('receivingIntegratorId', 'name');
 
     if (!schedule) {
       throw Object.assign(new Error('Schedule not found'), { statusCode: 404 });
     }
+
+    const currentStatus = normalizeSchedulerStatus(schedule.status);
+    const targetStatus = normalizeSchedulerStatus(body.status);
 
     const update = buildStatusUpdate(schedule, actor, body.status, body);
 
@@ -325,9 +329,101 @@ async function updateByStatus(id, user, body) {
       { new: true, runValidators: true }
     )
       .populate('engineer', 'first_name last_name email integrator')
-      .populate('project', 'name')
+      .populate('project', 'name location')
       .populate('payingIntegrator', 'name')
       .populate('receivingIntegratorId', 'name');
+
+    // Wire notification events after successful status update
+    try {
+      // ACCEPTED: Engineer accepts -> notify receiving integrator (A)
+      if (currentStatus === SCHEDULER_STATUS.PENDING && targetStatus === SCHEDULER_STATUS.ACCEPTED) {
+        await notificationEvents.bookingAccepted({
+          scheduleId: result._id,
+          receivingIntegratorId: result.receivingIntegratorId?._id,
+          engineerName: result.engineer?.first_name || 'Engineer',
+          projectName: result.project?.name || 'Project'
+        });
+      }
+
+      // DECLINED: Engineer declines -> notify paying integrator (B)
+      else if (currentStatus === SCHEDULER_STATUS.PENDING && targetStatus === SCHEDULER_STATUS.DECLINED) {
+        await notificationEvents.bookingDeclined({
+          scheduleId: result._id,
+          payingIntegratorId: result.payingIntegrator?._id,
+          engineerName: result.engineer?.first_name || 'Engineer',
+          projectName: result.project?.name || 'Project'
+        });
+      }
+
+      // APPROVED: Receiving integrator (A) approves -> notify engineer and paying integrator (B)
+      else if (currentStatus === SCHEDULER_STATUS.ACCEPTED && targetStatus === SCHEDULER_STATUS.APPROVED) {
+        await notificationEvents.bookingApproved({
+          scheduleId: result._id,
+          engineerId: result.engineer?._id,
+          payingIntegratorId: result.payingIntegrator?._id,
+          projectName: result.project?.name || 'Project',
+          siteLocation: result.project?.location || '',
+          startDate: result.startDate
+        });
+      }
+
+      // READY_TO_START: After payment succeeds (status changed from AwaitingPayment)
+      else if (
+        (currentStatus === SCHEDULER_STATUS.AWAITING_PAYMENT ||
+          currentStatus === SCHEDULER_STATUS.PAID) &&
+        targetStatus === SCHEDULER_STATUS.READY_TO_START
+      ) {
+        await notificationEvents.readyToStart({
+          scheduleId: result._id,
+          engineerId: result.engineer?._id,
+          projectName: result.project?.name || 'Project',
+          siteLocation: result.project?.location || '',
+          startDate: result.startDate
+        });
+      }
+
+      // IN_PROGRESS: Engineer marks work as started
+      else if (targetStatus === SCHEDULER_STATUS.IN_PROGRESS && currentStatus !== SCHEDULER_STATUS.IN_PROGRESS) {
+        await notificationEvents.workStarted({
+          scheduleId: result._id,
+          payingIntegratorId: result.payingIntegrator?._id,
+          receivingIntegratorId: result.receivingIntegratorId?._id,
+          projectName: result.project?.name || 'Project',
+          engineerName: result.engineer?.first_name || 'Engineer'
+        });
+      }
+
+      // COMPLETED: Engineer marks work as completed
+      else if (targetStatus === SCHEDULER_STATUS.COMPLETED && currentStatus !== SCHEDULER_STATUS.COMPLETED) {
+        await notificationEvents.workCompleted({
+          scheduleId: result._id,
+          payingIntegratorId: result.payingIntegrator?._id,
+          receivingIntegratorId: result.receivingIntegratorId?._id,
+          projectName: result.project?.name || 'Project',
+          engineerName: result.engineer?.first_name || 'Engineer'
+        });
+      }
+
+      // CANCELLED: Schedule cancelled
+      else if (targetStatus === SCHEDULER_STATUS.CANCELLED && currentStatus !== SCHEDULER_STATUS.CANCELLED) {
+        await notificationEvents.scheduleCancelled({
+          scheduleId: result._id,
+          engineerId: result.engineer?._id,
+          payingIntegratorId: result.payingIntegrator?._id,
+          receivingIntegratorId: result.receivingIntegratorId?._id,
+          projectName: result.project?.name || 'Project',
+          cancellationReason: body.cancellationReason || 'No reason provided'
+        });
+      }
+    } catch (notificationError) {
+      logger.error('Failed to send status change notification', {
+        scheduleId: result._id,
+        currentStatus,
+        targetStatus,
+        error: notificationError.message
+      });
+      // Don't throw - status update is successful even if notification fails
+    }
 
     return result;
   } catch (error) {

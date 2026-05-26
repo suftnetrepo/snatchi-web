@@ -2,9 +2,10 @@ import { Container } from 'react-bootstrap';
 import HeaderSidebarToggler from './HeaderSidebarToggler';
 import HeaderProfileNav from './HeaderProfileNav';
 import HeaderSearch from './HeaderSearch';
+import NotificationDropdown from './NotificationDropdown';
 import { useRouter } from 'next/navigation';
 
-export default function Header({ showSearch = true }) {
+export default function Header({ showSearch = true, showNotifications = true }) {
   const router = useRouter();
   const handleSearch = (searchTerm) => {
     if (searchTerm) {
@@ -27,7 +28,8 @@ export default function Header({ showSearch = true }) {
             <div className="col-md-6 col-lg-6"> </div>
           )}
 
-          <div className="col-md-3 col-lg-3 d-flex align-items-center justify-content-end">
+          <div className="col-md-3 col-lg-3 d-flex align-items-center justify-content-end gap-2">
+            {showNotifications && <NotificationDropdown />}
             <HeaderProfileNav />
           </div>
         </div>

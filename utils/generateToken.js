@@ -11,24 +11,35 @@ export const getRefreshToken = (payload) => {
 }
 
 export async function getUserSession(req) {
+    // Try to get NextAuth JWT token from cookies
+    // Use consistent secret without trimming (same as middleware.js)
     const token = await getToken({
       req: req,
-      secret: process.env.NEXTAUTH_SECRET?.trim(),
+      secret: process.env.NEXTAUTH_SECRET,
       secureCookie: false
     });
-    if (token?.email) return token;
+    
+    // If token found in cookies, return it
+    if (token?.email) {
+      return token;
+    }
   
+    // Fallback: Try Bearer token from x-access-token header (mobile/external clients)
     const authHeader = req.headers.get('x-access-token');
     if (authHeader?.startsWith('Bearer ')) {
       const rawToken = authHeader.split(' ')[1];
       try {
         const decoded = await AuthService.verifyAccessToken(rawToken);
-        if (decoded) return decoded;
+        if (decoded) {
+          return decoded;
+        }
       } catch (e) {
+        console.error('Bearer token verification failed:', e.message);
         return null;
       }
     }
   
+    // No valid authentication found
     return null;
   }
   

@@ -1,0 +1,91 @@
+// NotificationBell.scss
+// Styles for notification bell icon with badge
+
+.notification-bell {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  margin: 0 0.25rem;
+  cursor: pointer;
+  color: var(--bs-body-color, #333);
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 0.375rem;
+
+  &:hover {
+    background-color: var(--bs-gray-200, #e9ecef);
+    color: var(--bs-primary, #0d6efd);
+  }
+
+  &:focus {
+    outline: 2px solid var(--bs-primary, #0d6efd);
+    outline-offset: 2px;
+  }
+
+  &.active {
+    background-color: var(--bs-gray-200, #e9ecef);
+  }
+
+  .bell-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+// Badge for unread count
+.notification-unread-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: var(--bs-danger, #dc3545);
+  color: white;
+  border-radius: 50%;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  animation: badge-pulse 0.5s ease-in-out;
+
+  @media (max-width: 768px) {
+    min-width: 20px;
+    height: 20px;
+    font-size: 0.65rem;
+  }
+}
+
+// Subtle pulse animation on new notifications
+@keyframes badge-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 576px) {
+  .notification-bell {
+    padding: 0.375rem;
+    font-size: 1.1rem;
+
+    .bell-icon {
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+  }
+}
