@@ -81,15 +81,25 @@ export const getStatusLabel = (status) => {
 };
 
 export const normalizeSchedulerStatus = (status) => {
-  if (status === SCHEDULER_STATUS.PROGRESS) {
+  if (!status) {
+    return null;
+  }
+
+  const normalizedInput = String(status).trim().toLowerCase().replace(/\s+/g, '');
+
+  if (normalizedInput === 'progress' || normalizedInput === 'inprogress') {
     return SCHEDULER_STATUS.IN_PROGRESS;
   }
 
-  if (status === SCHEDULER_STATUS.READY) {
+  if (normalizedInput === 'ready' || normalizedInput === 'readytostart') {
     return SCHEDULER_STATUS.READY_TO_START;
   }
 
-  return status;
+  const canonicalStatus = Object.values(SCHEDULER_STATUS).find(
+    (value) => String(value).trim().toLowerCase() === normalizedInput
+  );
+
+  return canonicalStatus || status;
 };
 
 export const isSchedulerInProgress = (status) => {

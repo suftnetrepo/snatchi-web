@@ -23,6 +23,75 @@ const extractTimeFromDate = (dateString) => {
   return `${hours}:${minutes}`;
 };
 
+const toObjectId = (value) => new mongoose.Types.ObjectId(value);
+
+const createDefaultStatusCounts = () => ({
+  [SCHEDULER_STATUS.PENDING]: 0,
+  [SCHEDULER_STATUS.ACCEPTED]: 0,
+  [SCHEDULER_STATUS.APPROVED]: 0,
+  [SCHEDULER_STATUS.AWAITING_PAYMENT]: 0,
+  [SCHEDULER_STATUS.READY_TO_START]: 0,
+  [SCHEDULER_STATUS.IN_PROGRESS]: 0,
+  [SCHEDULER_STATUS.COMPLETED]: 0,
+  [SCHEDULER_STATUS.CANCELLED]: 0,
+  [SCHEDULER_STATUS.PAYMENT_FAILED]: 0,
+  [SCHEDULER_STATUS.DECLINED]: 0,
+  [SCHEDULER_STATUS.PAID]: 0
+});
+
+const createEngineerScheduleQuery = ({ engineerId, date, status }) => {
+  const query = { engineer: toObjectId(engineerId) };
+
+  if (date) {
+    const startOfDay = new Date(`${date}T00:00:00.000Z`);
+    const endOfDay = new Date(`${date}T23:59:59.999Z`);
+    query.startDate = { $lte: endOfDay };
+    query.endDate = { $gte: startOfDay };
+  }
+
+  if (status) {
+    const rawStatuses = Array.isArray(status)
+      ? status
+      : String(status).split(',').map((item) => item.trim()).filter(Boolean);
+
+    query.status = { $in: [...new Set(rawStatuses.flatMap(expandStatusAlias))] };
+  }
+
+  return query;
+};
+
+const assertEngineerAggregateAccess = async ({ actor, engineerId }) => {
+  if (!actor) {
+    return;
+  }
+
+  const actorUserId = actor.userId?.toString?.();
+  const targetEngineerId = engineerId.toString();
+
+  if (actor.role === 'engineer') {
+    if (!actorUserId || actorUserId !== targetEngineerId) {
+      throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
+    }
+    return;
+  }
+
+  if (actor.role === 'integrator') {
+    if (!actor.integratorId) {
+      throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
+    }
+
+    const engineer = await User.findById(engineerId).select('integrator');
+    if (!engineer || engineer.integrator?.toString() !== actor.integratorId.toString()) {
+      throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
+    }
+    return;
+  }
+
+  if (actor.role !== 'admin') {
+    throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
+  }
+};
+
 const normalizeActor = (user) => ({
   userId: user?.id || user?.sub || user?.user?.id || null,
   role: user?.role || user?.user?.role || null,
@@ -555,47 +624,9 @@ async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, a
     throw Object.assign(new Error('Invalid date format. Use YYYY-MM-DD'), { statusCode: 400 });
   }
 
-  // ── Security checks ──────────────────────────────────────────────────────
-  // if (actor) {
-  //   if (actor.role === 'engineer') {
-  //     if (!actor.userId || actor.userId.toString() !== engineerId.toString()) {
-  //       throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-  //     }
-  //   } else if (actor.role === 'integrator') {
-  //     if (!actor.integratorId) {
-  //       throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-  //     }
-  //     const engineer = await User.findById(engineerId).select('integrator');
-  //     if (!engineer || engineer.integrator?.toString() !== actor.integratorId.toString()) {
-  //       throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-  //     }
-  //   } else if (actor.role !== 'admin') {
-  //     throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-  //   }
-  // }
+  await assertEngineerAggregateAccess({ actor, engineerId });
 
-  // ── Build query ──────────────────────────────────────────────────────────
-  const query = { engineer: engineerId };
-
-  if (date) {
-    const startOfDay = new Date(`${date}T00:00:00.000Z`);
-    const endOfDay = new Date(`${date}T23:59:59.999Z`);
-    // Schedule overlaps selected date: starts on/before EOD and ends on/after SOD
-    query.startDate = { $lte: endOfDay };
-    query.endDate = { $gte: startOfDay };
-  }
-
-  if (status) {
-    const rawStatuses = Array.isArray(status)
-      ? status
-      : String(status).split(',').map((s) => s.trim()).filter(Boolean);
-
-    // Expand each value to cover both legacy alias and canonical form
-    const statuses = [...new Set(rawStatuses.flatMap(expandStatusAlias))];
-    query.status = { $in: statuses };
-  }
-
-  console.log("Query:", query);
+  const query = createEngineerScheduleQuery({ engineerId, date, status });
 
   try {
     const result = await Scheduler.find(query)
@@ -604,6 +635,130 @@ async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, a
   } catch (error) {
     logger.error(error);
     throw Object.assign(new Error(error.message || 'An unexpected server error occurred.'), { statusCode: 500 });
+  }
+}
+
+/**
+ * Get engineer schedule status aggregate
+ *
+ * Returns the total count of an engineer's schedules grouped by status.
+ * Supports optional date filtering and status filtering.
+ *
+ * @param {object} params
+ * @param {string}          params.engineerId  – required, Mongo ObjectId
+ * @param {string}          [params.date]      – optional, YYYY-MM-DD; overlapping schedules
+ * @param {string|string[]} [params.statuses]  – optional, single, comma-delimited, or array
+ * @param {object}          [params.actor]     – optional, normalised session actor for security checks
+ * @returns {Promise<object>} { total, byStatus: { Pending, Accepted, Approved, ... } }
+ */
+async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses, actor = null }) {
+  // ── Validate engineerId ─────────────────────────────────────────────────
+  if (!engineerId) {
+    throw Object.assign(new Error('engineerId is required'), { statusCode: 400 });
+  }
+
+  if (!mongoose.isValidObjectId(engineerId)) {
+    throw Object.assign(new Error('Invalid engineerId'), { statusCode: 400 });
+  }
+
+  const engineerObjectId = toObjectId(engineerId);
+
+  // ── Validate date format ─────────────────────────────────────────────────
+  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw Object.assign(new Error('Invalid date format. Use YYYY-MM-DD'), { statusCode: 400 });
+  }
+
+  await assertEngineerAggregateAccess({ actor, engineerId });
+
+  const query = createEngineerScheduleQuery({ engineerId, date, status: undefined });
+
+  try {
+    const sample = await Scheduler.find({ engineer: engineerObjectId }).limit(5);
+    console.log(
+      'sample schedules for engineer',
+      sample.map((schedule) => ({
+        id: schedule._id,
+        engineer: schedule.engineer,
+        status: schedule.status,
+        startDate: schedule.startDate,
+        endDate: schedule.endDate
+      }))
+    );
+
+    if (!sample.length) {
+      const [engineerFieldMatches, userFieldMatches, assignedEngineerMatches] = await Promise.all([
+        Scheduler.find({ engineer: engineerId }).limit(5),
+        Scheduler.find({ user: engineerObjectId }).limit(5),
+        Scheduler.find({ assignedEngineer: engineerObjectId }).limit(5)
+      ]);
+
+      console.log('fallback sample counts', {
+        engineerString: engineerFieldMatches.length,
+        userObjectId: userFieldMatches.length,
+        assignedEngineerObjectId: assignedEngineerMatches.length
+      });
+    }
+  } catch (sampleErr) {
+    console.log('sample schedules lookup failed', sampleErr);
+  }
+
+  // ── Parse and expand status filters ──────────────────────────────────────
+  let statusFilter = null;
+  if (statuses) {
+    const rawStatuses = Array.isArray(statuses)
+      ? statuses
+      : String(statuses).split(',').map((s) => s.trim()).filter(Boolean);
+
+    statusFilter = [...new Set(rawStatuses.map((value) => normalizeSchedulerStatus(value)).filter(Boolean))];
+  }
+
+  const match = { ...query };
+  if (statusFilter?.length) {
+    match.status = {
+      $in: [...new Set(statusFilter.flatMap(expandStatusAlias))]
+    };
+  }
+
+  const pipeline = [
+    { $match: match },
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 }
+      }
+    }
+  ];
+
+  try {
+    const raw = await Scheduler.aggregate(pipeline);
+    const byStatus = createDefaultStatusCounts();
+
+    raw.forEach((row) => {
+      const normalized = normalizeSchedulerStatus(row._id);
+      if (normalized && Object.prototype.hasOwnProperty.call(byStatus, normalized)) {
+        byStatus[normalized] += row.count;
+      }
+    });
+
+    const resultByStatus = statusFilter?.length
+      ? statusFilter.reduce((accumulator, status) => {
+          accumulator[status] = byStatus[status] || 0;
+          return accumulator;
+        }, {})
+      : byStatus;
+
+    const total = Object.values(resultByStatus).reduce((sum, count) => sum + count, 0);
+
+    return {
+      total,
+      byStatus: resultByStatus
+    };
+  } catch (error) {
+    logger.error('Error in getEngineerScheduleStatusAggregate:', error);
+    throw Object.assign(
+      new Error(error.message || 'An unexpected server error occurred.'),
+      { statusCode: 500 }
+    );
   }
 }
 
@@ -616,6 +771,7 @@ export {
   getByProjectDateRange,
   getAllSchedules,
   getEngineerSchedulesByDateAndStatus,
+  getEngineerScheduleStatusAggregate,
   normalizeActor,
   getScheduleReceivingIntegratorId,
   getSchedulePayingIntegratorId,

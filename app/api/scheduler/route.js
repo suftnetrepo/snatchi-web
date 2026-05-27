@@ -1,4 +1,4 @@
-import { remove, update, add, updateByStatus, getByUser, getByProjectDateRange, getAllSchedules, getEngineerSchedulesByDateAndStatus, normalizeActor } from '../services/scheduler';
+import { remove, update, add, updateByStatus, getByUser, getByProjectDateRange, getAllSchedules, getEngineerSchedulesByDateAndStatus, getEngineerScheduleStatusAggregate, normalizeActor } from '../services/scheduler';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
@@ -115,6 +115,41 @@ export const GET = async (req) => {
         return successResponse(results.data);
       } catch (err) {
         console.log("Error fetching engineer schedules:", err);
+        return errorResponse(err.message, err.statusCode || 500, err);
+      }
+    }
+
+    // Handle engineerStatusAggregate action — count schedules by status
+    if (action === 'engineerStatusAggregate') {
+      const engineerId = url.searchParams.get('engineerId');
+      const date = url.searchParams.get('date') || undefined;
+      // Support both ?status=A,B and ?status[]=A&status[]=B array notation
+      const statusArray = url.searchParams.getAll('status[]');
+      const statusScalar = url.searchParams.get('status');
+      const statuses = statusArray.length > 0 ? statusArray : (statusScalar || undefined);
+
+      if (!engineerId) {
+        return NextResponse.json(
+          { success: false, error: 'engineerId is required' },
+          { status: 400 }
+        );
+      }
+
+      if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid date format. Use YYYY-MM-DD' },
+          { status: 400 }
+        );
+      }
+
+      const actor = normalizeActor(user);
+
+      try {
+        const data = await getEngineerScheduleStatusAggregate({ engineerId, date, statuses, actor });
+
+       console.log("Engineer Schedule Status Aggregate Result:", data);
+        return successResponse(data);
+      } catch (err) {
         return errorResponse(err.message, err.statusCode || 500, err);
       }
     }
