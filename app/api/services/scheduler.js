@@ -375,11 +375,6 @@ async function updateByStatus(id, user, body) {
     }
 
     const schedule = await Scheduler.findById(id)
-      .populate('engineer', 'first_name last_name email integrator')
-      .populate('project', 'name location')
-      .populate('payingIntegrator', 'name')
-      .populate('receivingIntegratorId', 'name');
-
     if (!schedule) {
       throw Object.assign(new Error('Schedule not found'), { statusCode: 404 });
     }
@@ -397,10 +392,6 @@ async function updateByStatus(id, user, body) {
       },
       { new: true, runValidators: true }
     )
-      .populate('engineer', 'first_name last_name email integrator')
-      .populate('project', 'name location')
-      .populate('payingIntegrator', 'name')
-      .populate('receivingIntegratorId', 'name');
 
     // Wire notification events after successful status update
     try {
@@ -598,6 +589,30 @@ const expandStatusAlias = (status) => {
   return normalized !== status ? [status, normalized] : [normalized];
 };
 
+const normalizeSingleScheduleStatus = (status) => {
+  if (typeof status !== 'string') {
+    throw Object.assign(new Error('status is required'), { statusCode: 400 });
+  }
+
+  const trimmedStatus = status.trim();
+
+  if (!trimmedStatus) {
+    throw Object.assign(new Error('status is required'), { statusCode: 400 });
+  }
+
+  if (trimmedStatus.includes(',')) {
+    throw Object.assign(new Error('status must be a single value'), { statusCode: 400 });
+  }
+
+  const normalizedStatus = normalizeSchedulerStatus(trimmedStatus);
+
+  if (!normalizedStatus) {
+    throw Object.assign(new Error('Invalid status'), { statusCode: 400 });
+  }
+
+  return normalizedStatus;
+};
+
 /**
  * Return schedules for a specific engineer, optionally filtered by date and/or
  * status.  All three security tiers (engineer / integrator / admin) are
@@ -672,36 +687,6 @@ async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses, 
 
   const query = createEngineerScheduleQuery({ engineerId, date, status: undefined });
 
-  try {
-    const sample = await Scheduler.find({ engineer: engineerObjectId }).limit(5);
-    console.log(
-      'sample schedules for engineer',
-      sample.map((schedule) => ({
-        id: schedule._id,
-        engineer: schedule.engineer,
-        status: schedule.status,
-        startDate: schedule.startDate,
-        endDate: schedule.endDate
-      }))
-    );
-
-    if (!sample.length) {
-      const [engineerFieldMatches, userFieldMatches, assignedEngineerMatches] = await Promise.all([
-        Scheduler.find({ engineer: engineerId }).limit(5),
-        Scheduler.find({ user: engineerObjectId }).limit(5),
-        Scheduler.find({ assignedEngineer: engineerObjectId }).limit(5)
-      ]);
-
-      console.log('fallback sample counts', {
-        engineerString: engineerFieldMatches.length,
-        userObjectId: userFieldMatches.length,
-        assignedEngineerObjectId: assignedEngineerMatches.length
-      });
-    }
-  } catch (sampleErr) {
-    console.log('sample schedules lookup failed', sampleErr);
-  }
-
   // ── Parse and expand status filters ──────────────────────────────────────
   let statusFilter = null;
   if (statuses) {
@@ -762,6 +747,36 @@ async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses, 
   }
 }
 
+async function getEngineerSchedulesByStatus({ engineerId, status, actor = null }) {
+  if (!engineerId) {
+    throw Object.assign(new Error('engineerId is required'), { statusCode: 400 });
+  }
+
+  if (!mongoose.isValidObjectId(engineerId)) {
+    throw Object.assign(new Error('Invalid engineerId'), { statusCode: 400 });
+  }
+
+  const normalizedStatus = normalizeSingleScheduleStatus(status);
+
+  await assertEngineerAggregateAccess({ actor, engineerId });
+
+  try {
+    const schedules = await Scheduler.find({
+      engineer: toObjectId(engineerId),
+      status: normalizedStatus
+    })
+      .sort({ startDate: 1, startTime: 1 })
+
+    return { data: schedules };
+  } catch (error) {
+    logger.error('Error in getEngineerSchedulesByStatus:', error);
+    throw Object.assign(
+      new Error(error.message || 'An unexpected server error occurred.'),
+      { statusCode: 500 }
+    );
+  }
+}
+
 export {
   remove,
   add,
@@ -772,6 +787,7 @@ export {
   getAllSchedules,
   getEngineerSchedulesByDateAndStatus,
   getEngineerScheduleStatusAggregate,
+  getEngineerSchedulesByStatus,
   normalizeActor,
   getScheduleReceivingIntegratorId,
   getSchedulePayingIntegratorId,

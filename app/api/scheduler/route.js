@@ -1,4 +1,4 @@
-import { remove, update, add, updateByStatus, getByUser, getByProjectDateRange, getAllSchedules, getEngineerSchedulesByDateAndStatus, getEngineerScheduleStatusAggregate, normalizeActor } from '../services/scheduler';
+import { remove, update, add, updateByStatus, getByUser, getByProjectDateRange, getAllSchedules, getEngineerSchedulesByDateAndStatus, getEngineerScheduleStatusAggregate, getEngineerSchedulesByStatus, normalizeActor } from '../services/scheduler';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
@@ -150,6 +150,20 @@ export const GET = async (req) => {
        console.log("Engineer Schedule Status Aggregate Result:", data);
         return successResponse(data);
       } catch (err) {
+        return errorResponse(err.message, err.statusCode || 500, err);
+      }
+    }
+
+    if (action === 'engineerSchedulesByStatus') {
+      const engineerId = url.searchParams.get('engineerId');
+      const status = url.searchParams.get('status');
+      const actor = normalizeActor(user);
+
+      try {
+        const results = await getEngineerSchedulesByStatus({ engineerId, status, actor });
+        return successResponse(results.data);
+      } catch (err) {
+        console.log("Error fetching engineer schedules by status:", err);
         return errorResponse(err.message, err.statusCode || 500, err);
       }
     }
