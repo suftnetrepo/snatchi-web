@@ -34,9 +34,8 @@ async function createDocument(suid, projectId, body) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
 
-  const bodyErrors = documentValidator(body);
-  if (bodyErrors.length) {
-    throw new Error(bodyErrors.map((it) => it.message).join(','));
+  if (!isValidObjectId(projectId)) {
+    throw new Error(JSON.stringify([{ field: 'projectId', message: 'Invalid MongoDB ObjectId' }]));
   }
 
   try {
