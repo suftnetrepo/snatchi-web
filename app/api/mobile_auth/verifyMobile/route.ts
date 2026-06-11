@@ -11,8 +11,11 @@ export async function POST(req: Request) {
     const { email, code, fcm } = await req.json();
 
     const matchUser = await User.findOne({
-      $and: [{ email: new RegExp(email, 'i') }, { otp: code }]
-    });
+      email: new RegExp(`^${email}$`, 'i'),
+      otp: code
+    }).select('_id first_name last_name email chat_status address mobile role fcm secure_url public_id integrator attachments');
+
+    console.log('Matched User:', matchUser);
 
     if (!matchUser) {
       return NextResponse.json(
@@ -40,10 +43,13 @@ export async function POST(req: Request) {
       first_name: matchUser.first_name,
       last_name: matchUser.last_name,
       email: matchUser.email,
-      mobile:matchUser.mobile,
+      mobile: matchUser.mobile,
       role: matchUser.role,
-      fcm : matchUser.fcm,
-      secure_url : matchUser.secure_url
+      fcm: matchUser.fcm,
+      secure_url: matchUser.secure_url,
+      address: matchUser.address,
+      chat_status: matchUser.chat_status,
+      public_id: matchUser.public_id,
     };
 
     return NextResponse.json({ data: { user, token: accessToken } }, { status: 200 });

@@ -8,6 +8,65 @@ const { logger } = require('../utils/logger');
 
 mongoConnect();
 
+const ALLOWED_ADDRESS_FIELDS = new Set([
+  'addressLine1',
+  'county',
+  'town',
+  'country',
+  'country_code',
+  'postcode',
+  'completeAddress',
+  'location'
+]);
+
+const buildAddressUpdateSet = (address) => {
+  if (!address || typeof address !== 'object' || Array.isArray(address)) {
+    throw Object.assign(new Error('address must be an object'), { statusCode: 400 });
+  }
+
+  const updateSet = {};
+
+  Object.entries(address).forEach(([key, value]) => {
+    if (!ALLOWED_ADDRESS_FIELDS.has(key)) {
+      return;
+    }
+
+    if (key === 'location') {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        throw Object.assign(new Error('address.location must be an object'), { statusCode: 400 });
+      }
+
+      if (!Array.isArray(value.coordinates) || value.coordinates.length !== 2) {
+        throw Object.assign(new Error('address.location.coordinates must be an array of [lng, lat]'), {
+          statusCode: 400
+        });
+      }
+
+      if (!value.coordinates.every((coordinate) => typeof coordinate === 'number' && Number.isFinite(coordinate))) {
+        throw Object.assign(new Error('address.location.coordinates must contain only numbers'), {
+          statusCode: 400
+        });
+      }
+
+      if (value.type && value.type !== 'Point') {
+        throw Object.assign(new Error('address.location.type must be Point'), { statusCode: 400 });
+      }
+
+      updateSet['address.location.type'] = 'Point';
+      updateSet['address.location.coordinates'] = value.coordinates;
+      return;
+    }
+
+    updateSet[`address.${key}`] = value;
+  });
+
+  if (!Object.keys(updateSet).length) {
+    throw Object.assign(new Error('address must include at least one allowed field'), { statusCode: 400 });
+  }
+
+  return updateSet;
+};
+
 async function getUsers({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
   if (!isValidObjectId(suid)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
@@ -148,11 +207,60 @@ async function updateFcmToken(id, token) {
   }
 
   try {
-    await User.findByIdAndUpdate(id, {fcm :token});
+    await User.findByIdAndUpdate(id, { fcm: token });
     return true;
   } catch (error) {
     logger.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
+  }
+}
+
+async function updateEngineerAddress({ userId, address, actor }) {
+  console.log('updateEngineerAddress called with userId:', userId, 'address:', address, 'actor:', actor);
+
+  if (!userId) {
+    throw Object.assign(new Error('userId is required'), { statusCode: 400 });
+  }
+
+  if (!isValidObjectId(userId)) {
+    throw Object.assign(new Error('Invalid userId'), { statusCode: 400 });
+  }
+
+  if (typeof address === 'undefined') {
+    throw Object.assign(new Error('address is required'), { statusCode: 400 });
+  }
+
+  // await assertAddressUpdateAccess({ actor, userId });
+
+  const updateSet = buildAddressUpdateSet(address);
+
+  console.log('Address update set:', updateSet);
+
+  try {
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userId },
+      { $set: updateSet },
+      {
+        new: true,
+        runValidators: true,
+        projection: { address: 1 }
+      }
+    );
+
+    if (!updatedUser) {
+      throw Object.assign(new Error('User not found'), { statusCode: 404 });
+    }
+
+    return updatedUser;
+  } catch (error) {
+    if (error.statusCode) {
+      throw error;
+    }
+
+    logger.error(error);
+    throw Object.assign(new Error('An unexpected error occurred. Please try again.'), {
+      statusCode: 500
+    });
   }
 }
 
@@ -215,7 +323,7 @@ const aggregateUserDataByRole = async (integratorId) => {
  */
 function buildUserSearchFilter(searchTerm) {
   const regexPattern = { $regex: searchTerm, $options: 'i' };
-  
+
   return {
     $or: [
       // Name fields
@@ -253,23 +361,16 @@ async function searchUsersByMultipleCriteria({ suid, page = 1, limit = 10, sortF
 
   try {
     const searchFilter = buildUserSearchFilter(searchQuery.trim());
-    
+
     // Build base query with role filter for engineers only
     let query = {
-      $and: [
-        searchFilter,
-        { role: 'engineer' }
-      ]
+      $and: [searchFilter, { role: 'engineer' }]
     };
-    
+
     // Add integrator filter if provided
     if (suid) {
       query = {
-        $and: [
-          searchFilter,
-          { role: 'engineer' },
-          { integrator: suid }
-        ]
+        $and: [searchFilter, { role: 'engineer' }, { integrator: suid }]
       };
     }
 
@@ -307,5 +408,6 @@ export {
   changePassword,
   createUser,
   updateFcmToken,
-  searchUsersByMultipleCriteria
+  searchUsersByMultipleCriteria,
+  updateEngineerAddress
 };

@@ -8,7 +8,8 @@ import {
   getUserById,
   aggregateUserDataByRole,
   changePassword,
-  searchUsersByMultipleCriteria
+  searchUsersByMultipleCriteria,
+  updateEngineerAddress
 } from '../services/user';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
@@ -225,12 +226,37 @@ export const PUT = async (req) => {
       return successResponse(updated);
     }
 
+    if (action === 'updateAddress') {
+      const body = await req.json();
+
+      console.log("Updating engineer address with body:", body);
+
+      const updatedUser = await updateEngineerAddress({
+        userId: id,
+        address: body,
+        actor: user
+      });
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Address updated successfully',
+          data: {
+            _id: updatedUser._id,
+            address: updatedUser.address
+          }
+        },
+        { status: 200 }
+      );
+    }
+
     // Invalid action
     return NextResponse.json(
       { success: false, error: 'Invalid action parameter' }, 
       { status: 400 }
     );
   } catch (error) {
+    console.log("Error in PUT /api/user:", error);
     return errorResponse(error.message, 500, error);
   }
 };
