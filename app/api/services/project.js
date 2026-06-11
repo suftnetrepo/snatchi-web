@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 import { projectValidator } from '../validator/user';
 import Project from '../models/project';
-import User from '../models/user';
 import Task from '../models/task';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
@@ -199,8 +198,6 @@ const getMyProjects = async (userId) => {
       };
     });
 
-    console.log('Fetched ALL projects for user:', userId, 'Count:', result.length);
-
     return { data: result };
 
   } catch (error) {
@@ -354,8 +351,6 @@ const getUserProjects = async (userId, excludeProjectStatuses = [PROJECT_STATUS.
       };
     });
 
-    console.log('Fetched projects for user:', userId, 'Count:', result.length);
-
     return { data: result };
   } catch (error) {
     logger.error(error);
@@ -504,7 +499,7 @@ const getUserProjectById = async (projectId) => {
       },
     };
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw new Error(`Error fetching project by ID: ${error.message}`);
   }
 };
@@ -544,12 +539,10 @@ const getMyProjectAggregates = async (userId) => {
       { $sort: { status: 1 } }
     ]);
 
-    console.log("Aggregate results:", aggregates);
-
     return { data: aggregates };
 
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw new Error(`Error fetching project aggregates: ${error.message}`);
   }
 };
@@ -628,8 +621,6 @@ async function updateProject(id, body) {
       select: 'first_name last_name fcm secure_url role id'
     });
 
-    console.log('Updated Project:', JSON.stringify(updatedProject));
-
     return updatedProject;
   } catch (error) {
     logger.error(error);
@@ -690,7 +681,7 @@ async function getProjectStatusAggregates(integratorId) {
 
     return aggregates.length > 0 ? aggregates[0] : { statuses: [], totalProjects: 0 };
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw new Error(`Error aggregating project statuses: ${error.message}`);
   }
 }
