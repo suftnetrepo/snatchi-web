@@ -155,6 +155,17 @@ function fenceValidator(data) {
   return v.validate(data, schema);
 }
 
+function engineerServiceRateValidator(data) {
+  const validator = new Validator();
+  const schema = {
+    serviceName: { type: 'string', empty: false, max: 100 },
+    rate: { type: 'number', empty: false, min: 0 },
+    rateType: { type: 'enum', values: ['hourly', 'daily', 'fixed'], optional: true },
+    description: { type: 'string', empty: true, max: 500, optional: true }
+  };
+  return validator.validate(data, schema);
+}
+
 
 export {
   userEditValidator,
@@ -171,5 +182,6 @@ export {
   codeValidator,
   fenceValidator,
   userStatusValidator,
-  schedulerValidator
+  schedulerValidator,
+  engineerServiceRateValidator
 };
