@@ -1,6 +1,5 @@
-const mongoose = require('mongoose');
+
 import EngineerServiceRate from '../models/engineerServiceRate';
-import User from '../models/user';
 import { engineerServiceRateValidator } from '../validator/user';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
@@ -16,16 +15,9 @@ async function createEngineerServiceRate({ engineerId, serviceName, rate, rateTy
       throw error;
     }
 
-    const engineer = await User.findById(engineerId).select('_id role');
-    if (!engineer || engineer.role !== 'engineer') {
-      const error = new Error('Engineer not found or user is not an engineer');
-      error.statusCode = 404;
-      throw error;
-    }
-
     const validationErrors = engineerServiceRateValidator({
       serviceName,
-      rate,
+      rate: parseFloat(rate),
       rateType: rateType || 'hourly',
       description: description || ''
     });
@@ -106,15 +98,23 @@ async function getEngineerServiceRateById(rateId) {
   }
 }
 
-async function updateEngineerServiceRate({ rateId, engineerId, serviceName, rate, rateType, description }) {
+async function updateEngineerServiceRate({ rateId, serviceName, rate, rateType, description }) {
   try {
-    if (!isValidObjectId(rateId) || !isValidObjectId(engineerId)) {
-      const error = new Error('Invalid rate ID or engineer ID');
+    if (!isValidObjectId(rateId)) {
+      const error = new Error('Invalid rate ID');
       error.statusCode = 400;
       throw error;
     }
 
-    const validationErrors = engineerServiceRateValidator(validationPayload);
+    const updateData = {
+        ...(serviceName && { serviceName }),
+        ...(rate !== undefined && { rate: parseFloat(rate) }),
+        ...(rateType && { rateType }),
+        ...(description && { description })
+    };
+
+    const validationErrors = engineerServiceRateValidator(updateData);
+
     if (validationErrors.length) {
       const error = new Error(validationErrors.map((it) => it.message).join(', '));
       error.statusCode = 400;
@@ -136,10 +136,10 @@ async function updateEngineerServiceRate({ rateId, engineerId, serviceName, rate
   }
 }
 
-async function deleteEngineerServiceRate(rateId, engineerId) {
+async function deleteEngineerServiceRate(rateId) {
   try {
-    if (!isValidObjectId(rateId) || !isValidObjectId(engineerId)) {
-      const error = new Error('Invalid rate ID or engineer ID');
+    if (!isValidObjectId(rateId)) {
+      const error = new Error('Invalid rate ID');
       error.statusCode = 400;
       throw error;
     }

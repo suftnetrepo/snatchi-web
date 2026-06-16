@@ -50,38 +50,12 @@ export const GET = async (req) => {
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
-    const engineerId = url.searchParams.get('engineerId');
-    const rateId = url.searchParams.get('rateId');
-
+  
     // List all service rates for an engineer
     if (action === 'list' || action === null) {
-      if (!engineerId) {
-        return errorResponse('engineerId is required', 400);
-      }
-
-      const accessCheck = validateEngineerAccess(user, engineerId);
-      if (!accessCheck.valid) {
-        return errorResponse(accessCheck.error, accessCheck.status);
-      }
-
-      const rates = await getEngineerServiceRates(engineerId);
+    
+      const rates = await getEngineerServiceRates(user.id);
       return successResponse(rates);
-    }
-
-    // Get a specific service rate
-    if (action === 'getById') {
-      if (!rateId) {
-        return errorResponse('rateId is required', 400);
-      }
-
-      const rate = await getEngineerServiceRateById(rateId);
-      
-      const accessCheck = validateEngineerAccess(user, rate.engineer.toString());
-      if (!accessCheck.valid) {
-        return errorResponse(accessCheck.error, accessCheck.status);
-      }
-
-      return successResponse(rate);
     }
 
     return errorResponse('Invalid action', 400);
@@ -101,12 +75,7 @@ export const POST = async (req) => {
     }
 
     const body = await req.json();
-    const engineerId = body.engineerId || user.id;
-
-    const accessCheck = validateEngineerAccess(user, engineerId);
-    if (!accessCheck.valid) {
-      return errorResponse(accessCheck.error, accessCheck.status);
-    }
+    const engineerId = user.id;
 
     const newRate = await createEngineerServiceRate({
       engineerId,
@@ -133,21 +102,11 @@ export const PUT = async (req) => {
     }
 
     const body = await req.json();
-    const rateId = body.rateId;
-    const engineerId = body.engineerId || user.id;
-
-    if (!rateId) {
-      return errorResponse('rateId is required', 400);
-    }
-
-    const accessCheck = validateEngineerAccess(user, engineerId);
-    if (!accessCheck.valid) {
-      return errorResponse(accessCheck.error, accessCheck.status);
-    }
+    const url = new URL(req.url);
+    const rateId = url.searchParams.get('id');
 
     const updatedRate = await updateEngineerServiceRate({
       rateId,
-      engineerId,
       serviceName: body.serviceName,
       rate: body.rate,
       rateType: body.rateType,
@@ -171,19 +130,9 @@ export const DELETE = async (req) => {
     }
 
     const url = new URL(req.url);
-    const rateId = url.searchParams.get('rateId');
-    const engineerId = url.searchParams.get('engineerId') || user.id;
+    const rateId = url.searchParams.get('id');
 
-    if (!rateId) {
-      return errorResponse('rateId is required', 400);
-    }
-
-    const accessCheck = validateEngineerAccess(user, engineerId);
-    if (!accessCheck.valid) {
-      return errorResponse(accessCheck.error, accessCheck.status);
-    }
-
-    const deletedRate = await deleteEngineerServiceRate(rateId, engineerId);
+    const deletedRate = await deleteEngineerServiceRate(rateId);
 
     return successResponse({ message: 'Service rate deleted successfully', data: deletedRate });
   } catch (error) {
