@@ -51,7 +51,7 @@ const validateEngineerAccess = async (user, engineerId) => {
 
 // Send notification for pending schedules
 const sendPendingNotification = async (scheduleId, body, additionalParams = {}) => {
-  const { title, description, status, engineer, project, startDate, endDate } = body;
+  const { title, description, status, engineer, project } = body;
   
   if (status === 'Pending') {
     await sendUserNotification({
@@ -102,15 +102,8 @@ export const GET = async (req) => {
         );
       }
       
-      console.log("Engineer ID:", engineerId);
-      console.log("Date:", date);
-      console.log("Status:", status);
-      const actor = normalizeActor(user);
-      console.log("Normalized Actor:", actor);
       try {
-        const results = await getEngineerSchedulesByDateAndStatus({ engineerId, date, status, actor });
-
-        console.log("Engineer Schedules Results:", results);
+        const results = await getEngineerSchedulesByDateAndStatus({ engineerId, date, status });
 
         return successResponse(results.data);
       } catch (err) {
@@ -142,12 +135,9 @@ export const GET = async (req) => {
         );
       }
 
-      const actor = normalizeActor(user);
 
       try {
-        const data = await getEngineerScheduleStatusAggregate({ engineerId, date, statuses, actor });
-
-       console.log("Engineer Schedule Status Aggregate Result:", data);
+        const data = await getEngineerScheduleStatusAggregate({ engineerId, date, statuses });
         return successResponse(data);
       } catch (err) {
         return errorResponse(err.message, err.statusCode || 500, err);
@@ -157,10 +147,9 @@ export const GET = async (req) => {
     if (action === 'engineerSchedulesByStatus') {
       const engineerId = url.searchParams.get('engineerId');
       const status = url.searchParams.get('status');
-      const actor = normalizeActor(user);
 
       try {
-        const results = await getEngineerSchedulesByStatus({ engineerId, status, actor });
+        const results = await getEngineerSchedulesByStatus({ engineerId, status });
         return successResponse(results.data);
       } catch (err) {
         console.log("Error fetching engineer schedules by status:", err);
@@ -258,7 +247,9 @@ export const PUT = async (req) => {
       if (result) {
         await sendPendingNotification(id, body, { 
           startDate: body.startDate, 
-          endDate: body.endDate 
+          endDate: body.endDate,
+          startTime: body.startTime,
+          endTime: body.endTime 
         });
       }
       
@@ -291,10 +282,6 @@ export const POST = async (req) => {
       try {
         // Get full schedule with populated fields
         const fullSchedule = await result
-          .populate('engineer', 'first_name last_name')
-          .populate('project', 'name location')
-          .populate('payingIntegrator', 'name')
-          .populate('receivingIntegratorId', 'name')
           .execPopulate?.() || result;
 
         await notificationEvents.bookingCreated({

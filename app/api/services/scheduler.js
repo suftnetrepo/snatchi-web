@@ -639,8 +639,6 @@ async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, a
     throw Object.assign(new Error('Invalid date format. Use YYYY-MM-DD'), { statusCode: 400 });
   }
 
-  await assertEngineerAggregateAccess({ actor, engineerId });
-
   const query = createEngineerScheduleQuery({ engineerId, date, status });
 
   try {
@@ -666,7 +664,7 @@ async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, a
  * @param {object}          [params.actor]     – optional, normalised session actor for security checks
  * @returns {Promise<object>} { total, byStatus: { Pending, Accepted, Approved, ... } }
  */
-async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses, actor = null }) {
+async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses }) {
   // ── Validate engineerId ─────────────────────────────────────────────────
   if (!engineerId) {
     throw Object.assign(new Error('engineerId is required'), { statusCode: 400 });
@@ -676,14 +674,10 @@ async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses, 
     throw Object.assign(new Error('Invalid engineerId'), { statusCode: 400 });
   }
 
-  const engineerObjectId = toObjectId(engineerId);
-
   // ── Validate date format ─────────────────────────────────────────────────
   if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     throw Object.assign(new Error('Invalid date format. Use YYYY-MM-DD'), { statusCode: 400 });
   }
-
-  await assertEngineerAggregateAccess({ actor, engineerId });
 
   const query = createEngineerScheduleQuery({ engineerId, date, status: undefined });
 
@@ -747,7 +741,7 @@ async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses, 
   }
 }
 
-async function getEngineerSchedulesByStatus({ engineerId, status, actor = null }) {
+async function getEngineerSchedulesByStatus({ engineerId, status}) {
   if (!engineerId) {
     throw Object.assign(new Error('engineerId is required'), { statusCode: 400 });
   }
@@ -757,8 +751,6 @@ async function getEngineerSchedulesByStatus({ engineerId, status, actor = null }
   }
 
   const normalizedStatus = normalizeSingleScheduleStatus(status);
-
-  await assertEngineerAggregateAccess({ actor, engineerId });
 
   try {
     const schedules = await Scheduler.find({

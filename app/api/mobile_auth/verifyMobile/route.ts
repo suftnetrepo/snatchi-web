@@ -3,19 +3,20 @@ import User from '../../models/user';
 import { errorHandler } from '../../../../utils/errors';
 import { NextResponse } from 'next/server';
 import { AuthService } from '../../../../lib/AuthService';
+import { registerOrUpdateDeviceToken} from '../../services/deviceToken';
 
 mongoConnect();
 
 export async function POST(req: Request) {
   try {
-    const { email, code, fcm } = await req.json();
+    const { email, code, fcm, device } = await req.json();
+
+    console.log('Received request body:', { email, code, fcm, device });
 
     const matchUser = await User.findOne({
       email: new RegExp(`^${email}$`, 'i'),
       otp: code
     }).select('_id first_name last_name email chat_status address mobile role fcm secure_url public_id integrator attachments');
-
-    console.log('Matched User:', matchUser);
 
     if (!matchUser) {
       return NextResponse.json(
@@ -30,6 +31,7 @@ export async function POST(req: Request) {
     matchUser.otp = '';
     matchUser.fcm = fcm;
     await matchUser.save();
+    await registerOrUpdateDeviceToken({ userId: matchUser._id, token: fcm, device });
 
     const { accessToken } = await AuthService.generateTokens({
       id: matchUser._id,

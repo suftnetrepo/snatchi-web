@@ -199,8 +199,6 @@ export const PUT = async (req) => {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
-    // TODO: Re-enable subscription enforcement after billing rollout is complete.
-
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     const action = url.searchParams.get('action');
@@ -228,8 +226,6 @@ export const PUT = async (req) => {
 
     if (action === 'updateAddress') {
       const body = await req.json();
-
-      console.log("Updating engineer address with body:", body);
 
       const updatedUser = await updateEngineerAddress({
         userId: id,
@@ -268,8 +264,6 @@ export const POST = async (req) => {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
-    // TODO: Re-enable subscription enforcement after billing rollout is complete.
 
     const body = await req.json();
     const result = await createUser(user?.integrator, body);
