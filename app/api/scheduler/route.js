@@ -249,7 +249,8 @@ export const PUT = async (req) => {
           startDate: body.startDate, 
           endDate: body.endDate,
           startTime: body.startTime,
-          endTime: body.endTime 
+          endTime: body.endTime,
+          location: body.location || '', 
         });
       }
       
@@ -294,6 +295,7 @@ export const POST = async (req) => {
           payingIntegratorName: fullSchedule.payingIntegrator?.name || '',
           receivingIntegratorName: fullSchedule.receivingIntegratorId?.name || ''
         });
+
       } catch (notificationError) {
         logger.error('Failed to send booking created notification', {
           scheduleId: result._id,

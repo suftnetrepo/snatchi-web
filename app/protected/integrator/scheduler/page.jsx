@@ -178,7 +178,8 @@ export default function Scheduler() {
       'status',
       'engineer',
       'project',
-      'description'
+      'description',
+      'location'
     ]);
 
     if (fields._id) {

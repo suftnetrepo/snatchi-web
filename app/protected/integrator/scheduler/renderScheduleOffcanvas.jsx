@@ -17,7 +17,6 @@ const RenderScheduleOffcanvas = ({
   handleDelete,
   success
 }) => {
-  console.log('RenderScheduleOffcanvas fields:', fields);
 
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>

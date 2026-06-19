@@ -291,7 +291,8 @@ const schedulerValidator = {
       endDate: '',
       description: '',
       engineer: '',
-      project: ''
+      project: '',
+        location: ''
     };
   },
   fields: {
@@ -301,7 +302,8 @@ const schedulerValidator = {
     endDate: '',
     title: '',
     engineer: '',
-    project: ''
+    project: '',
+    location: ''
   }
 };
 

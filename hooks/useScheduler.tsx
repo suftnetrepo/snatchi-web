@@ -23,6 +23,7 @@ interface Schedule {
   endTime: string;
   status: string;
   description: string;
+  location?: string;
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -381,6 +382,7 @@ const useScheduler = (engineerId: string) => {
         fields: {
           ...prevState.fields,
           title: data.name,
+          location: data.completeAddress,  
           description: decodeHtmlToText(data.description)
         },
         loading: false

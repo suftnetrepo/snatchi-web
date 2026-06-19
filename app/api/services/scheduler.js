@@ -142,12 +142,6 @@ const buildStatusUpdate = (schedule, actor, targetStatus, payload = {}) => {
     throw Object.assign(new Error('Target status is required'), { statusCode: 400 });
   }
 
-  const invalidTransition = () =>
-    Object.assign(
-      new Error(`Cannot transition schedule from ${currentStatus} to ${nextStatus}.`),
-      { statusCode: 400 }
-    );
-
   switch (currentStatus) {
     case SCHEDULER_STATUS.PENDING:
       if (nextStatus === SCHEDULER_STATUS.ACCEPTED && isEngineerActor(schedule, actor)) {
@@ -202,7 +196,7 @@ const buildStatusUpdate = (schedule, actor, targetStatus, payload = {}) => {
       break;
   }
 
-  throw invalidTransition();
+  throw Object.assign(new Error(`Cannot transition schedule from ${currentStatus} to ${nextStatus}.`), { statusCode: 400 });
 };
 
 const buildPaymentPendingUpdate = ({
@@ -318,7 +312,7 @@ async function add(body) {
     await scheduler.populate('engineer', 'first_name last_name email');
     return scheduler;
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
@@ -357,7 +351,7 @@ async function update(suid, id, body) {
 
     return result;
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
