@@ -1,5 +1,5 @@
 import { FCMNotificationService } from '../utils/push-notification';
-import User from '../models/user'; // adjust path as needed
+import DeviceToken from '../models/deviceToken'; // adjust path as needed
 const { logger } = require('../utils/logger');
 
 /**
@@ -13,12 +13,14 @@ const { logger } = require('../utils/logger');
  */
 export async function sendUserNotification({ userId, title, body, screen, screenParams = {} }) {
     try {
-        const user = await User.findById(userId);
-        console.log('Sending notification to user:', userId, 'with FCM token:', screenParams);
-        if (user && user.fcm) {
+
+         console.log('Send...... to user:', userId._id, { userId, title, body, screen, screenParams });
+        const device = await DeviceToken.findOne({ user: userId});
+        console.log('Sending notification to user:', userId._id, 'with FCM tokens:', device?.token);
+        if (device?.token) {
             const notificationService = new FCMNotificationService();
             const result = await notificationService.sendNotification(
-                user.fcm,
+                device.token,
                 title,
                 body,
                 {
@@ -26,6 +28,8 @@ export async function sendUserNotification({ userId, title, body, screen, screen
                     screenParams
                 }
             );
+
+            console.log('Notification service result for user:', JSON.stringify(result));
 
             if (result) {
                 const { response, success } = result;
@@ -36,7 +40,7 @@ export async function sendUserNotification({ userId, title, body, screen, screen
         } else {
             logger.warn({
                 success: false,
-                message: !user
+                message: !device
                     ? `User not found for userId: ${userId}`
                     : `FCM token missing for userId: ${userId}`
             });

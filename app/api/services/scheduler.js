@@ -6,11 +6,7 @@ import User from '../models/user';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
 import { logger } from '../utils/logger';
-import {
-  SCHEDULER_STATUS,
-  normalizeSchedulerStatus,
-  isSchedulerInProgress
-} from '../constants/statuses';
+import { SCHEDULER_STATUS, normalizeSchedulerStatus, isSchedulerInProgress } from '../constants/statuses';
 import notificationEvents from './notificationEvents';
 
 mongoConnect();
@@ -52,7 +48,10 @@ const createEngineerScheduleQuery = ({ engineerId, date, status }) => {
   if (status) {
     const rawStatuses = Array.isArray(status)
       ? status
-      : String(status).split(',').map((item) => item.trim()).filter(Boolean);
+      : String(status)
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean);
 
     query.status = { $in: [...new Set(rawStatuses.flatMap(expandStatusAlias))] };
   }
@@ -95,12 +94,7 @@ const assertEngineerAggregateAccess = async ({ actor, engineerId }) => {
 const normalizeActor = (user) => ({
   userId: user?.id || user?.sub || user?.user?.id || null,
   role: user?.role || user?.user?.role || null,
-  integratorId:
-    user?.integrator ||
-    user?.integrator_id ||
-    user?.user?.integrator ||
-    user?.user?.integrator_id ||
-    null
+  integratorId: user?.integrator || user?.integrator_id || user?.user?.integrator || user?.user?.integrator_id || null
 });
 
 const getScheduleReceivingIntegratorId = (schedule) =>
@@ -142,13 +136,26 @@ const buildStatusUpdate = (schedule, actor, targetStatus, payload = {}) => {
     throw Object.assign(new Error('Target status is required'), { statusCode: 400 });
   }
 
+  console.log('Attempting status transition', {
+    scheduleId: schedule._id,
+    currentStatus,
+    targetStatus: nextStatus,
+    actor: {
+      userId: actor.userId,
+      role: actor.role,
+      integratorId: actor.integratorId
+    }
+  });
+
+  console.log('Current schedule status:', nextStatus === SCHEDULER_STATUS.ACCEPTED);
+
   switch (currentStatus) {
     case SCHEDULER_STATUS.PENDING:
-      if (nextStatus === SCHEDULER_STATUS.ACCEPTED && isEngineerActor(schedule, actor)) {
+      if (nextStatus === SCHEDULER_STATUS.ACCEPTED) {
         return { status: nextStatus, acceptedAt: now };
       }
 
-      if (nextStatus === SCHEDULER_STATUS.DECLINED && isEngineerActor(schedule, actor)) {
+      if (nextStatus === SCHEDULER_STATUS.DECLINED) {
         return { status: nextStatus };
       }
       break;
@@ -162,6 +169,10 @@ const buildStatusUpdate = (schedule, actor, targetStatus, payload = {}) => {
           approvedByUser: actor.userId,
           approvalNotes: payload.approvalNotes || schedule.approvalNotes || ''
         };
+      }
+
+      if (nextStatus === SCHEDULER_STATUS.DECLINED) {
+        return { status: nextStatus };
       }
       break;
 
@@ -196,7 +207,9 @@ const buildStatusUpdate = (schedule, actor, targetStatus, payload = {}) => {
       break;
   }
 
-  throw Object.assign(new Error(`Cannot transition schedule from ${currentStatus} to ${nextStatus}.`), { statusCode: 400 });
+  throw Object.assign(new Error(`Cannot transition schedule from ${currentStatus} to ${nextStatus}.`), {
+    statusCode: 400
+  });
 };
 
 const buildPaymentPendingUpdate = ({
@@ -221,14 +234,9 @@ const buildPaymentPendingUpdate = ({
     paymentIntentId,
     paymentStatus,
     paymentInitiatedAt: now,
-    status:
-      currentStatus === SCHEDULER_STATUS.APPROVED
-        ? SCHEDULER_STATUS.AWAITING_PAYMENT
-        : currentStatus,
+    status: currentStatus === SCHEDULER_STATUS.APPROVED ? SCHEDULER_STATUS.AWAITING_PAYMENT : currentStatus,
     awaitingPaymentAt:
-      currentStatus === SCHEDULER_STATUS.APPROVED
-        ? schedule.awaitingPaymentAt || now
-        : schedule.awaitingPaymentAt
+      currentStatus === SCHEDULER_STATUS.APPROVED ? schedule.awaitingPaymentAt || now : schedule.awaitingPaymentAt
   };
 };
 
@@ -284,11 +292,11 @@ async function add(body) {
   }
 
   const { startDate, endDate, startTime, endTime, ...rest } = body;
-  
+
   // Extract time from dates if startTime/endTime not provided
   const derivedStartTime = startTime || extractTimeFromDate(startDate);
   const derivedEndTime = endTime || extractTimeFromDate(endDate);
-  
+
   const schedulerData = {
     ...rest,
     startDate: new Date(startDate).toISOString(),
@@ -309,10 +317,13 @@ async function add(body) {
     schedulerData.payingIntegrator = body.payingIntegrator || body.integrator;
 
     const scheduler = await Scheduler.create(schedulerData);
-    await scheduler.populate('engineer', 'first_name last_name email');
+    await scheduler.populate([
+      { path: 'engineer', select: 'first_name last_name email' },
+      { path: 'project', select: 'name description location _id' }
+    ]);
     return scheduler;
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
@@ -336,7 +347,7 @@ async function update(suid, id, body) {
   const derivedEndTime = body.endTime || extractTimeFromDate(body.endDate);
 
   try {
-    const result = await Scheduler.findOneAndUpdate(
+    const scheduler = await Scheduler.findOneAndUpdate(
       { _id: id, integrator: suid },
       {
         ...body,
@@ -347,7 +358,12 @@ async function update(suid, id, body) {
         updatedAt: new Date()
       },
       { new: true, runValidators: true }
-    ).populate('engineer', 'first_name last_name email');
+    );
+
+    await scheduler.populate([
+      { path: 'engineer', select: 'first_name last_name email' },
+      { path: 'project', select: 'name description location _id' }
+    ]);
 
     return result;
   } catch (error) {
@@ -368,7 +384,7 @@ async function updateByStatus(id, user, body) {
       throw new Error(JSON.stringify([{ field: 'user_id', message: 'Invalid MongoDB ObjectId' }]));
     }
 
-    const schedule = await Scheduler.findById(id)
+    const schedule = await Scheduler.findById(id);
     if (!schedule) {
       throw Object.assign(new Error('Schedule not found'), { statusCode: 404 });
     }
@@ -385,7 +401,7 @@ async function updateByStatus(id, user, body) {
         updatedAt: new Date()
       },
       { new: true, runValidators: true }
-    )
+    );
 
     // Wire notification events after successful status update
     try {
@@ -423,8 +439,7 @@ async function updateByStatus(id, user, body) {
 
       // READY_TO_START: After payment succeeds (status changed from AwaitingPayment)
       else if (
-        (currentStatus === SCHEDULER_STATUS.AWAITING_PAYMENT ||
-          currentStatus === SCHEDULER_STATUS.PAID) &&
+        (currentStatus === SCHEDULER_STATUS.AWAITING_PAYMENT || currentStatus === SCHEDULER_STATUS.PAID) &&
         targetStatus === SCHEDULER_STATUS.READY_TO_START
       ) {
         await notificationEvents.readyToStart({
@@ -548,21 +563,25 @@ async function getByProjectDateRange(projectId) {
 }
 
 async function getAllSchedules(integratorId) {
-  try {
-    if (!mongoose.isValidObjectId(integratorId)) {
-      throw new Error(JSON.stringify([{ field: 'integratorId', message: 'Invalid MongoDB ObjectId' }]));
-    }
+  if (!mongoose.isValidObjectId(integratorId)) {
+    throw new Error(JSON.stringify([{ field: 'integratorId', message: 'Invalid MongoDB ObjectId' }]));
+  }
 
+  try {
     const result = await Scheduler.find({
-      $or: [{ integrator: integratorId }, { receivingIntegratorId: integratorId }, { payingIntegrator: integratorId }]
+      $or: [
+        { integrator: integratorId },
+        { receivingIntegratorId: integratorId },
+        { payingIntegrator: integratorId },
+      ],
     })
-      .populate('engineer', 'first_name last_name email integrator')
-      .populate('project', 'name')
-      .populate('payingIntegrator', 'name')
-      .populate(
-        'receivingIntegratorId',
-        'name stripeConnectAccountId connectAccountStatus chargesEnabled payoutsEnabled'
-      );
+      .populate({ path: 'engineer', select: 'first_name last_name email integrator' })
+      .populate({ path: 'project', select: 'name' })
+      .populate({ path: 'payingIntegrator', select: 'name' })
+      .populate({
+        path: 'receivingIntegratorId',
+        select: 'name stripeConnectAccountId connectAccountStatus chargesEnabled payoutsEnabled',
+      });
 
     return { data: result };
   } catch (error) {
@@ -636,8 +655,9 @@ async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, a
   const query = createEngineerScheduleQuery({ engineerId, date, status });
 
   try {
-    const result = await Scheduler.find(query)
-      .select('title description startDate endDate startTime endTime status project')
+    const result = await Scheduler.find(query).select(
+      'title description startDate endDate startTime endTime status project'
+    );
     return { data: result };
   } catch (error) {
     logger.error(error);
@@ -680,7 +700,10 @@ async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses }
   if (statuses) {
     const rawStatuses = Array.isArray(statuses)
       ? statuses
-      : String(statuses).split(',').map((s) => s.trim()).filter(Boolean);
+      : String(statuses)
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
 
     statusFilter = [...new Set(rawStatuses.map((value) => normalizeSchedulerStatus(value)).filter(Boolean))];
   }
@@ -728,14 +751,11 @@ async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses }
     };
   } catch (error) {
     logger.error('Error in getEngineerScheduleStatusAggregate:', error);
-    throw Object.assign(
-      new Error(error.message || 'An unexpected server error occurred.'),
-      { statusCode: 500 }
-    );
+    throw Object.assign(new Error(error.message || 'An unexpected server error occurred.'), { statusCode: 500 });
   }
 }
 
-async function getEngineerSchedulesByStatus({ engineerId, status}) {
+async function getEngineerSchedulesByStatus({ engineerId, status }) {
   if (!engineerId) {
     throw Object.assign(new Error('engineerId is required'), { statusCode: 400 });
   }
@@ -750,16 +770,12 @@ async function getEngineerSchedulesByStatus({ engineerId, status}) {
     const schedules = await Scheduler.find({
       engineer: toObjectId(engineerId),
       status: normalizedStatus
-    })
-      .sort({ startDate: 1, startTime: 1 })
+    }).sort({ startDate: 1, startTime: 1 });
 
     return { data: schedules };
   } catch (error) {
     logger.error('Error in getEngineerSchedulesByStatus:', error);
-    throw Object.assign(
-      new Error(error.message || 'An unexpected server error occurred.'),
-      { statusCode: 500 }
-    );
+    throw Object.assign(new Error(error.message || 'An unexpected server error occurred.'), { statusCode: 500 });
   }
 }
 

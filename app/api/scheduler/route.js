@@ -51,17 +51,21 @@ const validateEngineerAccess = async (user, engineerId) => {
 
 // Send notification for pending schedules
 const sendPendingNotification = async (scheduleId, body, additionalParams = {}) => {
-  const { title, description, status, engineer, project } = body;
-  
+  const { status, engineer, title, startDate } = body;
+  const formattedDate = new Date(startDate).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+
   if (status === 'Pending') {
     await sendUserNotification({
       userId: engineer,
-      title,
-      body: description,
+      title: 'Updated Booking Request',
+      body: `Updated booking for ${title} - ${formattedDate}`,
       screen: 'calendar',
       screenParams: { 
         scheduleId, 
-        projectId: project, 
         ...additionalParams 
       }
     });
@@ -107,7 +111,6 @@ export const GET = async (req) => {
 
         return successResponse(results.data);
       } catch (err) {
-        console.log("Error fetching engineer schedules:", err);
         return errorResponse(err.message, err.statusCode || 500, err);
       }
     }
@@ -135,7 +138,6 @@ export const GET = async (req) => {
         );
       }
 
-
       try {
         const data = await getEngineerScheduleStatusAggregate({ engineerId, date, statuses });
         return successResponse(data);
@@ -152,7 +154,6 @@ export const GET = async (req) => {
         const results = await getEngineerSchedulesByStatus({ engineerId, status });
         return successResponse(results.data);
       } catch (err) {
-        console.log("Error fetching engineer schedules by status:", err);
         return errorResponse(err.message, err.statusCode || 500, err);
       }
     }
@@ -182,7 +183,7 @@ export const GET = async (req) => {
     // Handle getByProjectDateRange action
     if (action === 'getByProjectDateRange') {
        const projectId = url.searchParams.get('projectId');
-      const results = await getByProjectDateRange(projectId);
+       const results = await getByProjectDateRange(projectId);
       return successResponse(results.data);
     }
 
@@ -250,7 +251,11 @@ export const PUT = async (req) => {
           endDate: body.endDate,
           startTime: body.startTime,
           endTime: body.endTime,
-          location: body.location || '', 
+          siteLocation: body.location || '', 
+          status : body.status,
+          projectId: result.project?._id || '',
+          projectName: result.project?.name || '',
+          projectDescription: result.project?.description || '',
         });
       }
       
@@ -288,12 +293,17 @@ export const POST = async (req) => {
         await notificationEvents.bookingCreated({
           scheduleId: result._id,
           engineerId: fullSchedule.engineer?._id,
+          projectId: fullSchedule.project?._id,
           projectName: fullSchedule.project?.name || body.project,
           siteLocation: fullSchedule.project?.location || body.location || '',
           startDate: result.startDate,
           endDate: result.endDate,
+          status: result.status, 
+          startTime: result.startTime,
+          endTime: result.endTime, 
           payingIntegratorName: fullSchedule.payingIntegrator?.name || '',
-          receivingIntegratorName: fullSchedule.receivingIntegratorId?.name || ''
+          receivingIntegratorName: fullSchedule.receivingIntegratorId?.name || '',
+          projectDescription: fullSchedule?.description || '',
         });
 
       } catch (notificationError) {

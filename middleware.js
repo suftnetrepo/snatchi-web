@@ -34,7 +34,6 @@ export async function middleware(req) {
       const bearerToken = authHeader.split(' ')[1];
       try {
         const decoded = await AuthService.verifyAccessToken(bearerToken);
-        console.log("✅ Bearer verified:", decoded);
         return NextResponse.next();
       } catch (e) {
         console.warn('❌ Invalid bearer token');

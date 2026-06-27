@@ -11,8 +11,6 @@ export async function POST(req: Request) {
   try {
     const { email, code, fcm, device } = await req.json();
 
-    console.log('Received request body:', { email, code, fcm, device });
-
     const matchUser = await User.findOne({
       email: new RegExp(`^${email}$`, 'i'),
       otp: code

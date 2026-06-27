@@ -58,7 +58,7 @@ class FCMNotificationService {
       logger.info('FCM sent', { name: response.data.name });
       return { success: true };
     } catch (err) {
-      logger.error('FCM failed', err.response?.data || err.message);
+      console.error('FCM failed', err.response?.data || err.message);
       return { success: false };
     }
   }

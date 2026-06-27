@@ -57,9 +57,12 @@ const bookingCreated = async (payload) => {
     projectName,
     siteLocation,
     startDate,
+    status,
+    startTime,
+    endTime,  
     endDate,
-    payingIntegratorName,
-    receivingIntegratorName
+    projectId,
+    projectDescription,
   } = payload;
 
   try {
@@ -81,7 +84,14 @@ const bookingCreated = async (payload) => {
       screenParams: {
         scheduleId: scheduleId.toString(),
         projectName,
-        siteLocation
+        siteLocation,
+        status,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        projectId,
+        projectDescription,
       },
       relatedTo: {
         schedule: scheduleId
@@ -116,7 +126,8 @@ const bookingAccepted = async (payload) => {
     receivingIntegratorId,
     engineerName,
     projectName,
-    siteLocation
+    siteLocation,
+    projectDescription
   } = payload;
 
   try {
@@ -165,7 +176,8 @@ const bookingDeclined = async (payload) => {
     payingIntegratorId,
     engineerName,
     projectName,
-    declineReason
+    declineReason,
+    status
   } = payload;
 
   try {
@@ -177,6 +189,7 @@ const bookingDeclined = async (payload) => {
       type: NOTIFICATION_TYPES.ENGINEER_DECLINED,
       title: 'Engineer Declined Booking',
       body: `${engineerName} declined the booking for ${projectName}`,
+      status: status,
       screen: NOTIFICATION_SCREENS.SCHEDULES,
       screenParams: {
         scheduleId: scheduleId.toString()

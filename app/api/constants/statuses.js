@@ -85,7 +85,11 @@ export const normalizeSchedulerStatus = (status) => {
     return null;
   }
 
-  const normalizedInput = String(status).trim().toLowerCase().replace(/\s+/g, '');
+  const normalizedInput = String(status)
+    .trim()
+    .toLowerCase()
+    .replace(/^\W+|\W+$/g, '')
+    .replace(/\s+/g, '');
 
   if (normalizedInput === 'progress' || normalizedInput === 'inprogress') {
     return SCHEDULER_STATUS.IN_PROGRESS;
