@@ -6,19 +6,11 @@ import { mongoConnect } from '@/utils/connectDb';
 
 await mongoConnect();
 
-// GET /api/notifications/unread-count
 export async function GET(req) {
   try {
     const user = await getUserSession(req);
 
-    // if (!user || user.role !== 'engineer') {
-    //   return NextResponse.json(
-    //     { success: false, error: 'Unauthorized' },
-    //     { status: 401 }
-    //   );
-    // }
-
-    const count = await notificationService.getUnreadCount(user.id);
+    const count =  notificationService.getUnreadCount(user.id);
 
     return NextResponse.json(
       {

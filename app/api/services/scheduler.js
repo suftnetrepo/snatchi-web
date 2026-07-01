@@ -319,11 +319,11 @@ async function add(body) {
     const scheduler = await Scheduler.create(schedulerData);
     await scheduler.populate([
       { path: 'engineer', select: 'first_name last_name email' },
-      { path: 'project', select: 'name description location _id' }
+      { path: 'project', select: 'name description completeAddress location _id' }
     ]);
     return scheduler;
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
@@ -358,16 +358,14 @@ async function update(suid, id, body) {
         updatedAt: new Date()
       },
       { new: true, runValidators: true }
-    );
-
-    await scheduler.populate([
+    ).populate([
       { path: 'engineer', select: 'first_name last_name email' },
-      { path: 'project', select: 'name description location _id' }
+      { path: 'project', select: 'name description completeAddress location _id' }
     ]);
 
-    return result;
+    return scheduler;
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
@@ -524,6 +522,16 @@ async function remove(suid, id) {
   }
 }
 
+async function removeAll() {  
+  try {
+    await Scheduler.deleteMany({});
+    return true;
+  } catch (error) {
+    console.error(error);
+    throw new Error('An unexpected error occurred. Please try again.');
+  }   
+}
+
 async function getByProjectDateRange(projectId) {
   if (!isValidObjectId(projectId)) {
     throw new Error(JSON.stringify([{ field: 'projectId', message: 'Invalid MongoDB ObjectId' }]));
@@ -569,18 +577,14 @@ async function getAllSchedules(integratorId) {
 
   try {
     const result = await Scheduler.find({
-      $or: [
-        { integrator: integratorId },
-        { receivingIntegratorId: integratorId },
-        { payingIntegrator: integratorId },
-      ],
+      $or: [{ integrator: integratorId }, { receivingIntegratorId: integratorId }, { payingIntegrator: integratorId }]
     })
       .populate({ path: 'engineer', select: 'first_name last_name email integrator' })
       .populate({ path: 'project', select: 'name' })
       .populate({ path: 'payingIntegrator', select: 'name' })
       .populate({
         path: 'receivingIntegratorId',
-        select: 'name stripeConnectAccountId connectAccountStatus chargesEnabled payoutsEnabled',
+        select: 'name stripeConnectAccountId connectAccountStatus chargesEnabled payoutsEnabled'
       });
 
     return { data: result };
@@ -795,5 +799,6 @@ export {
   getSchedulePayingIntegratorId,
   buildPaymentPendingUpdate,
   buildPaymentSucceededUpdate,
-  buildPaymentFailedUpdate
+  buildPaymentFailedUpdate,
+  removeAll
 };

@@ -21,7 +21,7 @@ const useSecure = () => {
     success: false
   });
 
-  const handleError = (error: string) => {
+  const handleError = (error: any) => {
     setState((pre) => {
       return { ...pre, error: error, loading: false };
     });

@@ -25,6 +25,8 @@ const CreateForm = () => {
     setErrorMessages({});
     const validationResult = validate(fields, projectValidator.rules);
 
+    console.log('validationResult.......', validationResult);
+
     if (validationResult.hasError) {
       setErrorMessages(validationResult.errors);
       return;

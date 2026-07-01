@@ -11,12 +11,14 @@ export async function GET(req) {
   try {
     const user = await getUserSession(req);
 
-    if (!user || user.role !== 'engineer') {
+    if (!user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
+
+    // await notificationService.cleaanAll()
 
     console.log('Fetching notifications for user:', user);
 
@@ -32,6 +34,8 @@ export async function GET(req) {
       unreadOnly,
       archived
     });
+
+    console.log('Notifications fetched successfully:', result);
 
     return NextResponse.json(
       {
@@ -54,7 +58,7 @@ export async function PUT(req) {
   try {
     const user = await getUserSession(req);
 
-    if (!user || user.role !== 'engineer') {
+    if (!user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -115,7 +119,7 @@ export async function DELETE(req) {
   try {
     const user = await getUserSession(req);
 
-    if (!user || user.role !== 'engineer') {
+    if (!user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -132,7 +136,7 @@ export async function DELETE(req) {
       );
     }
 
-    await notificationService.delete(notificationId, user.id);
+    notificationService.delete(notificationId, user.id);
 
     return NextResponse.json(
       {

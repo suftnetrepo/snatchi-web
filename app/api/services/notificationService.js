@@ -85,7 +85,7 @@ class NotificationService {
 
       // Persist to database FIRST
       const savedNotification = await notification.save();
-      logger.info('Notification persisted', {
+      console.log('Notification persisted', {
         notificationId: savedNotification._id,
         type,
         recipientType: recipient.type,
@@ -100,7 +100,7 @@ class NotificationService {
 
       return savedNotification;
     } catch (error) {
-      logger.error('Failed to create notification', error);
+      console.error('Failed to create notification', error);
       throw error;
     }
   }
@@ -317,6 +317,17 @@ class NotificationService {
         Notification.find().forUser(userId).countDocuments(),
         Notification.find().forUser(userId).unread().countDocuments()
       ]);
+
+      console.log('Fetched notifications', {
+        userId,
+        limit,
+        offset,
+        unreadOnly,
+        archived,
+        total,
+        unread,
+        fetched: notifications.length
+      });
 
       return {
         notifications,
@@ -548,6 +559,21 @@ class NotificationService {
       throw error;
     }
   }
+
+
+async cleaanAll() {
+  try {
+    const result = await Notification.deleteMany({});
+    logger.info('Deleted all notifications', {
+      count: result.deletedCount
+    });
+    return result;
+  } catch (error) {
+    logger.error('Failed to delete all notifications', error);
+    throw error;
+  }
 }
+}
+
 
 module.exports = new NotificationService();

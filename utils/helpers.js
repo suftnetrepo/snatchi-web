@@ -611,7 +611,33 @@ const getScheduleStatusColor = (status) => {
   }
 };
 
+function getActiveDays(startDate, endDate, useUTC = true) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  let activeDays = new Set();
+  
+  if (useUTC) {
+    // UTC-based calculation
+    for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+      let day = d.getUTCDay();
+      day = day === 0 ? 7 : day;
+      activeDays.add(day);
+    }
+  } else {
+    // Local time-based calculation
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      let day = d.getDay();
+      day = day === 0 ? 7 : day;
+      activeDays.add(day);
+    }
+  }
+  
+  return [...activeDays].sort((a, b) => a - b);
+}
+
 export {
+  getActiveDays,
   getScheduleStatusColor,
   formatDateForInput,
   decodeHtmlToText,

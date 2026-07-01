@@ -55,7 +55,6 @@ const bookingCreated = async (payload) => {
     scheduleId,
     engineerId,
     projectName,
-    siteLocation,
     startDate,
     status,
     startTime,
@@ -63,6 +62,11 @@ const bookingCreated = async (payload) => {
     endDate,
     projectId,
     projectDescription,
+    radius,
+    activeDays,
+    completeAddress,
+    latitude,
+    longitude,
   } = payload;
 
   try {
@@ -84,7 +88,6 @@ const bookingCreated = async (payload) => {
       screenParams: {
         scheduleId: scheduleId.toString(),
         projectName,
-        siteLocation,
         status,
         startDate,
         endDate,
@@ -92,6 +95,11 @@ const bookingCreated = async (payload) => {
         endTime,
         projectId,
         projectDescription,
+        radius,
+        activeDays,
+        completeAddress,
+        latitude,
+        longitude
       },
       relatedTo: {
         schedule: scheduleId
@@ -126,7 +134,6 @@ const bookingAccepted = async (payload) => {
     receivingIntegratorId,
     engineerName,
     projectName,
-    siteLocation,
     projectDescription
   } = payload;
 

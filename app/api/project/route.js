@@ -15,7 +15,6 @@ import {
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
-import { notifyAssignedUsers } from "../utils/format-project";
 
 // Authentication middleware
 const authenticateUser = async (req) => {
@@ -150,8 +149,6 @@ export const DELETE = async (req) => {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
-    // TODO: Re-enable subscription enforcement after billing rollout is complete.
-
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
 
@@ -164,24 +161,17 @@ export const DELETE = async (req) => {
 
 export const PUT = async (req) => {
   try {
-    const { user, error } = await authenticateUser(req);
+    const { error } = await authenticateUser(req);
     
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
-    // TODO: Re-enable subscription enforcement after billing rollout is complete.
-
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     const body = await req.json();
 
-    const { notify } = body;
     const result = await updateProject(id, body);
-    
-    if (result && notify) {
-      notifyAssignedUsers(result);
-    }
 
     return successResponse(result);
   } catch (error) {
@@ -196,8 +186,6 @@ export const POST = async (req) => {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
-    // TODO: Re-enable subscription enforcement after billing rollout is complete.
 
     const body = await req.json();
     const result = await createProject(user?.integrator, body);

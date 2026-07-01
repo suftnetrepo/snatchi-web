@@ -9,8 +9,8 @@ const projectValidator = {
       { pattern: /^.{0,50}$/, message: 'Project number must not exceed 50 characters' }
     ],
     description: [
-      { pattern: /^.+$/, message: 'Scope of Work is required' },
-      { pattern: /^.{0,5000}$/, message: 'Scope of Work must not exceed 1000 characters' }
+      { pattern: /^[\s\S]+$/, message: 'Scope of Work is required' },
+      { pattern: /^[\s\S]{0,5000}$/, message: 'Scope of Work must not exceed 5000 characters' }
     ],
     status: [{ pattern: /^.+$/, message: 'Status is required' }],
     priority: [{ pattern: /^.+$/, message: 'Priority is required' }],
@@ -48,7 +48,7 @@ const projectValidator = {
     ppe: [],
     status: '',
     priority: '',
-    description: null,
+    description: '',
     startDate: '',
     endDate: '',
     addressLine1: '',
@@ -73,7 +73,7 @@ const taskValidator = {
     ],
     description: [
       { pattern: /^.+$/, message: 'Scope of Work is required' },
-      { pattern: /^.{0,5000}$/, message: 'Scope of Work must not exceed 1000 characters' }
+      { pattern: /^.{0,5000}$/, message: 'Scope of Work must not exceed 5000 characters' }
     ],
     status: [{ pattern: /^.+$/, message: 'Status is required' }],
     priority: [{ pattern: /^.+$/, message: 'Priority is required' }],
@@ -292,7 +292,7 @@ const schedulerValidator = {
       description: '',
       engineer: '',
       project: '',
-        location: ''
+      location: ''
     };
   },
   fields: {

@@ -19,9 +19,12 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
 
   const handlePaste = (e) => {
     const pastedText = e.clipboardData.getData('text');
-    handleChange('description', pastedText);
+
+    handleChange('description', pastedText?.trim());
     e.preventDefault();
   };
+
+  console.log('fields.......', fields);
 
   const handlePPEChange = (values) => {
     handleChange('ppe', values);
@@ -69,9 +72,7 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
                 )}
               </Form.Group>
             </div>
-            <div className="col-md-6">
-
-            </div>
+            <div className="col-md-6"></div>
           </div>
         </div>
       </div>
@@ -326,10 +327,14 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
         <div className="col-md-12">
           <Form.Group controlId="formFirstName" className="mb-3 mt-3">
             <Form.Label className="text-dark">Scope of Work</Form.Label>
-            <Editor
-              onChange={(e) => handleChange('description', e)}
+            <Form.Control
+              as="textarea"
+              rows={8}
+              placeholder="Enter the scope of work"
+              value={fields.description}
+              onChange={(e) => handleChange('description', e.target?.value)}
+              className="border-dark"
               onPaste={handlePaste}
-              value={fields?.description}
             />
             {errorMessages?.description?.message && (
               <span className="text-danger fs-13">{errorMessages.description?.message}</span>
@@ -339,7 +344,7 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
       </div>
 
       <div className="row">
-        <div className="col-md-3">
+        <div className="col-md-6">
           <MultiSelectDropdown
             options={ppeOptions}
             label="PPE"
@@ -348,7 +353,7 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
             placeholder="Select PPE..."
           />
         </div>
-        <div className="col-md-9"></div>
+        <div className="col-md-6"></div>
       </div>
 
       <div className="row">
@@ -394,25 +399,6 @@ const ProjectForm = ({ errorMessages, handleSubmit, handleChange, fields, handle
               </Form.Group>
             </div>
           </div>
-        </div>
-      </div>
-      <div className="row">
-        <div className="col-md-6">
-          <Form.Group>
-            <div className="d-flex align-items-center justify-content-start mb-3">
-              <Form.Check
-                type="switch"
-                id="notify-switch"
-                checked={fields?.notify}
-                value={fields?.notify}
-                onChange={(e) => {
-                 handleChange('notify', e.target.checked)
-                }}
-                className="custom-switch"
-              />
-              <span className="text-dark ms-1">{'Notify Engineers'}</span>
-            </div>
-          </Form.Group>
         </div>
       </div>
       <div className="d-flex justify-content-start">
