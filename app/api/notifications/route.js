@@ -20,8 +20,6 @@ export async function GET(req) {
 
     // await notificationService.cleaanAll()
 
-    console.log('Fetching notifications for user:', user);
-
     const url = new URL(req.url);
     const limit = parseInt(url.searchParams.get('limit') || '20', 10);
     const offset = parseInt(url.searchParams.get('offset') || '0', 10);
@@ -35,7 +33,7 @@ export async function GET(req) {
       archived
     });
 
-    console.log('Notifications fetched successfully:', result);
+    // console.log('Notifications fetched successfully:', result);
 
     return NextResponse.json(
       {
@@ -105,7 +103,7 @@ export async function PUT(req) {
       { status: 200 }
     );
   } catch (error) {
-    conole.error('PUT /api/notifications failed', error);
+    // console.error('PUT /api/notifications failed', error);
     logger.error('PUT /api/notifications failed', error);
     return NextResponse.json(
       { success: false, error: "something went wrong" },
@@ -136,7 +134,7 @@ export async function DELETE(req) {
       );
     }
 
-    notificationService.delete(notificationId, user.id);
+    await notificationService.delete(notificationId, user.id);
 
     return NextResponse.json(
       {

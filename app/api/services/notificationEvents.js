@@ -67,6 +67,8 @@ const bookingCreated = async (payload) => {
     completeAddress,
     latitude,
     longitude,
+    integratorId,
+    priority
   } = payload;
 
   try {
@@ -99,7 +101,9 @@ const bookingCreated = async (payload) => {
         activeDays,
         completeAddress,
         latitude,
-        longitude
+        longitude,
+        integratorId,
+        priority
       },
       relatedTo: {
         schedule: scheduleId

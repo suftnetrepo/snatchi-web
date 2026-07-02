@@ -59,44 +59,6 @@ const createEngineerScheduleQuery = ({ engineerId, date, status }) => {
   return query;
 };
 
-const assertEngineerAggregateAccess = async ({ actor, engineerId }) => {
-  if (!actor) {
-    return;
-  }
-
-  const actorUserId = actor.userId?.toString?.();
-  const targetEngineerId = engineerId.toString();
-
-  if (actor.role === 'engineer') {
-    if (!actorUserId || actorUserId !== targetEngineerId) {
-      throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-    }
-    return;
-  }
-
-  if (actor.role === 'integrator') {
-    if (!actor.integratorId) {
-      throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-    }
-
-    const engineer = await User.findById(engineerId).select('integrator');
-    if (!engineer || engineer.integrator?.toString() !== actor.integratorId.toString()) {
-      throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-    }
-    return;
-  }
-
-  if (actor.role !== 'admin') {
-    throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-  }
-};
-
-const normalizeActor = (user) => ({
-  userId: user?.id || user?.sub || user?.user?.id || null,
-  role: user?.role || user?.user?.role || null,
-  integratorId: user?.integrator || user?.integrator_id || user?.user?.integrator || user?.user?.integrator_id || null
-});
-
 const getScheduleReceivingIntegratorId = (schedule) =>
   schedule?.receivingIntegratorId?._id?.toString?.() ||
   schedule?.receivingIntegratorId?.toString?.() ||
@@ -135,19 +97,6 @@ const buildStatusUpdate = (schedule, actor, targetStatus, payload = {}) => {
   if (!nextStatus) {
     throw Object.assign(new Error('Target status is required'), { statusCode: 400 });
   }
-
-  console.log('Attempting status transition', {
-    scheduleId: schedule._id,
-    currentStatus,
-    targetStatus: nextStatus,
-    actor: {
-      userId: actor.userId,
-      role: actor.role,
-      integratorId: actor.integratorId
-    }
-  });
-
-  console.log('Current schedule status:', nextStatus === SCHEDULER_STATUS.ACCEPTED);
 
   switch (currentStatus) {
     case SCHEDULER_STATUS.PENDING:
@@ -285,6 +234,25 @@ async function getByUser(user_id) {
   }
 }
 
+async function getSchedule(id) {
+  try {
+    const query = {};
+
+    if (id) {
+      if (!mongoose.isValidObjectId(id)) {
+        throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
+      }
+      query._id = id;
+    }
+
+    const result = await Scheduler.findOne(query).populate('project', 'name description completeAddress location _id integrator priority');
+    return { data: result };
+  } catch (error) {
+    logger.error(error);
+    throw new Error('Unexpected server error');
+  }
+}
+
 async function add(body) {
   const bodyErrors = schedulerValidator(body);
   if (bodyErrors.length) {
@@ -319,7 +287,7 @@ async function add(body) {
     const scheduler = await Scheduler.create(schedulerData);
     await scheduler.populate([
       { path: 'engineer', select: 'first_name last_name email' },
-      { path: 'project', select: 'name description completeAddress location _id' }
+      { path: 'project', select: 'name description completeAddress location _id integrator priority' }
     ]);
     return scheduler;
   } catch (error) {
@@ -360,7 +328,7 @@ async function update(suid, id, body) {
       { new: true, runValidators: true }
     ).populate([
       { path: 'engineer', select: 'first_name last_name email' },
-      { path: 'project', select: 'name description completeAddress location _id' }
+      { path: 'project', select: 'name description completeAddress location _id integrator priority' }
     ]);
 
     return scheduler;
@@ -794,11 +762,11 @@ export {
   getEngineerSchedulesByDateAndStatus,
   getEngineerScheduleStatusAggregate,
   getEngineerSchedulesByStatus,
-  normalizeActor,
   getScheduleReceivingIntegratorId,
   getSchedulePayingIntegratorId,
   buildPaymentPendingUpdate,
   buildPaymentSucceededUpdate,
   buildPaymentFailedUpdate,
-  removeAll
+  removeAll,
+  getSchedule
 };

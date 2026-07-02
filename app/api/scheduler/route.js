@@ -4,13 +4,12 @@ import {
   add,
   updateByStatus,
   getByUser,
-  removeAll,
   getByProjectDateRange,
   getAllSchedules,
   getEngineerSchedulesByDateAndStatus,
   getEngineerScheduleStatusAggregate,
   getEngineerSchedulesByStatus,
-  normalizeActor
+  getSchedule
 } from '../services/scheduler';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
@@ -209,8 +208,22 @@ export const DELETE = async (req) => {
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
 
-    const results = await remove(user?.integrator, id);
-    return successResponse(results);
+    const result = await remove(user?.integrator, id);
+
+    if (result) {
+      const schedule = await getSchedule(id);
+      await sendUserNotification({
+        userId: schedule.data.engineer,
+        title: 'Removed Booking Request',
+        body: `Removed booking for ${schedule.data.title}`,
+        screen: 'project',
+        screenParams: {
+          scheduleId : schedule._id,
+          projectId: schedule.data.project?._id || '',
+        }
+      });
+    }
+    return successResponse(result);
   } catch (error) {
     return errorResponse(error.message, 500, error);
   }
@@ -253,6 +266,8 @@ export const PUT = async (req) => {
           completeAddress: result.project?.completeAddress || '',
           latitude: result.project?.location?.coordinates[0],
           longitude: result.project?.location?.coordinates[1],
+          integratorId: result.project?.integrator || '',
+          priority: result.project?.priority || '',
           radius: 200,
           activeDays: getActiveDays(body.startDate, body.endDate)
         });
@@ -304,7 +319,8 @@ export const POST = async (req) => {
           endTime: result.endTime,
           payingIntegratorName: result.payingIntegrator?.name || '',
           receivingIntegratorName: result.receivingIntegrator?.name || '',
-          projectDescription: result.project?.description || ''
+          projectDescription: result.project?.description || '',
+          priority: result.project?.priority || ''
         });
       } catch (notificationError) {
         console.error('Failed to send booking created notification', {
