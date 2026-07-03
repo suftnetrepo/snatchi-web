@@ -506,6 +506,22 @@ class NotificationService {
     }
   }
 
+   async deleteByScheduleId(scheduleId) {
+    try {
+      const result = await Notification.deleteMany({ 'relatedTo.schedule': scheduleId });
+
+      logger.info('Deleted notifications by schedule', {
+        scheduleId,
+        count: result.deletedCount
+      });
+
+      return result.deletedCount > 0;
+    } catch (error) {
+      logger.error('Failed to delete notification', error);
+      throw error;
+    }
+  }
+
   /**
    * Clean up inactive device tokens
    * Runs as maintenance task
@@ -561,7 +577,7 @@ class NotificationService {
   }
 
 
-async cleaanAll() {
+async cleanAll() {
   try {
     const result = await Notification.deleteMany({});
     logger.info('Deleted all notifications', {

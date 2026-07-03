@@ -236,16 +236,11 @@ async function getByUser(user_id) {
 
 async function getSchedule(id) {
   try {
-    const query = {};
+   
+    
 
-    if (id) {
-      if (!mongoose.isValidObjectId(id)) {
-        throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
-      }
-      query._id = id;
-    }
-
-    const result = await Scheduler.findOne(query).populate('project', 'name description completeAddress location _id integrator priority');
+    const result = await Scheduler.findOne({ _id: id }).populate('engineer', 'first_name last_name email _id').populate('project', 'name description completeAddress location _id integrator priority');
+    
     return { data: result };
   } catch (error) {
     logger.error(error);

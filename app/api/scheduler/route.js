@@ -11,6 +11,7 @@ import {
   getEngineerSchedulesByStatus,
   getSchedule
 } from '../services/scheduler';
+import notificationService from '@/app/api/services/notificationService';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
@@ -208,23 +209,32 @@ export const DELETE = async (req) => {
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
 
-    const result = await remove(user?.integrator, id);
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'id is required' }, { status: 400 });
+    }
 
-    if (result) {
-      const schedule = await getSchedule(id);
+    const schedule = await getSchedule(id);
+    if (schedule?.data?.engineer) {
       await sendUserNotification({
-        userId: schedule.data.engineer,
+        userId: schedule.data.engineer._id,
         title: 'Removed Booking Request',
         body: `Removed booking for ${schedule.data.title}`,
         screen: 'project',
         screenParams: {
-          scheduleId : schedule._id,
+          scheduleId: schedule.data._id,
           projectId: schedule.data.project?._id || '',
         }
       });
     }
+
+    const result = await remove(user?.integrator, id);
+    if (result) {
+      notificationService.deleteByScheduleId(id);
+    }
+
     return successResponse(result);
   } catch (error) {
+    console.log('Error in DELETE /scheduler:', error);
     return errorResponse(error.message, 500, error);
   }
 };
@@ -279,7 +289,7 @@ export const PUT = async (req) => {
     // No valid action provided
     return NextResponse.json({ success: false, error: 'Invalid action parameter' }, { status: 400 });
   } catch (error) {
-    console.error(error);
+    console.error('Error in PUT /scheduler:', error);
     return errorResponse(error.message, error.statusCode || 500, error);
   }
 };
