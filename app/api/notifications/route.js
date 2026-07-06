@@ -12,10 +12,7 @@ export async function GET(req) {
     const user = await getUserSession(req);
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     // await notificationService.cleaanAll()
@@ -44,10 +41,7 @@ export async function GET(req) {
     );
   } catch (error) {
     logger.error('GET /api/notifications failed', error);
-    return NextResponse.json(
-      { success: false, error: "something went wrong" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'something went wrong' }, { status: 500 });
   }
 }
 
@@ -57,42 +51,23 @@ export async function PUT(req) {
     const user = await getUserSession(req);
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { action, notificationId } = body;
-
-    if (!action) {
-      return NextResponse.json(
-        { success: false, error: 'action is required' },
-        { status: 400 }
-      );
-    }
-
-    if (action === 'read' && !notificationId) {
-      return NextResponse.json(
-        { success: false, error: 'notificationId is required' },
-        { status: 400 }
-      );
-    }
+    const url = new URL(req.url);
+    const action = url.searchParams.get('action');
+    const id = url.searchParams.get('id');
 
     let result;
 
     if (action === 'read') {
-      result = await notificationService.markAsRead(notificationId, user.id);
+      result = await notificationService.markAsRead(id, user.id);
     } else if (action === 'read-all') {
       result = await notificationService.markAllAsRead(user.id);
     } else if (action === 'archive') {
-      result = await notificationService.archive(notificationId, user.id);
+      result = await notificationService.archive(id, user.id);
     } else {
-      return NextResponse.json(
-        { success: false, error: 'Unknown action' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Unknown action' }, { status: 400 });
     }
 
     return NextResponse.json(
@@ -103,10 +78,10 @@ export async function PUT(req) {
       { status: 200 }
     );
   } catch (error) {
-    // console.error('PUT /api/notifications failed', error);
+    console.error('PUT /api/notifications failed', error);
     logger.error('PUT /api/notifications failed', error);
     return NextResponse.json(
-      { success: false, error: "something went wrong" },
+      { success: false, error: 'something went wrong' },
       { status: error.message === 'Unauthorized' ? 403 : 500 }
     );
   }
@@ -118,23 +93,17 @@ export async function DELETE(req) {
     const user = await getUserSession(req);
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { notificationId } = body;
+    const url = new URL(req.url);
+    const id = url.searchParams.get('id');
 
-    if (!notificationId) {
-      return NextResponse.json(
-        { success: false, error: 'notificationId is required' },
-        { status: 400 }
-      );
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'notificationId is required' }, { status: 400 });
     }
 
-    await notificationService.delete(notificationId, user.id);
+    await notificationService.delete(id, user.id);
 
     return NextResponse.json(
       {
@@ -145,7 +114,7 @@ export async function DELETE(req) {
   } catch (error) {
     logger.error('DELETE /api/notifications failed', error);
     return NextResponse.json(
-      { success: false, error: "something went wrong" },
+      { success: false, error: 'something went wrong' },
       { status: error.message === 'Unauthorized' ? 403 : 500 }
     );
   }

@@ -1,6 +1,10 @@
 import mongoose, { ConnectOptions } from 'mongoose';
 
 export const mongoConnect = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    return;
+  }
+
   const connectionUrl = process.env.NEXT_PUBLIC_MONGODB_URL || "mongodb+srv://sr72:Kcmkcm12345!@cluster0.ihqj3.mongodb.net/snatchi_dev?retryWrites=true&w=majority";
 
   if (!connectionUrl) {

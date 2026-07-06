@@ -4,14 +4,13 @@ import { logger } from '@/app/api/utils/logger';
 import notificationService from '@/app/api/services/notificationService';
 import { mongoConnect } from '@/utils/connectDb';
 
-await mongoConnect();
+  await mongoConnect();
 
 export async function GET(req) {
   try {
+  
     const user = await getUserSession(req);
-
-    const count =  notificationService.getUnreadCount(user.id);
-
+    const count = await notificationService.getUnreadCount(user.id);
     return NextResponse.json(
       {
         success: true,
@@ -22,8 +21,6 @@ export async function GET(req) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('GET /api/notifications/unread-count failed', error);
-
     logger.error('GET /api/notifications/unread-count failed', error);
     return NextResponse.json(
       { success: false, error: error.message },

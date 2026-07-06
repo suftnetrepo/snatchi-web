@@ -292,6 +292,9 @@ async function add(body) {
 }
 
 async function update(suid, id, body) {
+
+  console.log('Updating schedule', { suid, id, body });
+
   if (!isValidObjectId(id)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
@@ -333,18 +336,13 @@ async function update(suid, id, body) {
   }
 }
 
-async function updateByStatus(id, user, body) {
+async function updateByStatus(id, body) {
   if (!isValidObjectId(id)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
 
   try {
-    const actor = normalizeActor(user);
-
-    if (!isValidObjectId(actor.userId || '')) {
-      throw new Error(JSON.stringify([{ field: 'user_id', message: 'Invalid MongoDB ObjectId' }]));
-    }
-
+  
     const schedule = await Scheduler.findById(id);
     if (!schedule) {
       throw Object.assign(new Error('Schedule not found'), { statusCode: 404 });
@@ -353,12 +351,10 @@ async function updateByStatus(id, user, body) {
     const currentStatus = normalizeSchedulerStatus(schedule.status);
     const targetStatus = normalizeSchedulerStatus(body.status);
 
-    const update = buildStatusUpdate(schedule, actor, body.status, body);
-
     const result = await Scheduler.findByIdAndUpdate(
       id,
       {
-        ...update,
+        body,
         updatedAt: new Date()
       },
       { new: true, runValidators: true }

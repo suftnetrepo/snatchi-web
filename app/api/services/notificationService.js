@@ -337,8 +337,7 @@ class NotificationService {
         offset
       };
     } catch (error) {
-        console.error('Failed to get notifications', error);
-      logger.error('Failed to get notifications', error);
+        logger.error('Failed to get notifications', error);
       throw error;
     }
   }
@@ -352,14 +351,14 @@ class NotificationService {
    */
   async getUnreadCount(userId) {
     try {
-      const count = await Notification.find().forUser(userId)
-        .unread()
-        .countDocuments();
-
+      const count = await Notification.countDocuments({
+        'recipient.userId': userId,
+        'recipient.type': RECIPIENT_TYPES.USER,
+        'status.read': false,
+        'status.archived': false
+      });
       return count;
     } catch (error) {
-
-        console.error('Failed to get unread count', error);
       logger.error('Failed to get unread count', error);
       throw error;
     }
@@ -376,15 +375,6 @@ class NotificationService {
   async markAsRead(notificationId, userId) {
     try {
       const notification = await Notification.findById(notificationId);
-
-      if (!notification) {
-        throw new Error('Notification not found');
-      }
-
-      // Verify ownership
-      if (notification.recipient.userId?.toString() !== userId.toString()) {
-        throw new Error('Unauthorized');
-      }
 
       notification.status.read = true;
       notification.readAt = new Date();
@@ -450,15 +440,6 @@ class NotificationService {
     try {
       const notification = await Notification.findById(notificationId);
 
-      if (!notification) {
-        throw new Error('Notification not found');
-      }
-
-      // Verify ownership
-      if (notification.recipient.userId?.toString() !== userId.toString()) {
-        throw new Error('Unauthorized');
-      }
-
       notification.status.archived = true;
       notification.archivedAt = new Date();
 
@@ -481,17 +462,7 @@ class NotificationService {
    */
   async delete(notificationId, userId) {
     try {
-      const notification = await Notification.findById(notificationId);
-
-      if (!notification) {
-        throw new Error('Notification not found');
-      }
-
-      // Verify ownership
-      if (notification.recipient.userId?.toString() !== userId.toString()) {
-        throw new Error('Unauthorized');
-      }
-
+     
       await Notification.deleteOne({ _id: notificationId });
 
       logger.info('Notification deleted', {
