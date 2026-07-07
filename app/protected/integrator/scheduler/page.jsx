@@ -201,7 +201,7 @@ export default function Scheduler() {
                 router.back();
                 return;
               }
-              router.push(`/protected/integrator/project/team?projectId=${projectId}&searchQuery=${searchQuery}`);
+              router.push(`/protected/integrator/search-engineers?projectId=${projectId}&searchQuery=${searchQuery}`);
             }}
           >
             <MdArrowBack size={24} /> Back

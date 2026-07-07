@@ -25,9 +25,6 @@ const Search = () => {
     }
   }, [previousSearchQuery]);
 
-  console.log('Search data:', projectId);
-  console.log('Search error:', error);
-
   const columns = useMemo(
     () => [
       { Header: 'First Name', accessor: 'first_name', sortType: 'basic' },

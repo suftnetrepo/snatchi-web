@@ -222,7 +222,7 @@ export const DELETE = async (req) => {
         screen: 'project',
         screenParams: {
           scheduleId: schedule.data._id,
-          projectId: schedule.data.project?._id || '',
+          projectId: schedule.data.project?._id || ''
         }
       });
     }
@@ -254,13 +254,14 @@ export const PUT = async (req) => {
     // Handle status update action
     if (action === 'status') {
       const body = await req.json();
-      const result = await updateByStatus(id, user, body);
+      const result = await updateByStatus(id, body);
       return successResponse(result);
     }
 
     // Handle general update action
     if (action === 'update') {
       const body = await req.json();
+
       const result = await update(user?.integrator, id, body);
 
       if (result) {

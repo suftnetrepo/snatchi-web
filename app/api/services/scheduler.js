@@ -3,6 +3,7 @@ import { schedulerValidator } from '../validator/user';
 import Scheduler from '../models/scheduler';
 import Project from '../models/project';
 import User from '../models/user';
+import '../models/integrator';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
 import { logger } from '../utils/logger';
@@ -236,11 +237,10 @@ async function getByUser(user_id) {
 
 async function getSchedule(id) {
   try {
-   
-    
+    const result = await Scheduler.findOne({ _id: id })
+      .populate('engineer', 'first_name last_name email _id')
+      .populate('project', 'name description completeAddress location _id integrator priority');
 
-    const result = await Scheduler.findOne({ _id: id }).populate('engineer', 'first_name last_name email _id').populate('project', 'name description completeAddress location _id integrator priority');
-    
     return { data: result };
   } catch (error) {
     logger.error(error);
@@ -292,7 +292,6 @@ async function add(body) {
 }
 
 async function update(suid, id, body) {
-
   console.log('Updating schedule', { suid, id, body });
 
   if (!isValidObjectId(id)) {
@@ -337,12 +336,14 @@ async function update(suid, id, body) {
 }
 
 async function updateByStatus(id, body) {
-  if (!isValidObjectId(id)) {
-    throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
-  }
 
-  try {
+  console.log('Updating schedule status', { id, body });
   
+  try {
+    if (!isValidObjectId(id)) {
+      throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
+    }
+
     const schedule = await Scheduler.findById(id);
     if (!schedule) {
       throw Object.assign(new Error('Schedule not found'), { statusCode: 404 });
@@ -354,7 +355,7 @@ async function updateByStatus(id, body) {
     const result = await Scheduler.findByIdAndUpdate(
       id,
       {
-        body,
+        status: body.status,
         updatedAt: new Date()
       },
       { new: true, runValidators: true }
@@ -481,14 +482,14 @@ async function remove(suid, id) {
   }
 }
 
-async function removeAll() {  
+async function removeAll() {
   try {
     await Scheduler.deleteMany({});
     return true;
   } catch (error) {
     console.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
-  }   
+  }
 }
 
 async function getByProjectDateRange(projectId) {
@@ -534,6 +535,8 @@ async function getAllSchedules(integratorId) {
     throw new Error(JSON.stringify([{ field: 'integratorId', message: 'Invalid MongoDB ObjectId' }]));
   }
 
+  console.log('Fetching all schedules for integrator', { integratorId });
+
   try {
     const result = await Scheduler.find({
       $or: [{ integrator: integratorId }, { receivingIntegratorId: integratorId }, { payingIntegrator: integratorId }]
@@ -546,9 +549,11 @@ async function getAllSchedules(integratorId) {
         select: 'name stripeConnectAccountId connectAccountStatus chargesEnabled payoutsEnabled'
       });
 
+      console.log('Fetched all schedules for integrator', { integratorId, count: result.length });
+
     return { data: result };
   } catch (error) {
-    logger.error(error);
+    console.error(error);
     throw new Error('An unexpected server error occurred.');
   }
 }
