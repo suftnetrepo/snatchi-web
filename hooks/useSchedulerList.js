@@ -68,6 +68,10 @@ export const useSchedulerList = () => {
         // Apply filtering based on query parameter
         if (filter === 'accepted') {
           filtered = filtered.filter(s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.ACCEPTED);
+        } else if (filter === 'approval' || filter === 'awaiting-payment') {
+          filtered = filtered.filter(s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.APPROVED);
+        } else if (filter === 'pending') {
+          filtered = filtered.filter(s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.PENDING);
         } else if (filter === 'awaiting-approval') {
           filtered = filtered.filter(isAwaitingApproval);
         } else if (filter === 'in-progress') {
@@ -110,26 +114,16 @@ export const useSchedulerList = () => {
 
   const handleStatusChange = async (scheduleId, newStatus) => {
     try {
-      const response = await fetch(`/api/scheduler/${scheduleId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
 
-      const data = await response.json();
+        const response = await zat(SCHEDULER.updatestatus, { status: newStatus }, VERBS.PUT, {
+          id : scheduleId,
+          action: 'status'
+        });
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update schedule status');
-      }
-
-      const updatedSchedule = data.data;
-
-      if (data.success) {
+       if (response.success) {
         setSchedules(
           schedules.map(s =>
-            s._id === scheduleId ? updatedSchedule : s
+            s._id === scheduleId ? response.data : s
           )
         );
       }

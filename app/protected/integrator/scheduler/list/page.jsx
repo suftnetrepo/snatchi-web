@@ -50,6 +50,8 @@ const SchedulerList = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
 
+  console.log('schedules:', schedules);
+
   useEffect(() => {
     fetchSchedules(filter);
   }, [filter, currentUserId, currentIntegratorId, session?.user?.role]);
@@ -290,6 +292,22 @@ const SchedulerList = () => {
               >
                 Accepted
               </Button>
+               <Button
+                variant={filter === 'approval' ? 'primary' : 'outline-primary'}
+                size="sm"
+                onClick={() => router.push('/protected/integrator/scheduler/list?filter=approval')}
+                data-testid="scheduler-filter-approval"
+              >
+                Approval
+              </Button>
+                <Button
+                variant={filter === 'pending' ? 'primary' : 'outline-primary'}
+                size="sm"
+                onClick={() => router.push('/protected/integrator/scheduler/list?filter=pending')}
+                data-testid="scheduler-filter-pending"
+              >
+                Pending Acceptance
+              </Button> 
               <Button
                 variant={filter === 'awaiting-approval' ? 'primary' : 'outline-primary'}
                 size="sm"

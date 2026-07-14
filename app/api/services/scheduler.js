@@ -292,8 +292,6 @@ async function add(body) {
 }
 
 async function update(suid, id, body) {
-  console.log('Updating schedule', { suid, id, body });
-
   if (!isValidObjectId(id)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
@@ -336,9 +334,6 @@ async function update(suid, id, body) {
 }
 
 async function updateByStatus(id, body) {
-
-  console.log('Updating schedule status', { id, body });
-  
   try {
     if (!isValidObjectId(id)) {
       throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
@@ -359,7 +354,10 @@ async function updateByStatus(id, body) {
         updatedAt: new Date()
       },
       { new: true, runValidators: true }
-    );
+    ).populate([
+      { path: 'engineer', select: 'first_name last_name email' },
+      { path: 'project', select: 'name description completeAddress location _id integrator priority' }
+    ]);
 
     // Wire notification events after successful status update
     try {
@@ -369,7 +367,26 @@ async function updateByStatus(id, body) {
           scheduleId: result._id,
           receivingIntegratorId: result.receivingIntegratorId?._id,
           engineerName: result.engineer?.first_name || 'Engineer',
-          projectName: result.project?.name || 'Project'
+          projectName: result.project?.name || 'Project',
+          scheduleId: result._id,
+          engineerId: result.engineer?._id,
+          projectId: result.project?._id,
+          integratorId: result.project?.integrator,
+          projectName: result.project?.name,
+          completeAddress: result.project?.completeAddress || '',
+          latitude: result.project?.location?.coordinates[0],
+          longitude: result.project?.location?.coordinates[1],
+          radius: 200,
+          activeDays: getActiveDays(result.startDate, result.endDate),
+          startDate: result.startDate,
+          endDate: result.endDate,
+          status: result.status,
+          startTime: result.startTime,
+          endTime: result.endTime,
+          payingIntegratorName: result.payingIntegrator?.name || '',
+          receivingIntegratorName: result.receivingIntegrator?.name || '',
+          projectDescription: result.project?.description || '',
+          priority: result.project?.priority || ''
         });
       }
 
@@ -378,8 +395,30 @@ async function updateByStatus(id, body) {
         await notificationEvents.bookingDeclined({
           scheduleId: result._id,
           payingIntegratorId: result.payingIntegrator?._id,
+          projectName: result.project?.name || 'Project',
+          projectId: result.project?._id,
+          projectLocation: result.project?.location || '',
           engineerName: result.engineer?.first_name || 'Engineer',
-          projectName: result.project?.name || 'Project'
+          projectName: result.project?.name || 'Project',
+          scheduleId: result._id,
+          engineerId: result.engineer?._id,
+          projectId: result.project?._id,
+          integratorId: result.project?.integrator,
+          projectName: result.project?.name,
+          completeAddress: result.project?.completeAddress || '',
+          latitude: result.project?.location?.coordinates[0],
+          longitude: result.project?.location?.coordinates[1],
+          radius: 200,
+          activeDays: getActiveDays(result.startDate, result.endDate),
+          startDate: result.startDate,
+          endDate: result.endDate,
+          status: result.status,
+          startTime: result.startTime,
+          endTime: result.endTime,
+          payingIntegratorName: result.payingIntegrator?.name || '',
+          receivingIntegratorName: result.receivingIntegrator?.name || '',
+          projectDescription: result.project?.description || '',
+          priority: result.project?.priority || ''
         });
       }
 
@@ -390,8 +429,28 @@ async function updateByStatus(id, body) {
           engineerId: result.engineer?._id,
           payingIntegratorId: result.payingIntegrator?._id,
           projectName: result.project?.name || 'Project',
+          projectId: result.project?._id,
           siteLocation: result.project?.location || '',
-          startDate: result.startDate
+          startDate: result.startDate,
+          scheduleId: result._id,
+          engineerId: result.engineer?._id,
+          projectId: result.project?._id,
+          integratorId: result.project?.integrator,
+          projectName: result.project?.name,
+          completeAddress: result.project?.completeAddress || '',
+          latitude: result.project?.location?.coordinates[0],
+          longitude: result.project?.location?.coordinates[1],
+          radius: 200,
+          activeDays: getActiveDays(result.startDate, result.endDate),
+          startDate: result.startDate,
+          endDate: result.endDate,
+          status: result.status,
+          startTime: result.startTime,
+          endTime: result.endTime,
+          payingIntegratorName: result.payingIntegrator?.name || '',
+          receivingIntegratorName: result.receivingIntegrator?.name || '',
+          projectDescription: result.project?.description || '',
+          priority: result.project?.priority || ''
         });
       }
 
@@ -405,7 +464,26 @@ async function updateByStatus(id, body) {
           engineerId: result.engineer?._id,
           projectName: result.project?.name || 'Project',
           siteLocation: result.project?.location || '',
-          startDate: result.startDate
+          startDate: result.startDate,
+          scheduleId: result._id,
+          engineerId: result.engineer?._id,
+          projectId: result.project?._id,
+          integratorId: result.project?.integrator,
+          projectName: result.project?.name,
+          completeAddress: result.project?.completeAddress || '',
+          latitude: result.project?.location?.coordinates[0],
+          longitude: result.project?.location?.coordinates[1],
+          radius: 200,
+          activeDays: getActiveDays(result.startDate, result.endDate),
+          startDate: result.startDate,
+          endDate: result.endDate,
+          status: result.status,
+          startTime: result.startTime,
+          endTime: result.endTime,
+          payingIntegratorName: result.payingIntegrator?.name || '',
+          receivingIntegratorName: result.receivingIntegrator?.name || '',
+          projectDescription: result.project?.description || '',
+          priority: result.project?.priority || ''
         });
       }
 
@@ -416,7 +494,26 @@ async function updateByStatus(id, body) {
           payingIntegratorId: result.payingIntegrator?._id,
           receivingIntegratorId: result.receivingIntegratorId?._id,
           projectName: result.project?.name || 'Project',
-          engineerName: result.engineer?.first_name || 'Engineer'
+          engineerName: result.engineer?.first_name || 'Engineer',
+          scheduleId: result._id,
+          engineerId: result.engineer?._id,
+          projectId: result.project?._id,
+          integratorId: result.project?.integrator,
+          projectName: result.project?.name,
+          completeAddress: result.project?.completeAddress || '',
+          latitude: result.project?.location?.coordinates[0],
+          longitude: result.project?.location?.coordinates[1],
+          radius: 200,
+          activeDays: getActiveDays(result.startDate, result.endDate),
+          startDate: result.startDate,
+          endDate: result.endDate,
+          status: result.status,
+          startTime: result.startTime,
+          endTime: result.endTime,
+          payingIntegratorName: result.payingIntegrator?.name || '',
+          receivingIntegratorName: result.receivingIntegrator?.name || '',
+          projectDescription: result.project?.description || '',
+          priority: result.project?.priority || ''
         });
       }
 
@@ -427,7 +524,26 @@ async function updateByStatus(id, body) {
           payingIntegratorId: result.payingIntegrator?._id,
           receivingIntegratorId: result.receivingIntegratorId?._id,
           projectName: result.project?.name || 'Project',
-          engineerName: result.engineer?.first_name || 'Engineer'
+          engineerName: result.engineer?.first_name || 'Engineer',
+          scheduleId: result._id,
+          engineerId: result.engineer?._id,
+          projectId: result.project?._id,
+          integratorId: result.project?.integrator,
+          projectName: result.project?.name,
+          completeAddress: result.project?.completeAddress || '',
+          latitude: result.project?.location?.coordinates[0],
+          longitude: result.project?.location?.coordinates[1],
+          radius: 200,
+          activeDays: getActiveDays(result.startDate, result.endDate),
+          startDate: result.startDate,
+          endDate: result.endDate,
+          status: result.status,
+          startTime: result.startTime,
+          endTime: result.endTime,
+          payingIntegratorName: result.payingIntegrator?.name || '',
+          receivingIntegratorName: result.receivingIntegrator?.name || '',
+          projectDescription: result.project?.description || '',
+          priority: result.project?.priority || ''
         });
       }
 
@@ -439,7 +555,26 @@ async function updateByStatus(id, body) {
           payingIntegratorId: result.payingIntegrator?._id,
           receivingIntegratorId: result.receivingIntegratorId?._id,
           projectName: result.project?.name || 'Project',
-          cancellationReason: body.cancellationReason || 'No reason provided'
+          cancellationReason: body.cancellationReason || 'No reason provided',
+          scheduleId: result._id,
+          engineerId: result.engineer?._id,
+          projectId: result.project?._id,
+          integratorId: result.project?.integrator,
+          projectName: result.project?.name,
+          completeAddress: result.project?.completeAddress || '',
+          latitude: result.project?.location?.coordinates[0],
+          longitude: result.project?.location?.coordinates[1],
+          radius: 200,
+          activeDays: getActiveDays(result.startDate, result.endDate),
+          startDate: result.startDate,
+          endDate: result.endDate,
+          status: result.status,
+          startTime: result.startTime,
+          endTime: result.endTime,
+          payingIntegratorName: result.payingIntegrator?.name || '',
+          receivingIntegratorName: result.receivingIntegrator?.name || '',
+          projectDescription: result.project?.description || '',
+          priority: result.project?.priority || ''
         });
       }
     } catch (notificationError) {
@@ -549,7 +684,7 @@ async function getAllSchedules(integratorId) {
         select: 'name stripeConnectAccountId connectAccountStatus chargesEnabled payoutsEnabled'
       });
 
-      console.log('Fetched all schedules for integrator', { integratorId, count: result.length });
+    console.log('Fetched all schedules for integrator', { integratorId, count: result.length });
 
     return { data: result };
   } catch (error) {

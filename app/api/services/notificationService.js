@@ -68,33 +68,9 @@ class NotificationService {
         ]
       });
 
-      console.log('Creating notification:', {
-        recipient,
-        type,
-        title,
-        body,
-        screen,
-        screenParams,
-        relatedTo,
-        priority
-      });
-
-      // 1. Persist to database
-      // 2. After DB save, send FCM push
-      // 3. Update notification delivery status in DB
-
       // Persist to database FIRST
       const savedNotification = await notification.save();
-      console.log('Notification persisted', {
-        notificationId: savedNotification._id,
-        type,
-        recipientType: recipient.type,
-        recipientId: recipient.userId || recipient.integratorId
-      });
-
-
-      console.log('Notification persisted:', savedNotification);
-
+   
       // After DB save: Send FCM push
       await this._sendPushNotification(savedNotification);
 

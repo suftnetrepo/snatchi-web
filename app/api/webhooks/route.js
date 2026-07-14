@@ -45,7 +45,7 @@ export async function POST(req) {
 
   try {
     // Log request headers for debugging
-    logger.info('Webhook Headers:', {
+    console.info('Webhook Headers:', {
       'content-type': req.headers.get('content-type'),
       'stripe-signature': req.headers.get('stripe-signature') ? 'present' : 'missing'
     });
@@ -53,9 +53,9 @@ export async function POST(req) {
     try {
       // Try to get raw body using the stream method
       rawBody = await getRawBody(req);
-      logger.info('Raw body length:', rawBody.length);
+      console.info('Raw body length:', rawBody.length);
     } catch (bodyError) {
-      logger.error('Body parsing error:', bodyError);
+      console.error('Body parsing error:', bodyError);
       return NextResponse.json(
         { error: 'Could not parse request body' },
         { status: 400 }
@@ -69,9 +69,9 @@ export async function POST(req) {
         req.headers.get('stripe-signature'),
         process.env.STRIPE_WEBHOOK_SECRET_LOCAL
       );
-      logger.info('Webhook event constructed successfully:', { type: event.type });
+      console.info('Webhook event constructed successfully:', { type: event.type });
     } catch (signatureError) {
-      logger.error('Signature verification failed:', signatureError.message);
+      console.error('Signature verification failed:', signatureError.message);
       return NextResponse.json(
         { error: 'Webhook signature verification failed' },
         { status: 400 }
@@ -97,67 +97,16 @@ export async function POST(req) {
       'transfer.paid': handleTransferPaid
     };
 
-    // Check for duplicate event using deduplication middleware
-    let deduplicationResult;
-    try {
-      deduplicationResult = await webhookDeduplicationMiddleware(req, event);
-    } catch (deduplicationError) {
-      logger.error('Deduplication check failed:', deduplicationError.message);
-      return NextResponse.json(
-        { error: 'Deduplication check failed' },
-        { status: 500 }
-      );
-    }
-
-    // If duplicate, return success without processing
-    if (deduplicationResult.isDuplicate) {
-      logger.warn(`Duplicate webhook event detected: ${event.id}`);
-      return NextResponse.json({ received: true, isDuplicate: true }, { status: 200 });
-    }
-
     // Process the event
     try {
       if (handlers[event.type]) {
         await handlers[event.type](event);
-        logger.info(`Successfully processed ${event.type} event: ${event.id}`);
-
-        // Record successful processing
-        await recordWebhookEvent(
-          deduplicationResult.stripeEventId,
-          deduplicationResult.eventType,
-          deduplicationResult.customerId,
-          deduplicationResult.subscriptionId,
-          event.data.object,
-          'completed'
-        );
+        console.info(`Successfully processed ${event.type} event: ${event.id}`)
       } else {
-        logger.warn(`Unhandled event type: ${event.type}`);
-
-        // Record unhandled event
-        await recordWebhookEvent(
-          deduplicationResult.stripeEventId,
-          deduplicationResult.eventType,
-          deduplicationResult.customerId,
-          deduplicationResult.subscriptionId,
-          event.data.object,
-          'completed',
-          'Unhandled event type'
-        );
+        console.warn(`Unhandled event type: ${event.type}`);
       }
     } catch (handlerError) {
-      logger.error(`Error processing ${event.type} event:`, handlerError);
-
-      // Record failed processing
-      try {
-        await markWebhookEventFailed(
-          deduplicationResult.stripeEventId,
-          handlerError.message,
-          0
-        );
-      } catch (recordError) {
-        logger.error('Failed to record error:', recordError);
-      }
-
+      console.error(`Error processing ${event.type} event:`, handlerError);
       // Return error to Stripe so it will retry
       return NextResponse.json(
         { error: 'Webhook processing failed', details: handlerError.message },
@@ -168,7 +117,7 @@ export async function POST(req) {
     return NextResponse.json({ received: true }, { status: 200 });
 
   } catch (error) {
-    logger.error('Webhook processing error:', {
+    console.error('Webhook processing error:', {
       message: error.message,
       stack: error.stack,
       eventType: event?.type,

@@ -137,8 +137,22 @@ const bookingAccepted = async (payload) => {
     scheduleId,
     receivingIntegratorId,
     engineerName,
+    engineerId,
     projectName,
-    projectDescription
+    projectId,
+    projectDescription,
+    integratorId,
+    completeAddress,
+    latitude,
+    longitude,
+    radius,
+    activeDays,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+    status,
+    priority
   } = payload;
 
   try {
@@ -152,15 +166,31 @@ const bookingAccepted = async (payload) => {
       body: `${engineerName} accepted the booking for ${projectName}`,
       screen: NOTIFICATION_SCREENS.SCHEDULES,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        projectName,
+        projectId,
+        projectDescription,
+        engineerId: engineerId?.toString(),
+        engineerName,
+        integratorId,
+        completeAddress,
+        latitude,
+        longitude,
+        radius,
+        activeDays,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        status,
+        priority
       },
       relatedTo: {
         schedule: scheduleId
       },
       priority: 'high'
     });
-
-    logNotificationEvent('BOOKING_ACCEPTED', 1, {
+      logNotificationEvent('BOOKING_ACCEPTED', 1, {
       receivingIntegratorId,
       scheduleId,
       engineerName
@@ -186,9 +216,23 @@ const bookingDeclined = async (payload) => {
     scheduleId,
     payingIntegratorId,
     engineerName,
+    engineerId,
     projectName,
+    projectId,
+    projectDescription,
     declineReason,
-    status
+    integratorId,
+    completeAddress,
+    latitude,
+    longitude,
+    radius,
+    activeDays,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+    status,
+    priority
   } = payload;
 
   try {
@@ -200,10 +244,27 @@ const bookingDeclined = async (payload) => {
       type: NOTIFICATION_TYPES.ENGINEER_DECLINED,
       title: 'Engineer Declined Booking',
       body: `${engineerName} declined the booking for ${projectName}`,
-      status: status,
       screen: NOTIFICATION_SCREENS.SCHEDULES,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        status: 'declined',
+        projectName,
+        projectId,
+        projectDescription,
+        engineerId: engineerId?.toString(),
+        engineerName,
+        declineReason,
+        integratorId,
+        completeAddress,
+        latitude,
+        longitude,
+        radius,
+        activeDays,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        priority
       },
       relatedTo: {
         schedule: scheduleId
@@ -240,8 +301,20 @@ const bookingApproved = async (payload) => {
     engineerId,
     payingIntegratorId,
     projectName,
+    projectId,
+    projectDescription,
     siteLocation,
-    startDate
+    integratorId,
+    completeAddress,
+    latitude,
+    longitude,
+    radius,
+    activeDays,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+    priority
   } = payload;
 
   try {
@@ -257,7 +330,24 @@ const bookingApproved = async (payload) => {
       body: `Your booking for ${projectName} has been approved. Awaiting payment.`,
       screen: NOTIFICATION_SCREENS.CALENDAR,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        status: 'approved',
+        engineerId: engineerId.toString(),
+        projectName,
+        projectId,
+        projectDescription,
+        siteLocation,
+        integratorId,
+        completeAddress,
+        latitude,
+        longitude,
+        radius,
+        activeDays,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        priority
       },
       relatedTo: {
         schedule: scheduleId
@@ -276,14 +366,22 @@ const bookingApproved = async (payload) => {
       body: `Booking for ${projectName} approved. Payment now due.`,
       screen: NOTIFICATION_SCREENS.PAYMENTS,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        status: 'approved',
+        projectName,
+        projectId,
+        engineerId: engineerId.toString(),
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        priority
       },
       relatedTo: {
         schedule: scheduleId
       },
       priority: 'high'
     });
-
     logNotificationEvent('BOOKING_APPROVED', 2, {
       engineerId,
       payingIntegratorId,
@@ -501,8 +599,21 @@ const readyToStart = async (payload) => {
     scheduleId,
     engineerId,
     projectName,
+    projectId,
+    projectDescription,
     siteLocation,
-    startDate
+    integratorId,
+    completeAddress,
+    latitude,
+    longitude,
+    radius,
+    activeDays,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+    status,
+    priority
   } = payload;
 
   try {
@@ -524,14 +635,30 @@ const readyToStart = async (payload) => {
       body: `${projectName} at ${siteLocation} starts ${formattedDate}`,
       screen: NOTIFICATION_SCREENS.CALENDAR,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        engineerId: engineerId?.toString(),
+        projectName,
+        projectId,
+        projectDescription,
+        siteLocation,
+        integratorId,
+        completeAddress,
+        latitude,
+        longitude,
+        radius,
+        activeDays,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        status,
+        priority
       },
       relatedTo: {
         schedule: scheduleId
       },
       priority: 'high'
     });
-
     logNotificationEvent('READY_TO_START', 1, {
       engineerId,
       scheduleId
@@ -560,7 +687,14 @@ const workStarted = async (payload) => {
     payingIntegratorId,
     receivingIntegratorId,
     projectName,
-    engineerName
+    projectId,
+    engineerId,
+    engineerName,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+    status
   } = payload;
 
   try {
@@ -575,7 +709,16 @@ const workStarted = async (payload) => {
       body: `${engineerName} started work on ${projectName}`,
       screen: NOTIFICATION_SCREENS.SCHEDULES,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        projectName,
+        projectId,
+        engineerId: engineerId?.toString(),
+        engineerName,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        status
       },
       relatedTo: {
         schedule: scheduleId
@@ -594,7 +737,16 @@ const workStarted = async (payload) => {
       body: `Work on ${projectName} has started`,
       screen: NOTIFICATION_SCREENS.SCHEDULES,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        projectName,
+        projectId,
+        engineerId: engineerId?.toString(),
+        engineerName,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        status
       },
       relatedTo: {
         schedule: scheduleId
@@ -632,7 +784,14 @@ const workCompleted = async (payload) => {
     payingIntegratorId,
     receivingIntegratorId,
     projectName,
-    engineerName
+    projectId,
+    engineerId,
+    engineerName,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+    status
   } = payload;
 
   try {
@@ -647,7 +806,16 @@ const workCompleted = async (payload) => {
       body: `${engineerName} completed work on ${projectName}`,
       screen: NOTIFICATION_SCREENS.SCHEDULES,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        projectName,
+        projectId,
+        engineerId: engineerId?.toString(),
+        engineerName,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        status
       },
       relatedTo: {
         schedule: scheduleId
@@ -666,7 +834,16 @@ const workCompleted = async (payload) => {
       body: `Work on ${projectName} is complete`,
       screen: NOTIFICATION_SCREENS.SCHEDULES,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        projectName,
+        projectId,
+        engineerId: engineerId?.toString(),
+        engineerName,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        status
       },
       relatedTo: {
         schedule: scheduleId
@@ -810,7 +987,13 @@ const scheduleCancelled = async (payload) => {
     payingIntegratorId,
     receivingIntegratorId,
     projectName,
-    cancellationReason
+    projectId,
+    cancellationReason,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+    status
   } = payload;
 
   try {
@@ -825,7 +1008,15 @@ const scheduleCancelled = async (payload) => {
       body: `Booking for ${projectName} has been cancelled`,
       screen: NOTIFICATION_SCREENS.CALENDAR,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        projectName,
+        projectId,
+        cancellationReason,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        status
       },
       relatedTo: {
         schedule: scheduleId
@@ -844,7 +1035,15 @@ const scheduleCancelled = async (payload) => {
       body: `Booking for ${projectName} has been cancelled`,
       screen: NOTIFICATION_SCREENS.SCHEDULES,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        projectName,
+        projectId,
+        cancellationReason,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        status
       },
       relatedTo: {
         schedule: scheduleId
@@ -863,7 +1062,15 @@ const scheduleCancelled = async (payload) => {
       body: `Booking for ${projectName} has been cancelled`,
       screen: NOTIFICATION_SCREENS.SCHEDULES,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        projectName,
+        projectId,
+        cancellationReason,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        status
       },
       relatedTo: {
         schedule: scheduleId

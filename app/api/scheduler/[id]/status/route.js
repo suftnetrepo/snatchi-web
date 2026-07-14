@@ -3,7 +3,7 @@ import { getUserSession } from '@/utils/generateToken';
 import { updateByStatus } from '../../../services/scheduler';
 import { logger } from '../../../utils/logger';
 
-export async function PUT(req, { params }) {
+export async function PUT(req) {
   try {
     const user = await getUserSession(req);
 
@@ -11,8 +11,10 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
+    const url = new URL(req.url);
+    const id = url.searchParams.get('id');
     const body = await req.json();
-    const result = await updateByStatus(params.id, user, body);
+    const result = await updateByStatus(id, body);
 
     return NextResponse.json({ success: true, data: result }, { status: 200 });
   } catch (error) {

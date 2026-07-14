@@ -12,18 +12,7 @@ const StripeWebhookEventSchema = new mongoose.Schema(
     eventType: {
       type: String,
       required: true,
-      trim: true,
-      enum: [
-        'invoice.payment_succeeded',
-        'invoice.payment_failed',
-        'customer.subscription.created',
-        'customer.subscription.updated',
-        'customer.subscription.deleted',
-        'customer.subscription.trial_will_end',
-        'charge.refunded',
-        'payment_intent.succeeded',
-        'payment_intent.payment_failed'
-      ]
+      trim: true
     },
     customerId: {
       type: String,
