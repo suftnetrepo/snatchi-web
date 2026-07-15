@@ -1,108 +1,196 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useStripe } from '@stripe/react-stripe-js';
+import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+    faHome,
+    faProjectDiagram,
+    faCogs,
+    faUser
+} from '@fortawesome/free-solid-svg-icons';
+import { signIn, getCsrfToken } from 'next-auth/react';
+import { useSubscriber } from '../../../hooks/useSubscriber';
 
-export default function CheckoutSuccessPage() {
-  const stripe = useStripe();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const [status, setStatus] = useState('processing');
-  const [error, setError] = useState(null);
+const PASSWORD = '12345!';
 
-  useEffect(() => {
-    const handlePaymentConfirmation = async () => {
-      if (!stripe) return;
+function CheckoutSuccessContent() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { handleVerifySubscriptionStatus } = useSubscriber();
+    const [csrfToken, setCsrfToken] = useState('');
+    const stripeCustomerId = searchParams.get('stripeCustomerId');
+    const email = searchParams.get('email');
+    const plan = searchParams.get('plan') || 'Basic Plan';
+    const amount = searchParams.get('amount') || '£50';
 
-      const clientSecret = searchParams.get('payment_intent_client_secret');
+    const [status, setStatus] = useState('processing');
+    // processing | active | failed
 
-      if (!clientSecret) {
-        setStatus('error');
-        setError('Invalid return from payment processor');
-        return;
-      }
+    useEffect(() => {
+        getCsrfToken().then(setCsrfToken);
+    }, []);
 
-      try {
-        // Retrieve the payment intent to check status
-        const { paymentIntent } = await stripe.retrievePaymentIntent(clientSecret);
+    useEffect(() => {
+        if (!stripeCustomerId || !email || !csrfToken) return;
 
-        if (!paymentIntent) {
-          setStatus('error');
-          setError('Payment intent not found');
-          return;
-        }
+        let retryCount = 0;
+        let isNavigating = false;
 
-        switch (paymentIntent.status) {
-          case 'succeeded':
-            setStatus('success');
-            // Redirect to dashboard after 2 seconds
-            setTimeout(() => {
-              router.push('/protected/dashboard');
-            }, 2000);
-            break;
+        const checkStatus = async () => {
+            try {
+                const data = await handleVerifySubscriptionStatus(stripeCustomerId);
 
-          case 'processing':
-            setStatus('processing');
-            // Redirect to dashboard (payment is processing)
-            setTimeout(() => {
-              router.push('/protected/dashboard');
-            }, 2000);
-            break;
+                if (data.active && !isNavigating) {
+                    isNavigating = true;
+                    setStatus('active');
 
-          case 'requires_payment_method':
-            setStatus('error');
-            setError('Payment failed. Please try again with a different payment method.');
-            // Redirect to checkout after 5 seconds
-            setTimeout(() => {
-              router.push('/checkout');
-            }, 5000);
-            break;
+                    const loginResult = await signIn('credentials', {
+                        redirect: false,
+                        email,
+                        password: PASSWORD,
+                        csrfToken
+                    });
 
-          default:
-            setStatus('error');
-            setError('Unexpected payment status. Please contact support.');
-            break;
-        }
-      } catch (err) {
-        setStatus('error');
-        setError(err?.message || 'An error occurred during payment confirmation');
-      }
-    };
+                    if (loginResult?.error) {
+                        isNavigating = false;
+                        setStatus('failed');
+                        return;
+                    }
 
-    handlePaymentConfirmation();
-  }, [stripe, searchParams, router]);
+                    window.location.assign('/protected/integrator/dashboard');
+                    return;
+                }
 
+                retryCount++;
+                if (retryCount > 15) {
+                    setStatus('failed');
+                }
+
+            } catch (err) {
+                setStatus('failed');
+            }
+        };
+
+        const interval = setInterval(checkStatus, 2000);
+        return () => clearInterval(interval);
+
+    }, [csrfToken, email, handleVerifySubscriptionStatus, stripeCustomerId]);
+
+    return (
+        <div
+            style={{
+                minHeight: '100vh',
+                background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+                display: 'flex',
+                alignItems: 'center',
+            }}
+        >
+            <Container>
+                <Row className="justify-content-center">
+                    <Col lg={7} md={9}>
+                        <Card className="shadow-lg border-0 text-center" style={{ borderRadius: 20 }}>
+                            <Card.Body className="p-5">
+
+                                {/* Icon Circle */}
+                                <div
+                                    className="d-flex justify-content-center align-items-center mb-4"
+                                    style={{
+                                        width: 90,
+                                        height: 90,
+                                        borderRadius: '50%',
+                                        background: '#e7f5ff',
+                                        margin: '0 auto',
+                                    }}
+                                >
+                                    {status === 'processing' && (
+                                        <FontAwesomeIcon icon={faCogs} size="2x" className="text-primary" spin />
+                                    )}
+
+                                    {status === 'active' && (
+                                        <FontAwesomeIcon icon={faProjectDiagram} size="2x" className="text-primary" />
+                                    )}
+
+                                    {status === 'failed' && (
+                                        <FontAwesomeIcon icon={faUser} size="2x" className="text-danger" />
+                                    )}
+                                </div>
+
+                                {/* Title */}
+                                <h2 className="fw-bold mb-3">
+                                    {status === 'processing' && 'Processing Your Subscription...'}
+                                    {status === 'active' && 'Subscription Activated 🎉'}
+                                    {status === 'failed' && 'Activation Failed'}
+                                </h2>
+
+                                {/* Subtitle */}
+                                <p className="text-muted mb-4">
+                                    {status === 'processing' &&
+                                        'We are confirming your payment and activating your account.'}
+
+                                    {status === 'active' &&
+                                        'Your account is ready. Redirecting to dashboard...'}
+
+                                    {status === 'failed' &&
+                                        'Something went wrong. Please contact support.'}
+                                </p>
+
+                                {/* Details */}
+                                <Card className="border-0 bg-light mb-4" style={{ borderRadius: 12 }}>
+                                    <Card.Body>
+                                        <Row>
+                                            <Col md={4}>
+                                                <small className="text-muted d-block">Plan</small>
+                                                <span className="fw-semibold">
+                                                    <FontAwesomeIcon icon={faProjectDiagram} className="me-2 text-primary" />
+                                                    {plan}
+                                                </span>
+                                            </Col>
+
+                                            <Col md={4}>
+                                                <small className="text-muted d-block">Amount</small>
+                                                <span className="fw-semibold">
+                                                    {amount}
+                                                </span>
+                                            </Col>
+
+                                            <Col md={4}>
+                                                <small className="text-muted d-block">Customer ID</small>
+                                                <Badge bg="secondary">
+                                                    {stripeCustomerId}
+                                                </Badge>
+                                            </Col>
+                                        </Row>
+                                    </Card.Body>
+                                </Card>
+
+                                {/* Button if failed */}
+                                {status === 'failed' && (
+                                    <Button
+                                        variant="primary"
+                                        size="lg"
+                                        className="w-100 rounded-pill"
+                                        onClick={() => router.push('/')}
+                                    >
+                                        <FontAwesomeIcon icon={faHome} className="me-2" />
+                                        Go to Homepage
+                                    </Button>
+                                )}
+
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </Container>
+        </div>
+    );
+}
+
+export default function Page() {
   return (
-    <div style={{ padding: '40px', textAlign: 'center', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ maxWidth: '500px', width: '100%' }}>
-        {status === 'processing' && (
-          <div>
-            <h2>Processing Your Payment</h2>
-            <p>Please wait while we confirm your payment...</p>
-            <div style={{ marginTop: '20px', fontSize: '48px' }}>⏳</div>
-          </div>
-        )}
-
-        {status === 'success' && (
-          <div>
-            <h2>Payment Successful!</h2>
-            <p>Thank you for your subscription. Redirecting to your dashboard...</p>
-            <div style={{ marginTop: '20px', fontSize: '48px' }}>✅</div>
-          </div>
-        )}
-
-        {status === 'error' && (
-          <div style={{ color: 'red' }}>
-            <h2>Payment Failed</h2>
-            <p>{error}</p>
-            <div style={{ marginTop: '20px', fontSize: '48px' }}>❌</div>
-            <p style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
-              Redirecting back to checkout...
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <CheckoutSuccessContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { Button } from 'react-bootstrap';
 import { MdArrowBack } from 'react-icons/md';
@@ -105,7 +105,7 @@ const PremiumCalendarEvent = ({ event }) => {
   );
 };
 
-export default function Scheduler() {
+function SchedulerContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const projectId = searchParams.get('projectId');
@@ -240,5 +240,13 @@ export default function Scheduler() {
         handleDelete={handleDelete}
       />
     </div>
+  );
+}
+
+export default function Scheduler() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SchedulerContent />
+    </Suspense>
   );
 }

@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import styles from './error.module.css';
 
-export default function PaymentErrorPage() {
+function PaymentErrorContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const error = searchParams.get('error');
@@ -50,5 +50,13 @@ export default function PaymentErrorPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function PaymentErrorPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PaymentErrorContent />
+    </Suspense>
   );
 }

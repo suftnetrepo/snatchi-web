@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, Suspense } from 'react';
 import { Table } from '@/components/elements/table/table';
 import { Button } from 'react-bootstrap';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -25,7 +25,7 @@ import {
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
-const SchedulerList = () => {
+function SchedulerListContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
@@ -385,6 +385,12 @@ const SchedulerList = () => {
       )}
     </>
   );
-};
+}
 
-export default SchedulerList;
+export default function SchedulerList() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SchedulerListContent />
+    </Suspense>
+  );
+}

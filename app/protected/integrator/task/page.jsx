@@ -21,7 +21,7 @@ import RenderTaskOffcanvas from './renderTaskOffcanvas';
 
 const RenderDocumentOffcanvas = dynamic(() => import('./renderDocumentOffcanvas'), { ssr: true });
 
-const RenderTask = () => {
+function RenderTaskContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const projectId = searchParams.get('projectId');
@@ -225,7 +225,7 @@ const RenderTask = () => {
 export default function Task() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <RenderTask />
+      <RenderTaskContent />
     </Suspense>
   );
 }

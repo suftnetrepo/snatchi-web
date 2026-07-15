@@ -109,6 +109,19 @@ const useSubscriber = (priceId) => {
     }
   }
 
+    async function handleVerifySubscriptionStatus(stripeCustomerId) {   
+    const { success, errorMessage, data } = await zat(STRIPE.verifySubscriptionStatus, null, VERBS.GET , {
+      stripeCustomerId: stripeCustomerId
+    });
+
+    if (success) {
+      return data;
+    } else {
+      handleError(errorMessage || 'Failed to verify subscription status.');
+      return false;
+    }
+  }
+
   useEffect(() => {
     handlePricing(priceId);
   }, [priceId]);
@@ -120,7 +133,8 @@ const useSubscriber = (priceId) => {
     handleError,
     handleErrorReset,
     handleSuccess,
-    handleCustomerPortalSession
+    handleCustomerPortalSession,
+    handleVerifySubscriptionStatus
    };
 };
 

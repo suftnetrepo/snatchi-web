@@ -227,5 +227,19 @@ async function updateIntegratorStatus(stripeCustomerId, body) {
   }
 }
 
+async function getVerifySubscriptionStatus(id) {
+  try {
+    const result = await Integrator.findOne({ stripeCustomerId: id });
+    
+    return {
+      active: result?.status === 'active'
+    };
+  } catch (error) {
+    logger.error(`Failed to verify subscription for customer ${id}:`, error);
+    throw new Error(`Unable to verify subscription status`);
+  }
+}
 
-export { getIntegratorsBySearch, updateIntegratorStatus, getIntegratorById, updateIntegrator, recentInspectors, aggregateInspectorStatus, getIntegrators, getWeeklyUserSignOnData };
+
+
+export { getIntegratorsBySearch, getVerifySubscriptionStatus, updateIntegratorStatus, getIntegratorById, updateIntegrator, recentInspectors, aggregateInspectorStatus, getIntegrators, getWeeklyUserSignOnData };

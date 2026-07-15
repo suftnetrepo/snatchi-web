@@ -8,7 +8,7 @@ import { useTaskEdit } from '../../../../../hooks/useTask';
 import TaskForm from '../taskForm';
 import ErrorDialogue from '../../../../../src/components/elements/errorDialogue';
 
-const EditForm = () => {
+function EditFormContent() {
   const router = useRouter(); 
   const searchParams = useSearchParams();
   const projectId = searchParams.get('projectId');
@@ -35,7 +35,7 @@ const EditForm = () => {
   };
 
   return (
-      <Suspense fallback={<div>Loading...</div>}>
+    <>
       <div className="ms-5 me-10 mt-5">
         <div className="card-body">
           <h3 className="card-title  mb-2 mb-5">Edit Task</h3>
@@ -49,8 +49,14 @@ const EditForm = () => {
         </div>
       </div>
       {error && <ErrorDialogue showError={error} onClose={() => handleReset()} />}
+    </>
+  );
+}
+
+export default function EditForm() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EditFormContent />
     </Suspense>
   );
-};
-
-export default EditForm;
+}

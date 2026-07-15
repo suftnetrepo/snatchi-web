@@ -1,5 +1,6 @@
-import Stripe from 'stripe';
+// import Stripe from 'stripe';
 import { logger } from '../../utils/logger';
+import Stripe from 'stripe';
 import { pricingList } from '../../../../src/data/pricing';
 import { rateLimitMiddleware, recordFailedCheckout, clearRateLimit } from '../../middleware/rate-limiter';
 const { NextResponse } = require('next/server');
@@ -14,18 +15,19 @@ export async function POST(req) {
   try {
     // Parse the request body
     const body = await req.json();
-    const { customerId, priceId, contact, email } = body;
+    const { priceId, contact, email } = body;
 
-    // Validate customer ID
-    if (!customerId) {
-      logger.warn('Missing customer ID in checkout request');
-      return NextResponse.json(
-        { error: 'Missing customer ID' },
-        { status: 400 }
-      );
-    }
+    // Initialize Stripe with modern API version
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2024-04-10'
+    });
+
+    const customer = await stripe.customers.create({
+      email,
+    });
 
     // Check rate limit (normal checkout attempts)
+    const customerId = customer.id;
     const rateLimit = rateLimitMiddleware(customerId, 'checkout', false);
     if (!rateLimit.allowed) {
       logger.warn(`Rate limit exceeded for customer ${customerId}`);
@@ -42,11 +44,6 @@ export async function POST(req) {
         }
       );
     }
-
-    // Initialize Stripe with modern API version
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-04-10'
-    });
 
     // Validate price ID
     if (!isValidPriceId(priceId)) {
@@ -106,6 +103,7 @@ export async function POST(req) {
       {
         data: {
           subscriptionId: subscription.id,
+           customerId: customerId,
           clientSecret: subscription?.latest_invoice?.payment_intent?.client_secret
         }
       },

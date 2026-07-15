@@ -13,7 +13,7 @@ import dynamic from 'next/dynamic';
 
 const TaskForm = dynamic(() => import('../taskForm'), { ssr: false });
 
-const TaskCreateContent = () => {
+function TaskCreateInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const projectId = searchParams.get('projectId');
@@ -38,7 +38,7 @@ const TaskCreateContent = () => {
   };
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <>
       <div className="ms-5 me-10 mt-5">
         <div className="card-body">
           <div className="d-flex justify-content-start align-items-center mb-3">
@@ -70,14 +70,14 @@ const TaskCreateContent = () => {
         />
       )}
       {error && <ErrorDialogue showError={error} onClose={() => handleReset()} />}
-    </Suspense>
+    </>
   );
-};
+}
 
 export default function CreateForm() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <TaskCreateContent />
+      <TaskCreateInner />
     </Suspense>
   );
 }
