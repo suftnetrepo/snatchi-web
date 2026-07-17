@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Dropdown, DropdownMenu, Spinner } from 'react-bootstrap';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationCircle, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -34,41 +34,54 @@ import './NotificationDropdown.scss';
 export default function NotificationDropdown() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
   const { notifications, loading, error, fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
-  const { refetch: refetchCount } = useNotificationCount(0); // no polling - NotificationBell handles it
+  const { unreadCount, refetch: refetchCount } = useNotificationCount(30000); // single poll for the whole header
 
-  // Fetch notifications when dropdown opens
+  // Close when clicking outside the entire component
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [isOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
+  // Fetch notifications when panel opens
   useEffect(() => {
     if (isOpen) {
-      fetchNotifications({
-        limit: 10,
-        unreadOnly: false,
-        archived: false,
-        reset: true
-      });
+      fetchNotifications({ limit: 10, unreadOnly: false, archived: false, reset: true });
     }
   }, [isOpen, fetchNotifications]);
 
-  const handleBellClick = () => {
+  const handleBellClick = useCallback(() => {
     setIsOpen((prev) => !prev);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsOpen(false);
-  };
+  }, []);
 
   const handleNotificationClick = async (notification) => {
     try {
-      // Mark as read
       await markAsRead(notification._id);
       refetchCount();
-
-      // Navigate to related screen
       const route = buildNotificationRoute(notification);
-      router.push(route);
-
-      // Close dropdown
       setIsOpen(false);
+      router.push(route);
     } catch (err) {
       console.error('Failed to handle notification click', err);
     }
@@ -84,12 +97,13 @@ export default function NotificationDropdown() {
   };
 
   return (
-    <Dropdown className="notification-dropdown" show={isOpen} onToggle={(show) => setIsOpen(show)}>
-      <Dropdown.Toggle as="div" className="position-relative">
-        <NotificationBell isOpen={isOpen} />
-      </Dropdown.Toggle>
+    <div className="notification-dropdown" ref={containerRef} style={{ position: 'relative' }}>
+      <div className="position-relative">
+        <NotificationBell onClick={handleBellClick} isOpen={isOpen} unreadCount={unreadCount} />
+      </div>
 
-      <DropdownMenu className="notification-dropdown-menu" align="end" data-testid="notification-dropdown">
+      {isOpen && (
+        <div className="notification-dropdown-menu" data-testid="notification-dropdown">
         {/* Header */}
         <div className="notification-dropdown-header">
           <h6 className="mb-0">Notifications</h6>
@@ -167,8 +181,9 @@ export default function NotificationDropdown() {
             </button>
           </div>
         )}
-      </DropdownMenu>
-    </Dropdown>
+        </div>
+      )}
+    </div>
   );
 }
 
