@@ -9,6 +9,7 @@ export const GET = async (req) => {
         const stripeCustomerId = searchParams.get('stripeCustomerId');
 
         const data = await getVerifySubscriptionStatus(stripeCustomerId);
+        
         return NextResponse.json({ data, success: true });
     } catch (error) {
         logger.error(error);

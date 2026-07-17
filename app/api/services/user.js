@@ -142,7 +142,7 @@ async function createUser(id, body) {
   try {
     const newUser = await User.create({
       integrator: id,
-      password: await generatePassword('#12345!'),
+      password: await generatePassword('12345!'),
       ...body
     });
 

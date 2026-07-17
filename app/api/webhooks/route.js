@@ -1,11 +1,6 @@
 import Stripe from 'stripe';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
-import { 
-  webhookDeduplicationMiddleware, 
-  recordWebhookEvent, 
-  markWebhookEventFailed 
-} from '../middleware/webhook-deduplication';
 
 const {
   invoicePaymentSuccess,
@@ -67,7 +62,7 @@ export async function POST(req) {
       event = stripe.webhooks.constructEvent(
         rawBody,
         req.headers.get('stripe-signature'),
-        process.env.STRIPE_WEBHOOK_SECRET
+        process.env.STRIPE_WEBHOOK_SECRET_LOCAL
       );
       console.info('Webhook event constructed successfully:', { type: event.type });
     } catch (signatureError) {

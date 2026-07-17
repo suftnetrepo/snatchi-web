@@ -8,20 +8,26 @@
 }
 
 .notification-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1050;
   width: 380px;
   max-height: 600px;
   padding: 0;
   border: 1px solid var(--bs-border-color, #dee2e6);
   border-radius: 0.5rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: var(--bs-body-bg, #fff);
 
   @media (max-width: 576px) {
     width: 100vw;
     max-width: 100%;
     max-height: 70vh;
+    right: -1rem;
   }
 }
 

@@ -64,7 +64,7 @@ function CheckoutSuccessContent() {
                 }
 
                 retryCount++;
-                if (retryCount > 15) {
+                if (retryCount > 10) {
                     setStatus('failed');
                 }
 

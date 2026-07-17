@@ -230,6 +230,8 @@ async function updateIntegratorStatus(stripeCustomerId, body) {
 async function getVerifySubscriptionStatus(id) {
   try {
     const result = await Integrator.findOne({ stripeCustomerId: id });
+
+    console.log(`Subscription status for customer ${id}:`, result);
     
     return {
       active: result?.status === 'active'
