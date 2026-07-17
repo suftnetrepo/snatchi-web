@@ -35,7 +35,7 @@ export default function NotificationDropdown() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const { notifications, loading, error, fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
-  const { refetch: refetchCount } = useNotificationCount();
+  const { refetch: refetchCount } = useNotificationCount(0); // no polling - NotificationBell handles it
 
   // Fetch notifications when dropdown opens
   useEffect(() => {

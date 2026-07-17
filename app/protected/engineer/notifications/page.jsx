@@ -29,7 +29,7 @@ import './page.scss';
  */
 export default function NotificationCenterPage() {
   const router = useRouter();
-  const { refetch: refetchCount } = useNotificationCount();
+  const { refetch: refetchCount } = useNotificationCount(0); // no polling - NotificationBell handles it
 
   const [filterUnread, setFilterUnread] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
