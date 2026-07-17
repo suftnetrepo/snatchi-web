@@ -148,7 +148,7 @@
     "zod-i18n-map": "^2.27.0"
   },
   "devDependencies": {
-    "@faker-js/faker": "^10.4.0",
+    "@faker-js/faker": "^9.3.0",
     "@playwright/test": "^1.60.0",
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.2",
@@ -175,5 +175,8 @@
   },
   "resolutions": {
     "@types/react": "^17.0.38"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   }
 }
