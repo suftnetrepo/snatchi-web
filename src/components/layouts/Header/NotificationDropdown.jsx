@@ -36,7 +36,7 @@ export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   const { notifications, loading, error, fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
-  const { unreadCount, refetch: refetchCount } = useNotificationCount(30000); // single poll for the whole header
+  const { unreadCount, refetch: refetchCount } = useNotificationCount();
 
   // Close when clicking outside the entire component
   useEffect(() => {

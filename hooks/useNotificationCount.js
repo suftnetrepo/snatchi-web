@@ -13,24 +13,17 @@ import { useState, useEffect, useCallback, useRef } from 'react';
  * - Handles auth expiration safely
  * - Avoids excessive polling with debounce
  */
-export function useNotificationCount(refreshInterval = 30000) {
+export function useNotificationCount() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const intervalRef = useRef(null);
-  const lastFetchRef = useRef(0);
-  const MIN_FETCH_INTERVAL = 3000; // Prevent spam - min 3 seconds between fetches
+  const isFetchingRef = useRef(false);
+  const hasFetchedRef = useRef(false);
 
-  // Fetch unread count
-  const fetchUnreadCount = useCallback(async (force = false) => {
-    // Prevent excessive polling
-    const now = Date.now();
-    if (!force && now - lastFetchRef.current < MIN_FETCH_INTERVAL) {
-      return;
-    }
-
-    lastFetchRef.current = now;
+  const fetchUnreadCount = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
 
     try {
       const response = await fetch('/api/notifications/unread-count', {
@@ -60,33 +53,22 @@ export function useNotificationCount(refreshInterval = 30000) {
     } catch (err) {
       setError(err.message);
       setLoading(false);
-      // Don't reset count on error - keep previous value for UX
+    } finally {
+      isFetchingRef.current = false;
     }
   }, []);
 
-  // Setup auto-refresh on mount
+  // Fetch once on mount only
   useEffect(() => {
-    // Initial fetch
-    fetchUnreadCount(true);
-
-    // Setup periodic refresh
-    if (refreshInterval > 0) {
-      intervalRef.current = setInterval(() => {
-        fetchUnreadCount();
-      }, refreshInterval);
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchUnreadCount();
     }
-
-    // Cleanup on unmount
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [refreshInterval, fetchUnreadCount]);
+  }, [fetchUnreadCount]);
 
   // Refetch function for manual updates (e.g., after mark-as-read)
   const refetch = useCallback(() => {
-    fetchUnreadCount(true);
+    fetchUnreadCount();
   }, [fetchUnreadCount]);
 
   return {
