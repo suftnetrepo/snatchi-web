@@ -53,6 +53,18 @@
       color: var(--bs-primary-darker);
       text-decoration: underline;
     }
+
+    &.notification-close-btn {
+      color: var(--bs-secondary, #6c757d);
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 2px;
+
+      &:hover {
+        color: var(--bs-danger, #dc3545);
+        text-decoration: none;
+      }
+    }
   }
 }
 

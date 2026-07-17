@@ -50,7 +50,11 @@ export default function NotificationDropdown() {
   }, [isOpen, fetchNotifications]);
 
   const handleBellClick = () => {
-    setIsOpen(!isOpen);
+    setIsOpen((prev) => !prev);
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
   };
 
   const handleNotificationClick = async (notification) => {
@@ -80,24 +84,34 @@ export default function NotificationDropdown() {
   };
 
   return (
-    <Dropdown className="notification-dropdown" show={isOpen} onToggle={handleBellClick}>
+    <Dropdown className="notification-dropdown" show={isOpen} onToggle={(show) => setIsOpen(show)}>
       <Dropdown.Toggle as="div" className="position-relative">
-        <NotificationBell onClick={handleBellClick} isOpen={isOpen} />
+        <NotificationBell isOpen={isOpen} />
       </Dropdown.Toggle>
 
       <DropdownMenu className="notification-dropdown-menu" align="end" data-testid="notification-dropdown">
         {/* Header */}
         <div className="notification-dropdown-header">
           <h6 className="mb-0">Notifications</h6>
-          {notifications.length > 0 && (
+          <div className="d-flex align-items-center gap-2">
+            {notifications.length > 0 && (
+              <button
+                className="btn-link-sm"
+                onClick={handleMarkAllAsRead}
+                title="Mark all as read"
+              >
+                Mark all as read
+              </button>
+            )}
             <button
-              className="btn-link-sm"
-              onClick={handleMarkAllAsRead}
-              title="Mark all as read"
+              className="btn-link-sm notification-close-btn"
+              onClick={handleClose}
+              title="Close"
+              aria-label="Close notifications"
             >
-              Mark all as read
+              ✕
             </button>
-          )}
+          </div>
         </div>
 
         {/* Loading State */}
