@@ -14,7 +14,6 @@ const { logger } = require('../utils/logger');
 export async function sendUserNotification({ userId, title, body, screen, screenParams = {} }) {
     try {
 
-         console.log('Send...... to user:', userId._id, { userId, title, body, screen, screenParams });
         const device = await DeviceToken.findOne({ user: userId});
         console.log('Sending notification to user:', userId._id, 'with FCM tokens:', device?.token);
         if (device?.token) {
@@ -28,8 +27,6 @@ export async function sendUserNotification({ userId, title, body, screen, screen
                     screenParams
                 }
             );
-
-            console.log('Notification service result for user:', JSON.stringify(result));
 
             if (result) {
                 const { response, success } = result;

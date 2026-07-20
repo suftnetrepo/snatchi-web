@@ -42,27 +42,6 @@ const successResponse = (data, status = 200) => {
   return NextResponse.json({ success: true, data }, { status });
 };
 
-// Validate engineer access permissions
-const validateEngineerAccess = async (user, engineerId) => {
-  if (user.role === 'engineer' && user.id !== engineerId) {
-    return { valid: false, error: 'Unauthorized', status: 403 };
-  }
-
-  if (user.role === 'integrator') {
-    const engineer = await User.findById(engineerId).select('integrator');
-
-    if (!engineer || engineer.integrator?.toString() !== user.integrator?.toString()) {
-      return { valid: false, error: 'Unauthorized', status: 403 };
-    }
-  }
-
-  if (!['engineer', 'integrator', 'admin'].includes(user.role)) {
-    return { valid: false, error: 'Unauthorized', status: 403 };
-  }
-
-  return { valid: true };
-};
-
 // Send notification for pending schedules
 const sendPendingNotification = async (scheduleId, body, additionalParams = {}) => {
   const { status, engineer, title, startDate } = body;
@@ -72,8 +51,7 @@ const sendPendingNotification = async (scheduleId, body, additionalParams = {}) 
     year: 'numeric'
   });
 
-  if (status === 'Pending') {
-    await sendUserNotification({
+  await sendUserNotification({
       userId: engineer,
       title: 'Updated Booking Request',
       body: `Updated booking for ${title} - ${formattedDate}`,
@@ -83,7 +61,6 @@ const sendPendingNotification = async (scheduleId, body, additionalParams = {}) 
         ...additionalParams
       }
     });
-  }
 };
 
 export const GET = async (req) => {
@@ -169,11 +146,6 @@ export const GET = async (req) => {
         return NextResponse.json({ success: false, error: 'Engineer id is required' }, { status: 400 });
       }
 
-      const access = await validateEngineerAccess(user, id);
-      if (!access.valid) {
-        return NextResponse.json({ success: false, error: access.error }, { status: access.status });
-      }
-
       const results = await getByUser(id);
       return successResponse(results.data);
     }
@@ -234,7 +206,6 @@ export const DELETE = async (req) => {
 
     return successResponse(result);
   } catch (error) {
-    console.log('Error in DELETE /scheduler:', error);
     return errorResponse(error.message, 500, error);
   }
 };
@@ -271,6 +242,7 @@ export const PUT = async (req) => {
           startTime: body.startTime,
           endTime: body.endTime,
           status: body.status,
+          scheduleStatus: body.status,  
           projectId: result.project?._id || '',
           projectName: result.project?.name || '',
           projectDescription: result.project?.description || '',
@@ -326,6 +298,7 @@ export const POST = async (req) => {
           startDate: result.startDate,
           endDate: result.endDate,
           status: result.status,
+          scheduleStatus : result.status, 
           startTime: result.startTime,
           endTime: result.endTime,
           payingIntegratorName: result.payingIntegrator?.name || '',

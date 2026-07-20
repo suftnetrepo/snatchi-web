@@ -550,142 +550,161 @@ const handleConnectAccountUpdated = async (event) => {
  * Called when charge succeeds
  * Creates transfer to receiving integrator
  */
+
 const handlePaymentIntentSucceeded = async (event) => {
   try {
     const Payment = require('../models/payment');
     const Scheduler = require('../models/scheduler');
-    const { createTransferToReceivingIntegrator } = await import('../services/stripeMarketplaceService');
+    const { createTransferToReceivingIntegrator } = await import(
+      '../services/stripeMarketplaceService'
+    );
 
-    const paymentIntent = event.data.object;
-    const chargeId = paymentIntent.charges.data[0]?.id;
+    const invoice = event.data.object;
+
+    const {
+      customer: customerId,
+      charge: chargeId,
+      payment_intent: paymentIntentId,
+      subscription: subscriptionId,
+      amount_paid,
+      currency,
+      status,
+    } = invoice;
+
+    logger.info('Processing invoice.paid event', {
+      invoiceId: invoice.id,
+      paymentIntentId,
+      chargeId,
+      customerId,
+      subscriptionId,
+      amount: amount_paid,
+      currency,
+      status,
+    });
 
     if (!chargeId) {
-      logger.warn('Payment intent succeeded but no charge found', {
-        paymentIntentId: paymentIntent.id
+      logger.warn('Invoice paid but no charge found', {
+        invoiceId: invoice.id,
       });
       return;
     }
 
-    logger.info('Processing payment_intent.succeeded event', {
-      paymentIntentId: paymentIntent.id,
-      chargeId,
-      amount: paymentIntent.amount
-    });
-
-    // Find payment in database
-    const payment = await Payment.findOne({ paymentIntentId: paymentIntent.id }).populate(
+    // Find the payment record
+    const payment = await Payment.findOne({
+      paymentIntentId,
+    }).populate(
       'receivingIntegrator',
       'stripeConnectAccountId _id'
     );
 
     if (!payment) {
-      logger.warn('Payment not found for succeeded intent', {
-        paymentIntentId: paymentIntent.id
+      logger.warn('Payment not found', {
+        paymentIntentId,
+        invoiceId: invoice.id,
       });
       return;
     }
 
-    // Update payment status
+    // Update payment
     payment.paymentStatus = 'succeeded';
     payment.chargeId = chargeId;
     payment.paymentSucceededAt = new Date();
     payment.transferStatus = 'pending';
 
-    // Create transfer to receiving integrator
-    // Model 2: Separate Charges & Transfers
-    // Platform automatically retains: grossAmount - netAmount = platformFeeAmount
     try {
-      // Safety Check 1: Verify charge amount matches expected
-      if (paymentIntent.amount !== payment.grossAmount) {
+      // Safety Check 1
+      if (amount_paid !== payment.grossAmount) {
         throw new Error(
-          `Charge amount mismatch: expected ${payment.grossAmount}, got ${paymentIntent.amount}`
+          `Charge amount mismatch. Expected ${payment.grossAmount}, received ${amount_paid}`
         );
       }
 
-      // Safety Check 2: Verify currency matches
-      if (paymentIntent.currency !== payment.currency) {
+      // Safety Check 2
+      if (currency !== payment.currency) {
         throw new Error(
-          `Currency mismatch: expected ${payment.currency}, got ${paymentIntent.currency}`
+          `Currency mismatch. Expected ${payment.currency}, received ${currency}`
         );
       }
 
-      // Safety Check 3: Verify transfer not already created (idempotency)
+      // Safety Check 3
       if (payment.transferId) {
-        logger.warn('Transfer already created for this payment', {
-          paymentIntentId: paymentIntent.id,
-          existingTransferId: payment.transferId
+        logger.warn('Transfer already exists', {
+          paymentId: payment._id,
+          transferId: payment.transferId,
         });
-        // Still save and return - treat as successful
+
         await payment.save();
         return;
       }
 
       const transfer = await createTransferToReceivingIntegrator({
         chargeId,
-        receivingIntegratorConnectId: payment.receivingIntegrator?.stripeConnectAccountId,
-        netAmount: payment.netAmount
+        receivingIntegratorConnectId:
+          payment.receivingIntegrator?.stripeConnectAccountId,
+        netAmount: payment.netAmount,
       });
 
       payment.transferId = transfer.id;
       payment.transferStatus = 'created';
       payment.transferInitiatedAt = new Date();
 
-      logger.info('Transfer created for succeeded payment', {
-        paymentIntentId: paymentIntent.id,
-        chargeId: chargeId,
+      logger.info('Transfer created', {
+        paymentId: payment._id,
         transferId: transfer.id,
         grossAmount: payment.grossAmount,
-        platformFeeAmount: payment.platformFeeAmount,
         netAmount: payment.netAmount,
-        platformRetained: payment.grossAmount - payment.netAmount
-      });
-    } catch (transferError) {
-      logger.error('Failed to create transfer for succeeded payment', {
-        error: transferError.message,
-        paymentIntentId: paymentIntent.id,
-        chargeId: chargeId,
-        netAmount: payment.netAmount,
-        receivingIntegratorId: payment.receivingIntegrator
+        platformFee: payment.platformFeeAmount,
       });
 
-      // Alert logging
+    } catch (transferError) {
+
+      logger.error('Transfer failed', {
+        paymentId: payment._id,
+        error: transferError.message,
+      });
+
       if (transferError.code === 'insufficient_funds') {
         alertLog.insufficientFunds(payment._id, payment.netAmount);
       } else if (transferError.code === 'account_closed') {
-        alertLog.transferToDisabledAccount(payment._id, payment.receivingIntegrator.stripeConnectAccountId, ['account_closed']);
+        alertLog.transferToDisabledAccount(
+          payment._id,
+          payment.receivingIntegrator?.stripeConnectAccountId,
+          ['account_closed']
+        );
       } else {
         alertLog.failedTransfer(payment._id, transferError, {
-          receivingIntegratorId: payment.receivingIntegrator._id
+          receivingIntegratorId: payment.receivingIntegrator?._id,
         });
       }
 
-      // Don't throw - we want to mark payment as succeeded even if transfer fails initially
-      // Transfer can be manually triggered later via admin function
-      // Mark as pending_retry so we can retry this transfer
       payment.transferStatus = 'pending_retry';
     }
 
     await payment.save();
 
-    // Update scheduler status
+    // Update Scheduler
     if (payment.scheduler) {
+
       const scheduler = await Scheduler.findById(payment.scheduler);
 
       if (scheduler) {
-      await Scheduler.findByIdAndUpdate(
-        payment.scheduler,
+
+        await Scheduler.findByIdAndUpdate(
+          payment.scheduler,
           buildPaymentSucceededUpdate(scheduler, {
             transferStatus: payment.transferStatus,
             transferId: payment.transferId,
-            transferInitiatedAt: payment.transferInitiatedAt
+            transferInitiatedAt: payment.transferInitiatedAt,
           })
-      );
+        );
       }
     }
 
-    // Wire notification event: Payment completed
+    // Send Notifications
     try {
+
       if (payment.scheduler) {
+
         const scheduler = await Scheduler.findById(payment.scheduler)
           .populate('engineer', '_id')
           .populate('payingIntegrator', '_id')
@@ -693,6 +712,7 @@ const handlePaymentIntentSucceeded = async (event) => {
           .populate('project', 'name');
 
         if (scheduler) {
+
           await notificationEvents.paymentCompleted({
             scheduleId: scheduler._id,
             paymentId: payment._id,
@@ -700,28 +720,34 @@ const handlePaymentIntentSucceeded = async (event) => {
             payingIntegratorId: scheduler.payingIntegrator?._id,
             receivingIntegratorId: scheduler.receivingIntegratorId?._id,
             projectName: scheduler.project?.name || 'Project',
-            amountPaid: payment.grossAmount
+            amountPaid: payment.grossAmount,
           });
         }
       }
+
     } catch (notificationError) {
-      logger.error('Failed to send payment completed notification', {
+
+      logger.error('Notification failed', {
         paymentId: payment._id,
-        error: notificationError.message
+        error: notificationError.message,
       });
-      // Don't throw - payment is marked as succeeded even if notification fails
     }
 
-    logger.info('Payment marked as succeeded', {
+    logger.info('Invoice processed successfully', {
+      invoiceId: invoice.id,
       paymentId: payment._id,
-      paymentIntentId: paymentIntent.id
+      paymentIntentId,
+      chargeId,
     });
+
   } catch (error) {
-    logger.error('Error handling payment_intent.succeeded', {
+
+    logger.error('Error handling invoice.paid', {
       error: error.message,
-      paymentIntentId: event.data.object?.id,
-      stack: error.stack
+      invoiceId: event.data.object?.id,
+      stack: error.stack,
     });
+
     throw error;
   }
 };

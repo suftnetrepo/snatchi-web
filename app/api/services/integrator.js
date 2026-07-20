@@ -91,19 +91,24 @@ async function getIntegratorsBySearch({ page = 1, limit = 10, sortField, sortOrd
             { name: { $regex: searchQuery, $options: 'i' } },
             { mobile: { $regex: searchQuery, $options: 'i' } },
             { email: { $regex: searchQuery, $options: 'i' } },
-            { plan: { $regex: searchQuery, $options: 'i' } },
+            { plan: { $regex: searchQuery, $options: 'i' } }
           ]
         }
       : {};
 
     const query = {
-      status: "active",  // Added this condition to only get active integrators
+      status: 'active', // Added this condition to only get active integrators
       ...searchFilter
     };
 
     const [integrators, totalCount] = await Promise.all([
-      Integrator.find(query).select('name email mobile description _id address secure_url status').sort(sortOptions).skip(skip).limit(limit).exec(),
-      Integrator.countDocuments({ status: "active" })  // Updated to count only active integrators
+      Integrator.find(query)
+        .select('name email mobile description _id address secure_url status')
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      Integrator.countDocuments({ status: 'active' }) // Updated to count only active integrators
     ]);
 
     return {
@@ -160,11 +165,9 @@ async function getWeeklyUserSignOnData() {
 }
 
 async function getIntegratorById(id) {
-
   try {
     try {
-      const results = await Integrator.findOne({ _id: id })
-        .exec();
+      const results = await Integrator.findOne({ _id: id }).exec();
       return { data: results };
     } catch (error) {
       throw error;
@@ -190,10 +193,6 @@ async function updateIntegrator(id, body) {
       new: true
     });
 
-    if (!updated) {
-      throw new Error('Integrator not found or update failed');
-    }
-
     return updated;
   } catch (error) {
     logger.error(error);
@@ -210,20 +209,12 @@ async function updateIntegratorStatus(stripeCustomerId, body) {
       updateData.status = updateData.status.toLowerCase();
     }
 
-    const updated = await Integrator.findOneAndUpdate(
-      { stripeCustomerId: stripeCustomerId },
-      updateData, 
-      { new: true } 
-    );
+    const result = await Integrator.updateOne({ stripeCustomerId }, { $set: updateData });
 
-    if (!updated) {
-      throw new Error('Integrator not found or update failed');
-    }
-
-    return updated;
+    return result;
   } catch (error) {
     logger.error(error);
-    throw error;  // Re-throw so caller is aware of the error
+    throw error; // Re-throw so caller is aware of the error
   }
 }
 
@@ -231,8 +222,6 @@ async function getVerifySubscriptionStatus(id) {
   try {
     const result = await Integrator.findOne({ stripeCustomerId: id });
 
-    console.log(`Subscription status for customer ${id}:`, result);
-    
     return {
       active: result?.status === 'active'
     };
@@ -242,6 +231,14 @@ async function getVerifySubscriptionStatus(id) {
   }
 }
 
-
-
-export { getIntegratorsBySearch, getVerifySubscriptionStatus, updateIntegratorStatus, getIntegratorById, updateIntegrator, recentInspectors, aggregateInspectorStatus, getIntegrators, getWeeklyUserSignOnData };
+export {
+  getIntegratorsBySearch,
+  getVerifySubscriptionStatus,
+  updateIntegratorStatus,
+  getIntegratorById,
+  updateIntegrator,
+  recentInspectors,
+  aggregateInspectorStatus,
+  getIntegrators,
+  getWeeklyUserSignOnData
+};

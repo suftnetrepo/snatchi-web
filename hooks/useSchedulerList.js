@@ -68,22 +68,16 @@ export const useSchedulerList = () => {
         // Apply filtering based on query parameter
         if (filter === 'accepted') {
           filtered = filtered.filter(s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.ACCEPTED);
-        } else if (filter === 'approval' || filter === 'awaiting-payment') {
+        } else if (filter === 'approval') {
           filtered = filtered.filter(s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.APPROVED);
+        } else if (filter === 'awaiting-payment') {
+          filtered = filtered.filter(s => isSchedulerAwaitingPayment(s));
         } else if (filter === 'pending') {
           filtered = filtered.filter(s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.PENDING);
         } else if (filter === 'awaiting-approval') {
           filtered = filtered.filter(isAwaitingApproval);
         } else if (filter === 'in-progress') {
           filtered = filtered.filter(isSchedulerInProgress);
-        } else if (filter === 'awaiting-payment') {
-          filtered = filtered.filter(
-            s =>
-              isPayingIntegratorSchedule(s) &&
-              !isSelfPaymentSchedule(s) &&
-              hasVerifiedReceivingIntegrator(s) &&
-              isSchedulerAwaitingPayment(s)
-          );
         } else if (filter === 'ready-to-start') {
           filtered = filtered.filter(isReadyToStart);
         }

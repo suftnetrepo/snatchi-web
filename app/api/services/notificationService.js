@@ -289,6 +289,7 @@ class NotificationService {
           .sort({ createdAt: -1 })
           .skip(offset)
           .limit(limit)
+          .populate('relatedTo.schedule', 'status')
           .lean(),
         Notification.find().forUser(userId).countDocuments(),
         Notification.find().forUser(userId).unread().countDocuments()
@@ -302,7 +303,8 @@ class NotificationService {
         archived,
         total,
         unread,
-        fetched: notifications.length
+        fetched: notifications.length,
+        notifications
       });
 
       return {

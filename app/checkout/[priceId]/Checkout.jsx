@@ -27,39 +27,19 @@ const CheckOut = () => {
   const [fields, setFields] = useState(checkoutValidator.fields);
   const { priceId } = params;
   const {
-    handleNewCustomer,
     handleNewSubscriber,
     handleErrorReset,
     loading,
-    subscription,
     handleError,
     error,
     handleSuccess,
-    success,
     pricing,
-    data
+   
   } = useSubscriber(priceId);
 
   useEffect(() => {
     getCsrfToken().then(setCsrfToken);
   }, []);
-
-  // useEffect(() => {
-  //   const handleResult = async (data) => {
-  //     await signIn('credentials', {
-  //       redirect: false,
-  //       email: fields.email,
-  //       csrfToken,
-  //       password: '#12345!'
-  //     });
-
-  //     handleSignUp(`${fields.first_name} ${fields.last_name}`, fields.email, '12345!').then(() => {});
-
-  //     router.push('/protected/integrator/dashboard');
-  //   };
-
-  //   data && handleResult(data);
-  // }, [success, data]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -68,36 +48,7 @@ const CheckOut = () => {
       [name]: type === 'checkbox' ? checked : value
     });
   };
-
-  // const handleSubmit = async () => {
-  //   setValidationError({});
-  //   const validationResult = validate(fields, checkoutValidator.rules);
-
-  //   if (validationResult.hasError) {
-  //     setValidationError(validationResult.errors);
-  //     return;
-  //   }
-
-  //   const customerResult = await handleNewCustomer({ email: fields.email });
-  //   if (customerResult) {
-  //     const subscriptionResult = await handleNewSubscriber({
-  //       customerId: customerResult.id,
-  //       priceId,
-  //       contact: `${fields.first_name} ${fields.last_name}`,
-  //       email: fields.email
-  //     });
-
-  //     if (subscriptionResult) {
-  //       setFields((prevFields) => ({
-  //         ...prevFields,
-  //         priceId: priceId,
-  //         plan: pricing?.planName,
-  //         stripeCustomerId: customerResult.id,
-  //         subscriptionId: subscriptionResult.subscriptionId
-  //       }));
-  //     }
-  //   }
-  // };
+ 
  const ensureSubscriberRecord = async (userPayload) => {
     if (userCreatedRef.current) {
       return true;
@@ -106,7 +57,6 @@ const CheckOut = () => {
     const userData = await handleSuccess(userPayload);
 
     if (!userData) {
-      // handleError('User creation failed.');
       return false;
     }
 

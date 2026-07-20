@@ -339,6 +339,8 @@ async function updateByStatus(id, body) {
       throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
     }
 
+    console.log(`Updating schedule status for ID: ${id} with body:`, body);
+
     const schedule = await Scheduler.findById(id);
     if (!schedule) {
       throw Object.assign(new Error('Schedule not found'), { statusCode: 404 });

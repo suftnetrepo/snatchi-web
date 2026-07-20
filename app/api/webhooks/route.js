@@ -22,8 +22,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-
 
 export const config = {
   api: {
-    bodyParser: false,
-  },
+    bodyParser: false
+  }
 };
 
 async function getRawBody(req) {
@@ -48,13 +48,10 @@ export async function POST(req) {
     try {
       // Try to get raw body using the stream method
       rawBody = await getRawBody(req);
-      console.info('Raw body length:', rawBody.length);
+      console.log('Raw body length:', rawBody.length);
     } catch (bodyError) {
       console.error('Body parsing error:', bodyError);
-      return NextResponse.json(
-        { error: 'Could not parse request body' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Could not parse request body' }, { status: 400 });
     }
 
     // Verify webhook signature
@@ -62,15 +59,12 @@ export async function POST(req) {
       event = stripe.webhooks.constructEvent(
         rawBody,
         req.headers.get('stripe-signature'),
-        process.env.STRIPE_WEBHOOK_SECRET
+        process.env.STRIPE_WEBHOOK_SECRET_LOCAL
       );
       console.info('Webhook event constructed successfully:', { type: event.type });
     } catch (signatureError) {
       console.error('Signature verification failed:', signatureError.message);
-      return NextResponse.json(
-        { error: 'Webhook signature verification failed' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 });
     }
 
     // Handle the verified event
@@ -96,21 +90,17 @@ export async function POST(req) {
     try {
       if (handlers[event.type]) {
         await handlers[event.type](event);
-        console.info(`Successfully processed ${event.type} event: ${event.id}`)
+        console.info(`Successfully processed ${event.type} event: ${event.id}`);
       } else {
         console.warn(`Unhandled event type: ${event.type}`);
       }
     } catch (handlerError) {
       console.error(`Error processing ${event.type} event:`, handlerError);
       // Return error to Stripe so it will retry
-      return NextResponse.json(
-        { error: 'Webhook processing failed', details: handlerError.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Webhook processing failed', details: handlerError.message }, { status: 500 });
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
-
   } catch (error) {
     console.error('Webhook processing error:', {
       message: error.message,
@@ -119,9 +109,6 @@ export async function POST(req) {
       rawBodyLength: rawBody?.length
     });
 
-    return NextResponse.json(
-      { error: 'Webhook processing failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
 }
