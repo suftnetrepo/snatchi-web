@@ -25,7 +25,7 @@ import { logger } from '../../../utils/logger';
 import { mongoConnect } from '../../../../../utils/connectDb';
 import Payment from '../../../models/payment';
 import Scheduler from '../../../models/scheduler';
-import { normalizeActor, buildPaymentSucceededUpdate } from '../../../services/scheduler';
+import { buildPaymentSucceededUpdate } from '../../../services/scheduler';
 import { getUserSession } from '@/utils/generateToken';
 import Stripe from 'stripe';
 
@@ -34,12 +34,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-
 export async function POST(req) {
   try {
     const session = await getUserSession(req);
-    const actor = normalizeActor(session);
 
     if (!session) {
       logger.warn('Unauthorized payment confirmation - no session');
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
+
+    const actor = {
+      userId: session.id,
+      role: session.role,
+      integratorId: session.integrator,
+    };
 
     const { paymentIntentId } = await req.json();
 
