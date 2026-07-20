@@ -36,7 +36,6 @@ import {
   createCrossIntegratorPaymentIntent
 } from '../../../services/stripeMarketplaceService';
 import {
-  normalizeActor,
   getScheduleReceivingIntegratorId,
   getSchedulePayingIntegratorId,
   buildPaymentPendingUpdate
@@ -47,12 +46,17 @@ import { getUserSession } from '@/utils/generateToken';
 export async function POST(req) {
   try {
     const session = await getUserSession(req);
-    const actor = normalizeActor(session);
 
     if (!session) {
       logger.warn('Unauthorized payment intent creation - no session');
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
+
+    const actor = {
+      userId: session.id,
+      role: session.role,
+      integratorId: session.integrator,
+    };
 
     // Security: Only integrators can create payments
     if (actor.role !== 'integrator') {

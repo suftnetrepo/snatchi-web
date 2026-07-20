@@ -5,7 +5,6 @@ import Integrator from '@/app/api/models/integrator';
 import Scheduler from '@/app/api/models/scheduler';
 import { logger } from '@/app/api/utils/logger';
 import {
-  normalizeActor,
   getScheduleReceivingIntegratorId,
   getSchedulePayingIntegratorId
 } from '@/app/api/services/scheduler';
@@ -24,11 +23,16 @@ import { validateReceivingIntegrator } from '@/app/api/services/stripeMarketplac
 export async function GET(req: Request) {
   try {
     const session = await getUserSession(req);
-    const actor = normalizeActor(session);
 
     if (!session) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
+
+    const actor = {
+      userId: session.id,
+      role: session.role,
+      integratorId: session.integrator,
+    };
 
     if (actor.role !== 'integrator') {
       return NextResponse.json({ success: false, error: 'Only integrators can access payment data' }, { status: 403 });
