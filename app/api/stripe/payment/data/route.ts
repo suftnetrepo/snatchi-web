@@ -9,7 +9,6 @@ import {
   getSchedulePayingIntegratorId
 } from '@/app/api/services/scheduler';
 import { getUserSession } from '@/utils/generateToken';
-import { validateReceivingIntegrator } from '@/app/api/services/stripeMarketplaceService';
 /**
  * GET /api/stripe/payment/data
  * 
@@ -89,35 +88,17 @@ export async function GET(req: Request) {
     const schedulePayingIntegratorId = getSchedulePayingIntegratorId(scheduler);
     const scheduleReceivingIntegratorId = getScheduleReceivingIntegratorId(scheduler);
 
-    if (!actor.integratorId || actor.integratorId.toString() !== schedulePayingIntegratorId) {
+    if (schedulePayingIntegratorId && actor.integratorId &&
+        actor.integratorId.toString() !== schedulePayingIntegratorId) {
       return NextResponse.json(
         { success: false, error: 'Only the paying integrator can access this payment data' },
         { status: 403 }
       );
     }
 
-    if (scheduleReceivingIntegratorId !== receivingIntegratorId) {
+    if (scheduleReceivingIntegratorId && scheduleReceivingIntegratorId !== receivingIntegratorId) {
       return NextResponse.json(
         { success: false, error: 'Receiving integrator does not match this schedule' },
-        { status: 400 }
-      );
-    }
-
-    if (scheduleReceivingIntegratorId === schedulePayingIntegratorId) {
-      return NextResponse.json(
-        { success: false, error: 'Cannot create self-payment for this schedule' },
-        { status: 400 }
-      );
-    }
-
-    try {
-      validateReceivingIntegrator(receivingIntegrator);
-    } catch (error) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: error instanceof Error ? error.message : 'Receiving integrator is not payment ready'
-        },
         { status: 400 }
       );
     }
