@@ -227,14 +227,34 @@ export async function POST(req) {
       );
     }
 
-    if (existingPayment && ['pending', 'succeeded'].includes(existingPayment.paymentStatus)) {
+    if (existingPayment?.paymentStatus === 'succeeded') {
       return NextResponse.json(
         {
           success: false,
-          error: 'Payment has already been initiated for this schedule.'
+          error: 'A successful payment already exists for this schedule.'
         },
         { status: 400 }
       );
+    }
+
+    // Reuse existing pending payment intent rather than blocking
+    if (existingPayment?.paymentStatus === 'pending' && existingPayment?.clientSecret) {
+      logger.info('Reusing existing pending payment intent', {
+        paymentIntentId: existingPayment.paymentIntentId,
+        schedulerId
+      });
+      return NextResponse.json({
+        success: true,
+        paymentIntentId: existingPayment.paymentIntentId,
+        clientSecret: existingPayment.clientSecret,
+        payingIntegrator: { name: payingIntegrator.name, email: payingIntegrator.email },
+        receivingIntegrator: { name: receivingIntegrator.name },
+        engineer: { name: `${engineer.first_name} ${engineer.last_name}` },
+        grossAmount: amount,
+        platformFeeAmount: existingPayment.platformFeeAmount,
+        netAmount: existingPayment.netAmount,
+        paymentStatus: 'pending'
+      });
     }
 
     logger.info('Creating payment intent', {
