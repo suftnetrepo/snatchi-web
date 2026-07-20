@@ -115,8 +115,7 @@ export const isSchedulerAwaitingPayment = (schedule) => {
   const normalizedStatus = normalizeSchedulerStatus(schedule?.status);
   return (
     (normalizedStatus === SCHEDULER_STATUS.APPROVED || normalizedStatus === SCHEDULER_STATUS.AWAITING_PAYMENT) &&
-    (!schedule?.paymentStatus || schedule.paymentStatus === 'pending') &&
-    Number(schedule?.estimatedAmount || 0) > 0
+    (!schedule?.paymentStatus || schedule.paymentStatus === 'pending')
   );
 };
 
