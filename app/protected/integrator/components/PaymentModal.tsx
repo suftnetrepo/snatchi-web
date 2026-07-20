@@ -295,6 +295,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 >
                   <CardElement
                     options={{
+                      hidePostalCode: true,
                       style: {
                         base: {
                           fontSize: '15px',
