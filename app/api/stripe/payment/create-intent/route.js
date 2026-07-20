@@ -24,6 +24,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import Stripe from 'stripe';
 import { logger } from '../../../utils/logger';
 import { mongoConnect } from '../../../../../utils/connectDb';
 import Scheduler from '../../../models/scheduler';
@@ -42,6 +43,8 @@ import {
 } from '../../../services/scheduler';
 import { SCHEDULER_STATUS, normalizeSchedulerStatus } from '../../../constants/statuses';
 import { getUserSession } from '@/utils/generateToken';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' });
 
 export async function POST(req) {
   try {
@@ -217,44 +220,43 @@ export async function POST(req) {
     }
 
     const existingPayment = await Payment.findOne({ scheduler: schedulerId });
+
     if (existingPayment?.paymentStatus === 'succeeded') {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'A successful payment already exists for this schedule.'
-        },
+        { success: false, error: 'A successful payment already exists for this schedule.' },
         { status: 400 }
       );
     }
 
-    if (existingPayment?.paymentStatus === 'succeeded') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'A successful payment already exists for this schedule.'
-        },
-        { status: 400 }
-      );
-    }
-
-    // Reuse existing pending payment intent rather than blocking
+    // If a pending payment exists, verify the PI is still usable on Stripe's side
     if (existingPayment?.paymentStatus === 'pending' && existingPayment?.clientSecret) {
-      logger.info('Reusing existing pending payment intent', {
-        paymentIntentId: existingPayment.paymentIntentId,
-        schedulerId
-      });
-      return NextResponse.json({
-        success: true,
-        paymentIntentId: existingPayment.paymentIntentId,
-        clientSecret: existingPayment.clientSecret,
-        payingIntegrator: { name: payingIntegrator.name, email: payingIntegrator.email },
-        receivingIntegrator: { name: receivingIntegrator.name },
-        engineer: { name: `${engineer.first_name} ${engineer.last_name}` },
-        grossAmount: amount,
-        platformFeeAmount: existingPayment.platformFeeAmount,
-        netAmount: existingPayment.netAmount,
-        paymentStatus: 'pending'
-      });
+      try {
+        const existingPI = await stripe.paymentIntents.retrieve(existingPayment.paymentIntentId);
+        if (existingPI.status === 'requires_payment_method') {
+          logger.info('Reusing existing valid pending payment intent', {
+            paymentIntentId: existingPayment.paymentIntentId, schedulerId
+          });
+          return NextResponse.json({
+            success: true,
+            paymentIntentId: existingPayment.paymentIntentId,
+            clientSecret: existingPayment.clientSecret,
+            payingIntegrator: { name: payingIntegrator.name, email: payingIntegrator.email },
+            receivingIntegrator: { name: receivingIntegrator.name },
+            engineer: { name: `${engineer.first_name} ${engineer.last_name}` },
+            grossAmount: amount,
+            platformFeeAmount: existingPayment.platformFeeAmount,
+            netAmount: existingPayment.netAmount,
+            paymentStatus: 'pending'
+          });
+        }
+        // PI is in an unusable state — fall through to create a new one
+        logger.info('Existing PI not reusable, creating fresh one', {
+          paymentIntentId: existingPayment.paymentIntentId,
+          piStatus: existingPI.status
+        });
+      } catch (retrieveErr) {
+        logger.warn('Could not retrieve existing PI, creating fresh one', { error: retrieveErr.message });
+      }
     }
 
     logger.info('Creating payment intent', {
