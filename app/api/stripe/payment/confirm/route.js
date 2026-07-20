@@ -19,8 +19,6 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/auth';
 import { logger } from '../../../utils/logger';
 import { mongoConnect } from '../../../../../utils/connectDb';
 import Payment from '../../../models/payment';
@@ -76,8 +74,11 @@ export async function POST(req) {
       );
     }
 
-    // Retrieve current status from Stripe
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    // Retrieve current status from Stripe (expand latest_charge for chargeId)
+    const paymentIntent = await stripe.paymentIntents.retrieve(
+      paymentIntentId,
+      { expand: ['latest_charge'] }
+    );
 
     logger.info('Payment confirmation attempt', {
       paymentIntentId,
@@ -87,7 +88,9 @@ export async function POST(req) {
     if (paymentIntent.status === 'succeeded') {
       // Payment already succeeded
       payment.paymentStatus = 'succeeded';
-      payment.chargeId = paymentIntent.charges.data[0]?.id;
+      payment.chargeId = typeof paymentIntent.latest_charge === 'object'
+        ? paymentIntent.latest_charge?.id
+        : paymentIntent.latest_charge;
       payment.paymentSucceededAt = new Date();
       await payment.save();
 
