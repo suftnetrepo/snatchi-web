@@ -169,29 +169,28 @@ export const createCrossIntegratorPaymentIntent = async (params) => {
       netAmount
     });
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: grossAmount,
-      currency: payingIntegrator.currency?.toLowerCase() || 'gbp',
-      customer: payingIntegrator.stripeCustomerId,
-      payment_method_types: ['card'],
-      description: `Engineer service: ${engineer.first_name} ${engineer.last_name} for ${payingIntegrator.name}`,
-      metadata: {
-        payingIntegratorId: payingIntegrator._id.toString(),
-        receivingIntegratorId: receivingIntegrator._id.toString(),
-        engineerId: engineer._id.toString(),
-        schedulerId: scheduler?._id?.toString(),
-        platformFeeAmount,
-        netAmount,
-        receivingIntegratorConnectId: receivingIntegrator.stripeConnectAccountId,
-        serviceType: 'engineer_booking'
+    const paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount: grossAmount,
+        currency: payingIntegrator.currency?.toLowerCase() || 'gbp',
+        customer: payingIntegrator.stripeCustomerId,
+        payment_method_types: ['card'],
+        description: `Engineer service: ${engineer.first_name} ${engineer.last_name} for ${payingIntegrator.name}`,
+        metadata: {
+          payingIntegratorId: payingIntegrator._id.toString(),
+          receivingIntegratorId: receivingIntegrator._id.toString(),
+          engineerId: engineer._id.toString(),
+          schedulerId: scheduler?._id?.toString(),
+          platformFeeAmount: String(platformFeeAmount),
+          netAmount: String(netAmount),
+          receivingIntegratorConnectId: receivingIntegrator.stripeConnectAccountId,
+          serviceType: 'engineer_booking'
+        }
       },
-      // Idempotency key prevents duplicate charges on network retry
-      idempotency_key: `payment_${payingIntegrator._id}_${scheduler._id}_${Date.now()}`
-      // NOTE: Model 2 - Separate Charges & Transfers Architecture
-      // Charge created on platform account (Snatchi)
-      // Manual transfer via webhook after payment_intent.succeeded
-      // Platform automatically retains: grossAmount - netAmount = platformFeeAmount
-    });
+      {
+        idempotency_key: `payment_${payingIntegrator._id}_${scheduler._id}_${Date.now()}`
+      }
+    );
 
     logger.info('Payment intent created successfully', {
       paymentIntentId: paymentIntent.id,
