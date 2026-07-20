@@ -282,7 +282,9 @@ export async function POST(req) {
       platformFeePercentage: feePercentage,
       platformFeeAmount,
       netAmount,
-      currency: payingIntegrator.currency?.toLowerCase() || 'gbp',
+      currency: (['£','$','€','¥'].includes(payingIntegrator.currency)
+        ? { '£': 'gbp', '$': 'usd', '€': 'eur', '¥': 'jpy' }[payingIntegrator.currency]
+        : payingIntegrator.currency?.toLowerCase()) || 'gbp',
       paymentIntentId: paymentIntent.id,
       clientSecret: paymentIntent.client_secret,
       paymentStatus: 'pending',

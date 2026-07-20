@@ -169,10 +169,14 @@ export const createCrossIntegratorPaymentIntent = async (params) => {
       netAmount
     });
 
+    const CURRENCY_SYMBOL_MAP = { '£': 'gbp', '$': 'usd', '€': 'eur', '¥': 'jpy' };
+    const rawCurrency = payingIntegrator.currency?.toLowerCase() || 'gbp';
+    const currency = CURRENCY_SYMBOL_MAP[payingIntegrator.currency] || rawCurrency;
+
     const paymentIntent = await stripe.paymentIntents.create(
       {
         amount: grossAmount,
-        currency: payingIntegrator.currency?.toLowerCase() || 'gbp',
+        currency,
         customer: payingIntegrator.stripeCustomerId,
         payment_method_types: ['card'],
         description: `Engineer service: ${engineer.first_name} ${engineer.last_name} for ${payingIntegrator.name}`,
