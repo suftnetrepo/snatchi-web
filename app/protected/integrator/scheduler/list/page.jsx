@@ -15,6 +15,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { useSession } from 'next-auth/react';
 import { useSchedulerList } from '@/hooks/useSchedulerList';
 import { PaymentModal } from '../../components/PaymentModal';
+import { resolvePaymentAmount } from '@/src/constants/payment';
 import {
   SCHEDULER_STATUS,
   normalizeSchedulerStatus,
@@ -61,15 +62,16 @@ function SchedulerListContent() {
     setShowPaymentModal(true);
   };
 
+  // Resolve amount in pence: backend paymentAmount → estimatedAmount → MOCK_PAYMENT_AMOUNT
+  const getPaymentAmount = (schedule) => resolvePaymentAmount(schedule);
+
   const isEngineerSchedule = (schedule) => schedule.engineer?._id === currentUserId;
   const isBookingIntegratorSchedule = (schedule) =>
     (schedule.integrator?._id || schedule.integrator) === currentIntegratorId;
 
   const canPay = (schedule) =>
     session?.user?.role === 'integrator' &&
-    isPayingIntegratorSchedule(schedule) &&
-    !isSelfPaymentSchedule(schedule) &&
-    hasVerifiedReceivingIntegrator(schedule) &&
+    isBookingIntegratorSchedule(schedule) &&
     isSchedulerAwaitingPayment(schedule);
 
   const canApprove = (schedule) =>
@@ -238,8 +240,8 @@ function SchedulerListContent() {
               </Button>
             )}
 
-            {/* Delete button */}
-            {session?.user?.role === 'integrator' && isBookingIntegratorSchedule(row.original) && (
+            {/* Delete button — hidden for awaiting-payment schedules */}
+            {session?.user?.role === 'integrator' && isBookingIntegratorSchedule(row.original) && !isSchedulerAwaitingPayment(row.original) && (
               <Tooltip title="Delete Schedule" arrow>
                 <span className="p-0">
                   <DeleteConfirmation
@@ -371,7 +373,7 @@ function SchedulerListContent() {
           <PaymentModal
             schedulerId={selectedSchedule._id}
             engineerId={selectedSchedule.engineer?._id}
-            amount={Math.round((selectedSchedule.estimatedAmount || 0) * 100)}
+            amount={getPaymentAmount(selectedSchedule)}
             receivingIntegratorId={selectedSchedule.receivingIntegratorId?._id || selectedSchedule.receivingIntegratorId}
             isOpen={showPaymentModal}
             schedule={selectedSchedule}
