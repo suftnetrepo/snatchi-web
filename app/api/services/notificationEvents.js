@@ -57,6 +57,7 @@ const bookingCreated = async (payload) => {
     projectName,
     startDate,
     status,
+    scheduleStatus,
     startTime,
     endTime,  
     endDate,
@@ -103,7 +104,8 @@ const bookingCreated = async (payload) => {
         latitude,
         longitude,
         integratorId,
-        priority
+        priority,
+        scheduleStatus
       },
       relatedTo: {
         schedule: scheduleId
@@ -152,6 +154,7 @@ const bookingAccepted = async (payload) => {
     startTime,
     endTime,
     status,
+    scheduleStatus,
     priority
   } = payload;
 
@@ -183,7 +186,8 @@ const bookingAccepted = async (payload) => {
         startTime,
         endTime,
         status,
-        priority
+        priority,
+        scheduleStatus
       },
       relatedTo: {
         schedule: scheduleId
@@ -232,6 +236,7 @@ const bookingDeclined = async (payload) => {
     startTime,
     endTime,
     status,
+    scheduleStatus, 
     priority
   } = payload;
 
@@ -247,7 +252,6 @@ const bookingDeclined = async (payload) => {
       screen: NOTIFICATION_SCREENS.SCHEDULES,
       screenParams: {
         scheduleId: scheduleId.toString(),
-        status: 'declined',
         projectName,
         projectId,
         projectDescription,
@@ -264,7 +268,9 @@ const bookingDeclined = async (payload) => {
         endDate,
         startTime,
         endTime,
-        priority
+        priority,
+        scheduleStatus,
+        status
       },
       relatedTo: {
         schedule: scheduleId
@@ -314,7 +320,9 @@ const bookingApproved = async (payload) => {
     endDate,
     startTime,
     endTime,
-    priority
+    priority,
+    scheduleStatus,
+    status
   } = payload;
 
   try {
@@ -347,7 +355,9 @@ const bookingApproved = async (payload) => {
         endDate,
         startTime,
         endTime,
-        priority
+        priority,
+        scheduleStatus,
+        status
       },
       relatedTo: {
         schedule: scheduleId
@@ -375,7 +385,9 @@ const bookingApproved = async (payload) => {
         endDate,
         startTime,
         endTime,
-        priority
+        priority,
+        scheduleStatus,
+        status
       },
       relatedTo: {
         schedule: scheduleId
@@ -417,7 +429,9 @@ const paymentCompleted = async (payload) => {
     payingIntegratorId,
     receivingIntegratorId,
     projectName,
-    amountPaid
+    amountPaid,
+    scheduleStatus,
+    status
   } = payload;
 
   try {
@@ -437,9 +451,9 @@ const paymentCompleted = async (payload) => {
       return;
     }
 
-    const formattedAmount = new Intl.NumberFormat('en-US', {
+    const formattedAmount = new Intl.NumberFormat('en-GB', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'GBP'
     }).format(amountPaid / 100);
 
     // Notify Engineer
@@ -454,7 +468,9 @@ const paymentCompleted = async (payload) => {
       screen: NOTIFICATION_SCREENS.PAYMENTS,
       screenParams: {
         paymentId: paymentId.toString(),
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        scheduleStatus,
+        status
       },
       relatedTo: {
         schedule: scheduleId,
@@ -613,7 +629,8 @@ const readyToStart = async (payload) => {
     startTime,
     endTime,
     status,
-    priority
+    priority,
+    scheduleStatus
   } = payload;
 
   try {
@@ -632,7 +649,7 @@ const readyToStart = async (payload) => {
       },
       type: NOTIFICATION_TYPES.READY_TO_START,
       title: 'Payment Confirmed — Ready to Start',
-      body: `${projectName} at ${siteLocation} starts ${formattedDate}`,
+      body: `${projectName}${siteLocation ? ` at ${siteLocation}` : ''} starts ${formattedDate}`,
       screen: NOTIFICATION_SCREENS.CALENDAR,
       screenParams: {
         scheduleId: scheduleId.toString(),
@@ -652,7 +669,8 @@ const readyToStart = async (payload) => {
         startTime,
         endTime,
         status,
-        priority
+        priority,
+        scheduleStatus
       },
       relatedTo: {
         schedule: scheduleId
@@ -694,7 +712,8 @@ const workStarted = async (payload) => {
     endDate,
     startTime,
     endTime,
-    status
+    status,
+    scheduleStatus,
   } = payload;
 
   try {
@@ -718,7 +737,8 @@ const workStarted = async (payload) => {
         endDate,
         startTime,
         endTime,
-        status
+        status,
+        scheduleStatus
       },
       relatedTo: {
         schedule: scheduleId
@@ -746,7 +766,8 @@ const workStarted = async (payload) => {
         endDate,
         startTime,
         endTime,
-        status
+        status,
+        scheduleStatus
       },
       relatedTo: {
         schedule: scheduleId
@@ -791,7 +812,8 @@ const workCompleted = async (payload) => {
     endDate,
     startTime,
     endTime,
-    status
+    status,
+    scheduleStatus,
   } = payload;
 
   try {
@@ -815,7 +837,8 @@ const workCompleted = async (payload) => {
         endDate,
         startTime,
         endTime,
-        status
+        status,
+        scheduleStatus
       },
       relatedTo: {
         schedule: scheduleId
@@ -843,7 +866,8 @@ const workCompleted = async (payload) => {
         endDate,
         startTime,
         endTime,
-        status
+        status,
+        scheduleStatus
       },
       relatedTo: {
         schedule: scheduleId
@@ -911,7 +935,9 @@ const scheduleUpdated = async (payload) => {
       body: `Schedule for ${projectName} has been updated`,
       screen: NOTIFICATION_SCREENS.CALENDAR,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        scheduleStatus,
+        projectName
       },
       relatedTo: {
         schedule: scheduleId
@@ -930,7 +956,9 @@ const scheduleUpdated = async (payload) => {
       body: `Schedule for ${projectName} has been updated`,
       screen: NOTIFICATION_SCREENS.SCHEDULES,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        scheduleStatus,
+        projectName
       },
       relatedTo: {
         schedule: scheduleId
@@ -949,7 +977,9 @@ const scheduleUpdated = async (payload) => {
       body: `Schedule for ${projectName} has been updated`,
       screen: NOTIFICATION_SCREENS.SCHEDULES,
       screenParams: {
-        scheduleId: scheduleId.toString()
+        scheduleId: scheduleId.toString(),
+        scheduleStatus,
+        projectName
       },
       relatedTo: {
         schedule: scheduleId
@@ -993,7 +1023,8 @@ const scheduleCancelled = async (payload) => {
     endDate,
     startTime,
     endTime,
-    status
+    status,
+    scheduleStatus
   } = payload;
 
   try {
@@ -1016,7 +1047,8 @@ const scheduleCancelled = async (payload) => {
         endDate,
         startTime,
         endTime,
-        status
+        status,
+        scheduleStatus
       },
       relatedTo: {
         schedule: scheduleId
@@ -1043,7 +1075,8 @@ const scheduleCancelled = async (payload) => {
         endDate,
         startTime,
         endTime,
-        status
+        status,
+        scheduleStatus
       },
       relatedTo: {
         schedule: scheduleId
@@ -1070,7 +1103,8 @@ const scheduleCancelled = async (payload) => {
         endDate,
         startTime,
         endTime,
-        status
+        status,
+        scheduleStatus
       },
       relatedTo: {
         schedule: scheduleId
