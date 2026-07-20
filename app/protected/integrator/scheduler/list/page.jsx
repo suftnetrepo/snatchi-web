@@ -374,6 +374,7 @@ function SchedulerListContent() {
             amount={Math.round((selectedSchedule.estimatedAmount || 0) * 100)}
             receivingIntegratorId={selectedSchedule.receivingIntegratorId?._id || selectedSchedule.receivingIntegratorId}
             isOpen={showPaymentModal}
+            schedule={selectedSchedule}
             onClose={() => setShowPaymentModal(false)}
             onSuccess={() => {
               setShowPaymentModal(false);

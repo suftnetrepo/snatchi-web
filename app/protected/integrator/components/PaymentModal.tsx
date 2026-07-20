@@ -1,13 +1,27 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import styles from './PaymentModal.module.css';
+import { dateFormatted } from '@/utils/helpers';
 
 const parseResponseBody = async (response: Response) => {
   const text = await response.text();
   return text ? JSON.parse(text) : null;
 };
+
+interface Schedule {
+  _id: string;
+  title?: string;
+  startDate?: string;
+  endDate?: string;
+  estimatedAmount?: number;
+  paymentStatus?: string;
+  status?: string;
+  paymentReference?: string;
+  engineer?: { _id: string; first_name: string; last_name: string };
+  project?: { _id: string; name: string } | string;
+}
 
 interface PaymentModalProps {
   schedulerId: string;
@@ -18,6 +32,7 @@ interface PaymentModalProps {
   onClose: () => void;
   onSuccess: (paymentId: string) => void;
   onError: (error: string) => void;
+  schedule?: Schedule;
 }
 
 interface ModalData {
@@ -35,16 +50,18 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   onSuccess,
   onError,
+  schedule,
 }) => {
   const stripe = useStripe();
   const elements = useElements();
   
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [cardError, setCardError] = useState<string | null>(null);
   const [modalData, setModalData] = useState<ModalData>({});
   const [loading, setLoading] = useState(true);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [cardholderName, setCardholderName] = useState('');
 
   const platformFeePercentage = 10;
   const platformFeeAmount = Math.round(amount * (platformFeePercentage / 100));
@@ -52,9 +69,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
   // Fetch modal data (engineer, integrators, etc.)
   useEffect(() => {
+    if (!isOpen) return;
+    setPaymentSuccess(false);
+    setCardError(null);
+    setClientSecret(null);
+    setCardholderName('');
+
     const fetchModalData = async () => {
-      if (!isOpen) return;
-      
       try {
         setLoading(true);
         const response = await fetch(`/api/stripe/payment/data?schedulerId=${schedulerId}&engineerId=${engineerId}&receivingIntegratorId=${receivingIntegratorId}`);
@@ -77,32 +98,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
   // Create payment intent
   const createPaymentIntent = async () => {
-    try {
-      setCardError(null);
-      const response = await fetch('/api/stripe/payment/create-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          schedulerId,
-          amount,
-        }),
-      });
-
-      const data = await parseResponseBody(response);
-
-      if (!response.ok) {
-        throw new Error(data?.error || data?.details || 'Failed to create payment intent');
-      }
-
-      setPaymentIntentId(data.paymentIntentId);
-      setClientSecret(data.clientSecret);
-      return data;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create payment intent';
-      setCardError(message);
-      onError(message);
-      throw err;
-    }
+    const response = await fetch('/api/stripe/payment/create-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ schedulerId, amount }),
+    });
+    const data = await parseResponseBody(response);
+    if (!response.ok) throw new Error(data?.error || data?.details || 'Failed to create payment intent');
+    setClientSecret(data.clientSecret);
+    return data;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,25 +121,19 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     setCardError(null);
 
     try {
-      // Create payment intent if not already created
       const paymentData = clientSecret ? null : await createPaymentIntent();
       const secret = clientSecret || paymentData?.clientSecret;
 
-      if (!secret) {
-        throw new Error('Failed to get payment intent');
-      }
+      if (!secret) throw new Error('Failed to get payment intent');
 
-      // Confirm card payment
       const cardElement = elements.getElement(CardElement);
-      if (!cardElement) {
-        throw new Error('Card element not found');
-      }
+      if (!cardElement) throw new Error('Card element not found');
 
       const result = await stripe.confirmCardPayment(secret, {
         payment_method: {
           card: cardElement,
           billing_details: {
-            name: modalData.payingIntegrator?.name || 'Unknown',
+            name: cardholderName || modalData.payingIntegrator?.name || 'Unknown',
           },
         },
       });
@@ -146,26 +144,20 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       } else if (result.paymentIntent?.status === 'succeeded') {
         const confirmResponse = await fetch('/api/stripe/payment/confirm', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            paymentIntentId: result.paymentIntent.id
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentIntentId: result.paymentIntent.id }),
         });
 
         const confirmData = await parseResponseBody(confirmResponse);
+        if (!confirmResponse.ok) throw new Error(confirmData?.error || 'Failed to confirm payment');
 
-        if (!confirmResponse.ok) {
-          throw new Error(confirmData?.error || 'Failed to confirm payment');
-        }
-
-        onSuccess(paymentIntentId || result.paymentIntent.id);
-        onClose();
+        // Show success animation, then auto-close
+        setPaymentSuccess(true);
+        setTimeout(() => {
+          onSuccess(result.paymentIntent!.id);
+        }, 1500);
       } else if (result.paymentIntent?.status === 'requires_action') {
-        // 3D Secure or other authentication required
-        setCardError('Additional verification required. Completing...');
-        // The client_secret will handle the redirect
+        setCardError('Additional verification required. Completing…');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Payment failed';
@@ -176,122 +168,175 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
+  const handleClose = () => {
+    if (isProcessing) return;
+    onClose();
+  };
+
   if (!isOpen) return null;
 
+  const engineerName = schedule?.engineer
+    ? `${schedule.engineer.first_name} ${schedule.engineer.last_name}`
+    : `${modalData.engineer?.first_name || ''} ${modalData.engineer?.last_name || ''}`.trim() || '—';
+
+  const projectName =
+    schedule?.project && typeof schedule.project === 'object'
+      ? (schedule.project as { name: string }).name
+      : '—';
+
   return (
-    <div data-testid="payment-modal" className={styles.modalBackdrop} onClick={onClose}>
+    <div data-testid="payment-modal" className={styles.modalBackdrop} onClick={handleClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+
         {/* Header */}
         <div data-testid="payment-modal-header" className={styles.header}>
-          <h2>Pay for Engineer Service</h2>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
+              Complete Payment
+            </h2>
+            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#64748b' }}>
+              Secure payment powered by Stripe
+            </p>
+          </div>
           <button
             data-testid="payment-close-btn"
             className={styles.closeBtn}
-            onClick={onClose}
+            onClick={handleClose}
             type="button"
+            disabled={isProcessing}
           >
             ✕
           </button>
         </div>
 
-        {loading ? (
-          <div className={styles.loading}>Loading payment details...</div>
+        {/* Success state */}
+        {paymentSuccess ? (
+          <div className={styles.successContainer}>
+            <div className={styles.successIcon}>✓</div>
+            <div className={styles.successTitle}>Payment Successful</div>
+            <div className={styles.successSubtitle}>Closing automatically…</div>
+          </div>
+        ) : loading ? (
+          <div className={styles.loading}>Loading payment details…</div>
         ) : (
-          <form onSubmit={handleSubmit} data-testid="payment-form" className={styles.form}>
-            {/* Amount Breakdown */}
-            <div data-testid="payment-breakdown" className={styles.breakdown}>
-              <div className={styles.breakdownRow}>
-                <span>Gross Amount:</span>
-                <span data-testid="payment-gross-amount" className={styles.amount}>
-                  £{(amount / 100).toFixed(2)}
-                </span>
-              </div>
-              <div className={styles.breakdownRow}>
-                <span>Platform Fee ({platformFeePercentage}%):</span>
-                <span data-testid="payment-platform-fee" className={styles.amount}>
-                  £{(platformFeeAmount / 100).toFixed(2)}
-                </span>
-              </div>
-              <div className={styles.breakdownRowHighlight}>
-                <span>
-                  <strong>{modalData.receivingIntegrator?.name} receives:</strong>
-                </span>
-                <span data-testid="payment-net-amount" className={styles.amountHighlight}>
-                  <strong>£{(netAmount / 100).toFixed(2)}</strong>
-                </span>
+          <div className={styles.drawerBody}>
+
+            {/* Schedule Summary Card */}
+            <div className={styles.summaryCard}>
+              <div className={styles.summaryTitle}>Schedule Summary</div>
+              <div className={styles.summaryGrid}>
+                {projectName && projectName !== '—' && (
+                  <div className={`${styles.summaryItem} ${styles.summaryFullRow}`}>
+                    <span className={styles.summaryLabel}>Project</span>
+                    <span className={styles.summaryValue}>{projectName}</span>
+                  </div>
+                )}
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>Engineer</span>
+                  <span className={styles.summaryValue}>{engineerName}</span>
+                </div>
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>Status</span>
+                  <span className={styles.summaryValue}>Awaiting Payment</span>
+                </div>
+                {schedule?.startDate && (
+                  <div className={styles.summaryItem}>
+                    <span className={styles.summaryLabel}>Start Date</span>
+                    <span className={styles.summaryValue}>{dateFormatted(schedule.startDate)}</span>
+                  </div>
+                )}
+                {schedule?.endDate && (
+                  <div className={styles.summaryItem}>
+                    <span className={styles.summaryLabel}>End Date</span>
+                    <span className={styles.summaryValue}>{dateFormatted(schedule.endDate)}</span>
+                  </div>
+                )}
+                {schedule?.paymentReference && (
+                  <div className={`${styles.summaryItem} ${styles.summaryFullRow}`}>
+                    <span className={styles.summaryLabel}>Payment Reference</span>
+                    <span className={styles.summaryValue} style={{ fontFamily: 'monospace', fontSize: 13 }}>
+                      {schedule.paymentReference}
+                    </span>
+                  </div>
+                )}
+                <div className={`${styles.summaryItem} ${styles.summaryFullRow}`}>
+                  <span className={styles.summaryLabel}>Amount</span>
+                  <span className={styles.summaryAmountValue}>£{(amount / 100).toFixed(2)}</span>
+                </div>
               </div>
             </div>
 
-            {/* Party Information */}
-            <div data-testid="payment-parties" className={styles.parties}>
-              <div data-testid="payment-paying-integrator" className={styles.party}>
-                You ({modalData.payingIntegrator?.name}) will be charged
-              </div>
-              <div data-testid="payment-engineer-name" className={styles.party}>
-                Engineer: {modalData.engineer?.first_name} {modalData.engineer?.last_name}
-              </div>
-              <div data-testid="payment-receiving-integrator" className={styles.partyWarning}>
-                <strong>⚠️ {modalData.receivingIntegrator?.name} will receive £{(netAmount / 100).toFixed(2)}</strong>
-              </div>
-            </div>
+            {/* Payment Form */}
+            <form onSubmit={handleSubmit} data-testid="payment-form">
 
-            {/* Card Element */}
-            <div className={styles.formGroup}>
-              <label htmlFor="card-element" className={styles.label}>
-                Card Details
-              </label>
-              <div
-                data-testid="stripe-card-element"
-                className={styles.cardElement}
-                id="card-element"
-              >
-                <CardElement
-                  options={{
-                    style: {
-                      base: {
-                        fontSize: '16px',
-                        color: '#424770',
-                        '::placeholder': {
-                          color: '#aab7c4',
-                        },
-                      },
-                      invalid: {
-                        color: '#fa755a',
-                      },
-                    },
-                  }}
+              {/* Cardholder Name */}
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Cardholder Name</label>
+                <input
+                  type="text"
+                  className={styles.nameInput}
+                  placeholder="Name on card"
+                  value={cardholderName}
+                  onChange={(e) => setCardholderName(e.target.value)}
+                  disabled={isProcessing}
+                  autoComplete="cc-name"
                 />
               </div>
-            </div>
 
-            {/* Error Display */}
-            {cardError && (
-              <div data-testid="payment-card-error" className={styles.error}>
-                {cardError}
+              {/* Card Element */}
+              <div className={styles.formGroup}>
+                <label htmlFor="card-element" className={styles.label}>
+                  Card Details
+                </label>
+                <div
+                  data-testid="stripe-card-element"
+                  className={styles.cardElement}
+                  id="card-element"
+                >
+                  <CardElement
+                    options={{
+                      style: {
+                        base: {
+                          fontSize: '15px',
+                          color: '#1e293b',
+                          '::placeholder': { color: '#94a3b8' },
+                        },
+                        invalid: { color: '#dc2626' },
+                      },
+                    }}
+                  />
+                </div>
               </div>
-            )}
 
-            {/* Action Buttons */}
-            <div data-testid="payment-actions" className={styles.actions}>
-              <button
-                data-testid="payment-cancel"
-                type="button"
-                onClick={onClose}
-                disabled={isProcessing}
-                className={styles.cancelBtn}
-              >
-                Cancel
-              </button>
+              {/* Error Banner */}
+              {cardError && (
+                <div data-testid="payment-card-error" className={styles.error}>
+                  <strong>Payment failed</strong><br />
+                  {cardError}<br />
+                  <small style={{ color: '#991b1b' }}>Please try another payment method.</small>
+                </div>
+              )}
+
+              <div className={styles.divider} />
+
+              {/* Total Row */}
+              <div className={styles.totalRow}>
+                <span className={styles.totalLabel}>Total</span>
+                <span className={styles.totalAmount}>£{(amount / 100).toFixed(2)}</span>
+              </div>
+
+              {/* Submit */}
               <button
                 data-testid="payment-submit"
                 type="submit"
                 disabled={isProcessing || !stripe || !elements}
                 className={styles.submitBtn}
               >
-                {isProcessing ? 'Processing...' : 'Pay Now'}
+                {isProcessing && <span className={styles.spinner} />}
+                {isProcessing ? 'Processing Payment…' : `Pay £${(amount / 100).toFixed(2)}`}
               </button>
-            </div>
-          </form>
+            </form>
+          </div>
         )}
       </div>
     </div>
