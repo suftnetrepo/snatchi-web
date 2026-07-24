@@ -66,16 +66,15 @@ export const useSchedulerList = () => {
         let filtered = response.data;
 
         // Apply filtering based on query parameter
-        if (filter === 'accepted') {
+        if (filter === 'accepted' || filter === 'awaiting-approval') {
           filtered = filtered.filter(s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.ACCEPTED);
+           isReceivingIntegratorSchedule(schedule);
         } else if (filter === 'approval') {
           filtered = filtered.filter(s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.APPROVED);
         } else if (filter === 'awaiting-payment') {
           filtered = filtered.filter(s => isSchedulerAwaitingPayment(s));
         } else if (filter === 'pending') {
           filtered = filtered.filter(s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.PENDING);
-        } else if (filter === 'awaiting-approval') {
-          filtered = filtered.filter(isAwaitingApproval);
         } else if (filter === 'in-progress') {
           filtered = filtered.filter(isSchedulerInProgress);
         } else if (filter === 'ready-to-start') {

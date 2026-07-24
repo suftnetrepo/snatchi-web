@@ -9,6 +9,8 @@ import {
   getEngineerSchedulesByDateAndStatus,
   getEngineerScheduleStatusAggregate,
   getEngineerSchedulesByStatus,
+  getSchedulesByEngineerAndStatus,
+  markSchedulesAsRead,
   getSchedule
 } from '../services/scheduler';
 import notificationService from '@/app/api/services/notificationService';
@@ -80,22 +82,12 @@ export const GET = async (req) => {
     if (action === 'getEngineerSchedules') {
       const engineerId = url.searchParams.get('engineerId');
       const date = url.searchParams.get('date') || undefined;
-      // Support both ?status=A,B and ?status[]=A&status[]=B array notation
       const statusArray = url.searchParams.getAll('status[]');
       const statusScalar = url.searchParams.get('status');
       const status = statusArray.length > 0 ? statusArray : statusScalar || undefined;
 
-      if (!engineerId) {
-        return NextResponse.json({ success: false, error: 'engineerId is required' }, { status: 400 });
-      }
-
-      if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        return NextResponse.json({ success: false, error: 'Invalid date format. Use YYYY-MM-DD' }, { status: 400 });
-      }
-
       try {
         const results = await getEngineerSchedulesByDateAndStatus({ engineerId, date, status });
-
         return successResponse(results.data);
       } catch (err) {
         return errorResponse(err.message, err.statusCode || 500, err);
@@ -111,14 +103,6 @@ export const GET = async (req) => {
       const statusScalar = url.searchParams.get('status');
       const statuses = statusArray.length > 0 ? statusArray : statusScalar || undefined;
 
-      if (!engineerId) {
-        return NextResponse.json({ success: false, error: 'engineerId is required' }, { status: 400 });
-      }
-
-      if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        return NextResponse.json({ success: false, error: 'Invalid date format. Use YYYY-MM-DD' }, { status: 400 });
-      }
-
       try {
         const data = await getEngineerScheduleStatusAggregate({ engineerId, date, statuses });
         return successResponse(data);
@@ -133,6 +117,18 @@ export const GET = async (req) => {
 
       try {
         const results = await getEngineerSchedulesByStatus({ engineerId, status });
+        return successResponse(results.data);
+      } catch (err) {
+        return errorResponse(err.message, err.statusCode || 500, err);
+      }
+    }
+
+    if (action === 'getSchedulesByEngineerStatus') {
+      const engineerId = url.searchParams.get('engineerId');
+      const status = url.searchParams.get('status');
+
+      try {
+        const results = await getSchedulesByEngineerAndStatus({ engineerId, status });
         return successResponse(results.data);
       } catch (err) {
         return errorResponse(err.message, err.statusCode || 500, err);
@@ -317,6 +313,35 @@ export const POST = async (req) => {
     return successResponse(result);
   } catch (error) {
     console.error('Error in POST /scheduler:', error);
+    return errorResponse(error.message, 500, error);
+  }
+};
+
+export const PATCH = async (req) => {
+  try {
+    const { user, error } = await authenticateUser(req);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+
+    const url = new URL(req.url);
+    const action = url.searchParams.get('action');
+
+    if (action === 'markAsRead') {
+      const body = await req.json();
+      const { engineerId, status } = body;
+
+      try {
+        const result = await markSchedulesAsRead({ engineerId, status });
+        return successResponse(result);
+      } catch (err) {
+        return errorResponse(err.message, err.statusCode || 500, err);
+      }
+    }
+
+    return NextResponse.json({ success: false, error: 'Invalid action parameter' }, { status: 400 });
+  } catch (error) {
     return errorResponse(error.message, 500, error);
   }
 };

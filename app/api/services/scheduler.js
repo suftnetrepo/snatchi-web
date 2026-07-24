@@ -339,8 +339,6 @@ async function updateByStatus(id, body) {
       throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
     }
 
-    console.log(`Updating schedule status for ID: ${id} with body:`, body);
-
     const schedule = await Scheduler.findById(id);
     if (!schedule) {
       throw Object.assign(new Error('Schedule not found'), { statusCode: 404 });
@@ -672,8 +670,6 @@ async function getAllSchedules(integratorId) {
     throw new Error(JSON.stringify([{ field: 'integratorId', message: 'Invalid MongoDB ObjectId' }]));
   }
 
-  console.log('Fetching all schedules for integrator', { integratorId });
-
   try {
     const result = await Scheduler.find({
       $or: [{ integrator: integratorId }, { receivingIntegratorId: integratorId }, { payingIntegrator: integratorId }]
@@ -743,20 +739,7 @@ const normalizeSingleScheduleStatus = (status) => {
  * @param {object}          [params.actor]     – normalised session actor
  */
 async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, actor = null }) {
-  // ── Validate engineerId ─────────────────────────────────────────────────
-  if (!engineerId) {
-    throw Object.assign(new Error('engineerId is required'), { statusCode: 400 });
-  }
-
-  if (!mongoose.isValidObjectId(engineerId)) {
-    throw Object.assign(new Error('Invalid engineerId'), { statusCode: 400 });
-  }
-
-  // ── Validate date format ─────────────────────────────────────────────────
-  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    throw Object.assign(new Error('Invalid date format. Use YYYY-MM-DD'), { statusCode: 400 });
-  }
-
+ 
   const query = createEngineerScheduleQuery({ engineerId, date, status });
 
   try {
@@ -784,20 +767,7 @@ async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, a
  * @returns {Promise<object>} { total, byStatus: { Pending, Accepted, Approved, ... } }
  */
 async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses }) {
-  // ── Validate engineerId ─────────────────────────────────────────────────
-  if (!engineerId) {
-    throw Object.assign(new Error('engineerId is required'), { statusCode: 400 });
-  }
-
-  if (!mongoose.isValidObjectId(engineerId)) {
-    throw Object.assign(new Error('Invalid engineerId'), { statusCode: 400 });
-  }
-
-  // ── Validate date format ─────────────────────────────────────────────────
-  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    throw Object.assign(new Error('Invalid date format. Use YYYY-MM-DD'), { statusCode: 400 });
-  }
-
+  
   const query = createEngineerScheduleQuery({ engineerId, date, status: undefined });
 
   // ── Parse and expand status filters ──────────────────────────────────────
@@ -861,13 +831,6 @@ async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses }
 }
 
 async function getEngineerSchedulesByStatus({ engineerId, status }) {
-  if (!engineerId) {
-    throw Object.assign(new Error('engineerId is required'), { statusCode: 400 });
-  }
-
-  if (!mongoose.isValidObjectId(engineerId)) {
-    throw Object.assign(new Error('Invalid engineerId'), { statusCode: 400 });
-  }
 
   const normalizedStatus = normalizeSingleScheduleStatus(status);
 
@@ -884,6 +847,46 @@ async function getEngineerSchedulesByStatus({ engineerId, status }) {
   }
 }
 
+async function getSchedulesByEngineerAndStatus({ engineerId, status }) {
+  if (!mongoose.isValidObjectId(engineerId)) {
+    throw Object.assign(new Error('Invalid engineerId'), { statusCode: 400 });
+  }
+
+  const normalizedStatus = normalizeSingleScheduleStatus(status);
+
+  try {
+    const schedules = await Scheduler.find({
+      engineer: toObjectId(engineerId),
+      status: normalizedStatus
+    }).sort({ startDate: 1, startTime: 1 });
+
+    return { data: schedules };
+  } catch (error) {
+    logger.error('Error in getSchedulesByEngineerAndStatus:', error);
+    throw Object.assign(new Error(error.message || 'An unexpected server error occurred.'), { statusCode: 500 });
+  }
+}
+
+async function markSchedulesAsRead({ engineerId, status }) {
+  if (!mongoose.isValidObjectId(engineerId)) {
+    throw Object.assign(new Error('Invalid engineerId'), { statusCode: 400 });
+  }
+
+  const normalizedStatus = normalizeSingleScheduleStatus(status);
+
+  try {
+    const result = await Scheduler.updateMany(
+      { engineer: toObjectId(engineerId), status: normalizedStatus },
+      { $set: { read: true } }
+    );
+
+    return { modifiedCount: result.modifiedCount };
+  } catch (error) {
+    logger.error('Error in markSchedulesAsRead:', error);
+    throw Object.assign(new Error(error.message || 'An unexpected server error occurred.'), { statusCode: 500 });
+  }
+}
+
 export {
   remove,
   add,
@@ -895,6 +898,8 @@ export {
   getEngineerSchedulesByDateAndStatus,
   getEngineerScheduleStatusAggregate,
   getEngineerSchedulesByStatus,
+  getSchedulesByEngineerAndStatus,
+  markSchedulesAsRead,
   getScheduleReceivingIntegratorId,
   getSchedulePayingIntegratorId,
   buildPaymentPendingUpdate,

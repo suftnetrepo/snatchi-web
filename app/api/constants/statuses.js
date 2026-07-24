@@ -81,6 +81,9 @@ export const getStatusLabel = (status) => {
 };
 
 export const normalizeSchedulerStatus = (status) => {
+
+  console.log('Normalizing status:', status);
+
   if (!status) {
     return null;
   }

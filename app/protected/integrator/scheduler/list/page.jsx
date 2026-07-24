@@ -99,7 +99,7 @@ function SchedulerListContent() {
     const normalizedStatus = normalizeSchedulerStatus(schedule.status);
 
     if (normalizedStatus === SCHEDULER_STATUS.ACCEPTED) {
-      return 'Awaiting Integrator Approval';
+      return 'Awaiting Approval';
     }
 
     if (

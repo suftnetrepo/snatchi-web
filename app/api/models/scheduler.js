@@ -166,6 +166,10 @@ const schedulerSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: ''
+    },
+    read: {
+      type: Boolean,
+      default: false
     }
   },
   { timestamps: true }

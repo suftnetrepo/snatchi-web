@@ -4,7 +4,6 @@ import { VERBS } from '../config';
 import { PROJECT, SCHEDULER } from '../utils/apiUrl';
 import { schedulerValidator, schedulerSearchValidator } from '../app/protected/integrator/rules';
 import { formatDateForInput, decodeHtmlToText } from '../utils/helpers';
-import { status } from '@/_/api/utils/subscription-status';
 
 interface Schedule {
   _id: string;
