@@ -11,14 +11,15 @@ import {
   getEngineerSchedulesByStatus,
   getSchedulesByEngineerAndStatus,
   markSchedulesAsRead,
-  getSchedule
+  getUnreadSchedulesByEngineer,
+  getSchedule,
+  getSchedulesByEngineer
 } from '../services/scheduler';
 import notificationService from '@/app/api/services/notificationService';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
 import { sendUserNotification } from '../services/notify';
-import notificationEvents from '../services/notificationEvents';
 import User from '../models/user';
 import { getActiveDays } from '../../../utils/helpers';
 
@@ -54,15 +55,15 @@ const sendPendingNotification = async (scheduleId, body, additionalParams = {}) 
   });
 
   await sendUserNotification({
-      userId: engineer,
-      title: 'Updated Booking Request',
-      body: `Updated booking for ${title} - ${formattedDate}`,
-      screen: 'calendar',
-      screenParams: {
-        scheduleId,
-        ...additionalParams
-      }
-    });
+    userId: engineer,
+    title: 'Updated Booking Request',
+    body: `Updated booking for ${title} - ${formattedDate}`,
+    screen: 'calendar',
+    screenParams: {
+      scheduleId,
+      ...additionalParams
+    }
+  });
 };
 
 export const GET = async (req) => {
@@ -75,6 +76,8 @@ export const GET = async (req) => {
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
+
+    console.log('GET /scheduler called with action:', action);
 
     // await removeAll();
 
@@ -135,13 +138,27 @@ export const GET = async (req) => {
       }
     }
 
+    if (action === 'getSchedulesByEngineer') {
+      try {
+        const results = await getSchedulesByEngineer({ engineerId: user.id });
+        return successResponse(results.data);
+      } catch (err) {
+        return errorResponse(err.message, err.statusCode || 500, err);
+      }
+    }
+
+    if (action === 'getUnreadByEngineer') {
+      try {
+        const results = await getUnreadSchedulesByEngineer({ engineerId: user.id });
+        return successResponse(results.count);
+      } catch (err) {
+        return errorResponse(err.message, err.statusCode || 500, err);
+      }
+    }
+
     // Handle getByEngineer action
     if (action === 'getByEngineer') {
       const id = url.searchParams.get('id');
-      if (!id) {
-        return NextResponse.json({ success: false, error: 'Engineer id is required' }, { status: 400 });
-      }
-
       const results = await getByUser(id);
       return successResponse(results.data);
     }
@@ -159,7 +176,6 @@ export const GET = async (req) => {
       return successResponse(results.data);
     }
 
-    // Invalid action
     return NextResponse.json({ success: false, message: 'Invalid action parameter' }, { status: 400 });
   } catch (error) {
     return errorResponse(error.message, 500, error);
@@ -238,8 +254,9 @@ export const PUT = async (req) => {
           startTime: body.startTime,
           endTime: body.endTime,
           status: body.status,
-          scheduleStatus: body.status,  
           projectId: result.project?._id || '',
+          scheduleId: result._id,
+          engineerId: result.engineer?._id || '',
           projectName: result.project?.name || '',
           projectDescription: result.project?.description || '',
           completeAddress: result.project?.completeAddress || '',
@@ -279,8 +296,7 @@ export const POST = async (req) => {
       try {
         // Get full schedule with populated fields
         const fullSchedule = (await result.execPopulate?.()) || result;
-
-        await notificationEvents.bookingCreated({
+        await sendPendingNotification(result._id, body, {
           scheduleId: result._id,
           engineerId: fullSchedule.engineer?._id,
           projectId: fullSchedule.project?._id,
@@ -294,11 +310,8 @@ export const POST = async (req) => {
           startDate: result.startDate,
           endDate: result.endDate,
           status: result.status,
-          scheduleStatus : result.status, 
           startTime: result.startTime,
           endTime: result.endTime,
-          payingIntegratorName: result.payingIntegrator?.name || '',
-          receivingIntegratorName: result.receivingIntegrator?.name || '',
           projectDescription: result.project?.description || '',
           priority: result.project?.priority || ''
         });
@@ -319,28 +332,17 @@ export const POST = async (req) => {
 
 export const PATCH = async (req) => {
   try {
-    const { user, error } = await authenticateUser(req);
+    const { error } = await authenticateUser(req);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
     const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    const id = url.searchParams.get('id');
 
-    if (action === 'markAsRead') {
-      const body = await req.json();
-      const { engineerId, status } = body;
-
-      try {
-        const result = await markSchedulesAsRead({ engineerId, status });
-        return successResponse(result);
-      } catch (err) {
-        return errorResponse(err.message, err.statusCode || 500, err);
-      }
-    }
-
-    return NextResponse.json({ success: false, error: 'Invalid action parameter' }, { status: 400 });
+    const result = await markSchedulesAsRead(id);
+    return successResponse(result);
   } catch (error) {
     return errorResponse(error.message, 500, error);
   }

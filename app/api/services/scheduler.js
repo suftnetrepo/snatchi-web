@@ -7,8 +7,7 @@ import '../models/integrator';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
 import { logger } from '../utils/logger';
-import { SCHEDULER_STATUS, normalizeSchedulerStatus, isSchedulerInProgress } from '../constants/statuses';
-import notificationEvents from './notificationEvents';
+import { SCHEDULER_STATUS, normalizeSchedulerStatus } from '../constants/statuses';
 
 mongoConnect();
 
@@ -76,91 +75,6 @@ const getSchedulePayingIntegratorId = (schedule) =>
 
 const isEngineerActor = (schedule, actor) =>
   !!actor.userId && schedule?.engineer?._id?.toString?.() === actor.userId.toString();
-
-const isReceivingIntegratorActor = (schedule, actor) =>
-  actor.role === 'integrator' &&
-  !!actor.integratorId &&
-  getScheduleReceivingIntegratorId(schedule) === actor.integratorId.toString();
-
-const isAuthorizedExecutionActor = (schedule, actor) =>
-  isEngineerActor(schedule, actor) ||
-  (actor.role === 'integrator' &&
-    !!actor.integratorId &&
-    [getSchedulePayingIntegratorId(schedule), getScheduleReceivingIntegratorId(schedule)].includes(
-      actor.integratorId.toString()
-    ));
-
-const buildStatusUpdate = (schedule, actor, targetStatus, payload = {}) => {
-  const currentStatus = normalizeSchedulerStatus(schedule.status);
-  const nextStatus = normalizeSchedulerStatus(targetStatus);
-  const now = new Date();
-
-  if (!nextStatus) {
-    throw Object.assign(new Error('Target status is required'), { statusCode: 400 });
-  }
-
-  switch (currentStatus) {
-    case SCHEDULER_STATUS.PENDING:
-      if (nextStatus === SCHEDULER_STATUS.ACCEPTED) {
-        return { status: nextStatus, acceptedAt: now };
-      }
-
-      if (nextStatus === SCHEDULER_STATUS.DECLINED) {
-        return { status: nextStatus };
-      }
-      break;
-
-    case SCHEDULER_STATUS.ACCEPTED:
-      if (nextStatus === SCHEDULER_STATUS.APPROVED && isReceivingIntegratorActor(schedule, actor)) {
-        return {
-          status: nextStatus,
-          approvedAt: now,
-          approvedByIntegrator: actor.integratorId,
-          approvedByUser: actor.userId,
-          approvalNotes: payload.approvalNotes || schedule.approvalNotes || ''
-        };
-      }
-
-      if (nextStatus === SCHEDULER_STATUS.DECLINED) {
-        return { status: nextStatus };
-      }
-      break;
-
-    case SCHEDULER_STATUS.APPROVED:
-      if (nextStatus === SCHEDULER_STATUS.AWAITING_PAYMENT && actor.role === 'integrator') {
-        return {
-          status: nextStatus,
-          awaitingPaymentAt: schedule.awaitingPaymentAt || now
-        };
-      }
-      break;
-
-    case SCHEDULER_STATUS.READY_TO_START:
-      if (nextStatus === SCHEDULER_STATUS.IN_PROGRESS && isAuthorizedExecutionActor(schedule, actor)) {
-        return {
-          status: nextStatus,
-          startedAt: schedule.startedAt || now
-        };
-      }
-      break;
-
-    case SCHEDULER_STATUS.IN_PROGRESS:
-      if (nextStatus === SCHEDULER_STATUS.COMPLETED && isAuthorizedExecutionActor(schedule, actor)) {
-        return {
-          status: nextStatus,
-          completedAt: now
-        };
-      }
-      break;
-
-    default:
-      break;
-  }
-
-  throw Object.assign(new Error(`Cannot transition schedule from ${currentStatus} to ${nextStatus}.`), {
-    statusCode: 400
-  });
-};
 
 const buildPaymentPendingUpdate = ({
   schedule,
@@ -339,14 +253,6 @@ async function updateByStatus(id, body) {
       throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
     }
 
-    const schedule = await Scheduler.findById(id);
-    if (!schedule) {
-      throw Object.assign(new Error('Schedule not found'), { statusCode: 404 });
-    }
-
-    const currentStatus = normalizeSchedulerStatus(schedule.status);
-    const targetStatus = normalizeSchedulerStatus(body.status);
-
     const result = await Scheduler.findByIdAndUpdate(
       id,
       {
@@ -358,234 +264,6 @@ async function updateByStatus(id, body) {
       { path: 'engineer', select: 'first_name last_name email' },
       { path: 'project', select: 'name description completeAddress location _id integrator priority' }
     ]);
-
-    // Wire notification events after successful status update
-    try {
-      // ACCEPTED: Engineer accepts -> notify receiving integrator (A)
-      if (currentStatus === SCHEDULER_STATUS.PENDING && targetStatus === SCHEDULER_STATUS.ACCEPTED) {
-        await notificationEvents.bookingAccepted({
-          scheduleId: result._id,
-          receivingIntegratorId: result.receivingIntegratorId?._id,
-          engineerName: result.engineer?.first_name || 'Engineer',
-          projectName: result.project?.name || 'Project',
-          scheduleId: result._id,
-          engineerId: result.engineer?._id,
-          projectId: result.project?._id,
-          integratorId: result.project?.integrator,
-          projectName: result.project?.name,
-          completeAddress: result.project?.completeAddress || '',
-          latitude: result.project?.location?.coordinates[0],
-          longitude: result.project?.location?.coordinates[1],
-          radius: 200,
-          activeDays: getActiveDays(result.startDate, result.endDate),
-          startDate: result.startDate,
-          endDate: result.endDate,
-          status: result.status,
-          startTime: result.startTime,
-          endTime: result.endTime,
-          payingIntegratorName: result.payingIntegrator?.name || '',
-          receivingIntegratorName: result.receivingIntegrator?.name || '',
-          projectDescription: result.project?.description || '',
-          priority: result.project?.priority || ''
-        });
-      }
-
-      // DECLINED: Engineer declines -> notify paying integrator (B)
-      else if (currentStatus === SCHEDULER_STATUS.PENDING && targetStatus === SCHEDULER_STATUS.DECLINED) {
-        await notificationEvents.bookingDeclined({
-          scheduleId: result._id,
-          payingIntegratorId: result.payingIntegrator?._id,
-          projectName: result.project?.name || 'Project',
-          projectId: result.project?._id,
-          projectLocation: result.project?.location || '',
-          engineerName: result.engineer?.first_name || 'Engineer',
-          projectName: result.project?.name || 'Project',
-          scheduleId: result._id,
-          engineerId: result.engineer?._id,
-          projectId: result.project?._id,
-          integratorId: result.project?.integrator,
-          projectName: result.project?.name,
-          completeAddress: result.project?.completeAddress || '',
-          latitude: result.project?.location?.coordinates[0],
-          longitude: result.project?.location?.coordinates[1],
-          radius: 200,
-          activeDays: getActiveDays(result.startDate, result.endDate),
-          startDate: result.startDate,
-          endDate: result.endDate,
-          status: result.status,
-          startTime: result.startTime,
-          endTime: result.endTime,
-          payingIntegratorName: result.payingIntegrator?.name || '',
-          receivingIntegratorName: result.receivingIntegrator?.name || '',
-          projectDescription: result.project?.description || '',
-          priority: result.project?.priority || ''
-        });
-      }
-
-      // APPROVED: Receiving integrator (A) approves -> notify engineer and paying integrator (B)
-      else if (currentStatus === SCHEDULER_STATUS.ACCEPTED && targetStatus === SCHEDULER_STATUS.APPROVED) {
-        await notificationEvents.bookingApproved({
-          scheduleId: result._id,
-          engineerId: result.engineer?._id,
-          payingIntegratorId: result.payingIntegrator?._id,
-          projectName: result.project?.name || 'Project',
-          projectId: result.project?._id,
-          siteLocation: result.project?.location || '',
-          startDate: result.startDate,
-          scheduleId: result._id,
-          engineerId: result.engineer?._id,
-          projectId: result.project?._id,
-          integratorId: result.project?.integrator,
-          projectName: result.project?.name,
-          completeAddress: result.project?.completeAddress || '',
-          latitude: result.project?.location?.coordinates[0],
-          longitude: result.project?.location?.coordinates[1],
-          radius: 200,
-          activeDays: getActiveDays(result.startDate, result.endDate),
-          startDate: result.startDate,
-          endDate: result.endDate,
-          status: result.status,
-          startTime: result.startTime,
-          endTime: result.endTime,
-          payingIntegratorName: result.payingIntegrator?.name || '',
-          receivingIntegratorName: result.receivingIntegrator?.name || '',
-          projectDescription: result.project?.description || '',
-          priority: result.project?.priority || ''
-        });
-      }
-
-      // READY_TO_START: After payment succeeds (status changed from AwaitingPayment)
-      else if (
-        (currentStatus === SCHEDULER_STATUS.AWAITING_PAYMENT || currentStatus === SCHEDULER_STATUS.PAID) &&
-        targetStatus === SCHEDULER_STATUS.READY_TO_START
-      ) {
-        await notificationEvents.readyToStart({
-          scheduleId: result._id,
-          engineerId: result.engineer?._id,
-          projectName: result.project?.name || 'Project',
-          siteLocation: result.project?.location || '',
-          startDate: result.startDate,
-          scheduleId: result._id,
-          engineerId: result.engineer?._id,
-          projectId: result.project?._id,
-          integratorId: result.project?.integrator,
-          projectName: result.project?.name,
-          completeAddress: result.project?.completeAddress || '',
-          latitude: result.project?.location?.coordinates[0],
-          longitude: result.project?.location?.coordinates[1],
-          radius: 200,
-          activeDays: getActiveDays(result.startDate, result.endDate),
-          startDate: result.startDate,
-          endDate: result.endDate,
-          status: result.status,
-          startTime: result.startTime,
-          endTime: result.endTime,
-          payingIntegratorName: result.payingIntegrator?.name || '',
-          receivingIntegratorName: result.receivingIntegrator?.name || '',
-          projectDescription: result.project?.description || '',
-          priority: result.project?.priority || ''
-        });
-      }
-
-      // IN_PROGRESS: Engineer marks work as started
-      else if (targetStatus === SCHEDULER_STATUS.IN_PROGRESS && currentStatus !== SCHEDULER_STATUS.IN_PROGRESS) {
-        await notificationEvents.workStarted({
-          scheduleId: result._id,
-          payingIntegratorId: result.payingIntegrator?._id,
-          receivingIntegratorId: result.receivingIntegratorId?._id,
-          projectName: result.project?.name || 'Project',
-          engineerName: result.engineer?.first_name || 'Engineer',
-          scheduleId: result._id,
-          engineerId: result.engineer?._id,
-          projectId: result.project?._id,
-          integratorId: result.project?.integrator,
-          projectName: result.project?.name,
-          completeAddress: result.project?.completeAddress || '',
-          latitude: result.project?.location?.coordinates[0],
-          longitude: result.project?.location?.coordinates[1],
-          radius: 200,
-          activeDays: getActiveDays(result.startDate, result.endDate),
-          startDate: result.startDate,
-          endDate: result.endDate,
-          status: result.status,
-          startTime: result.startTime,
-          endTime: result.endTime,
-          payingIntegratorName: result.payingIntegrator?.name || '',
-          receivingIntegratorName: result.receivingIntegrator?.name || '',
-          projectDescription: result.project?.description || '',
-          priority: result.project?.priority || ''
-        });
-      }
-
-      // COMPLETED: Engineer marks work as completed
-      else if (targetStatus === SCHEDULER_STATUS.COMPLETED && currentStatus !== SCHEDULER_STATUS.COMPLETED) {
-        await notificationEvents.workCompleted({
-          scheduleId: result._id,
-          payingIntegratorId: result.payingIntegrator?._id,
-          receivingIntegratorId: result.receivingIntegratorId?._id,
-          projectName: result.project?.name || 'Project',
-          engineerName: result.engineer?.first_name || 'Engineer',
-          scheduleId: result._id,
-          engineerId: result.engineer?._id,
-          projectId: result.project?._id,
-          integratorId: result.project?.integrator,
-          projectName: result.project?.name,
-          completeAddress: result.project?.completeAddress || '',
-          latitude: result.project?.location?.coordinates[0],
-          longitude: result.project?.location?.coordinates[1],
-          radius: 200,
-          activeDays: getActiveDays(result.startDate, result.endDate),
-          startDate: result.startDate,
-          endDate: result.endDate,
-          status: result.status,
-          startTime: result.startTime,
-          endTime: result.endTime,
-          payingIntegratorName: result.payingIntegrator?.name || '',
-          receivingIntegratorName: result.receivingIntegrator?.name || '',
-          projectDescription: result.project?.description || '',
-          priority: result.project?.priority || ''
-        });
-      }
-
-      // CANCELLED: Schedule cancelled
-      else if (targetStatus === SCHEDULER_STATUS.CANCELLED && currentStatus !== SCHEDULER_STATUS.CANCELLED) {
-        await notificationEvents.scheduleCancelled({
-          scheduleId: result._id,
-          engineerId: result.engineer?._id,
-          payingIntegratorId: result.payingIntegrator?._id,
-          receivingIntegratorId: result.receivingIntegratorId?._id,
-          projectName: result.project?.name || 'Project',
-          cancellationReason: body.cancellationReason || 'No reason provided',
-          scheduleId: result._id,
-          engineerId: result.engineer?._id,
-          projectId: result.project?._id,
-          integratorId: result.project?.integrator,
-          projectName: result.project?.name,
-          completeAddress: result.project?.completeAddress || '',
-          latitude: result.project?.location?.coordinates[0],
-          longitude: result.project?.location?.coordinates[1],
-          radius: 200,
-          activeDays: getActiveDays(result.startDate, result.endDate),
-          startDate: result.startDate,
-          endDate: result.endDate,
-          status: result.status,
-          startTime: result.startTime,
-          endTime: result.endTime,
-          payingIntegratorName: result.payingIntegrator?.name || '',
-          receivingIntegratorName: result.receivingIntegrator?.name || '',
-          projectDescription: result.project?.description || '',
-          priority: result.project?.priority || ''
-        });
-      }
-    } catch (notificationError) {
-      logger.error('Failed to send status change notification', {
-        scheduleId: result._id,
-        currentStatus,
-        targetStatus,
-        error: notificationError.message
-      });
-      // Don't throw - status update is successful even if notification fails
-    }
 
     return result;
   } catch (error) {
@@ -682,11 +360,9 @@ async function getAllSchedules(integratorId) {
         select: 'name stripeConnectAccountId connectAccountStatus chargesEnabled payoutsEnabled'
       });
 
-    console.log('Fetched all schedules for integrator', { integratorId, count: result.length });
-
     return { data: result };
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw new Error('An unexpected server error occurred.');
   }
 }
@@ -867,22 +543,51 @@ async function getSchedulesByEngineerAndStatus({ engineerId, status }) {
   }
 }
 
-async function markSchedulesAsRead({ engineerId, status }) {
+async function getSchedulesByEngineer({ engineerId }) {
   if (!mongoose.isValidObjectId(engineerId)) {
     throw Object.assign(new Error('Invalid engineerId'), { statusCode: 400 });
   }
 
-  const normalizedStatus = normalizeSingleScheduleStatus(status);
-
   try {
-    const result = await Scheduler.updateMany(
-      { engineer: toObjectId(engineerId), status: normalizedStatus },
+    const schedules = await Scheduler.find({
+      engineer: toObjectId(engineerId),
+    }).sort({ startDate: 1, startTime: 1 }).populate({ path: 'project', select: 'completeAddress' });
+
+    return { data: schedules };
+  } catch (error) {
+    logger.error('Error in getSchedulesByEngineer:', error);
+    throw Object.assign(new Error(error.message || 'An unexpected server error occurred.'), { statusCode: 500 });
+  }
+}
+
+async function markSchedulesAsRead( id ) {
+ 
+  try {
+    const result = await Scheduler.updateOne(
+      { _id: id },
       { $set: { read: true } }
     );
 
-    return { modifiedCount: result.modifiedCount };
+    return { data : true };
   } catch (error) {
-    logger.error('Error in markSchedulesAsRead:', error);
+    console.error('Error in markSchedulesAsRead:', error);
+    // throw Object.assign(new Error(error.message || 'An unexpected server error occurred.'), { statusCode: 500 });
+  }
+}
+
+async function getUnreadSchedulesByEngineer({ engineerId }) {
+  if (!mongoose.isValidObjectId(engineerId)) {
+    throw Object.assign(new Error('Invalid engineerId'), { statusCode: 400 });
+  }
+  try {
+    const count = await Scheduler.countDocuments({
+      engineer: engineerId,
+      read: false
+    });
+
+    return { count };
+  } catch (error) {
+    logger.error('Error in getUnreadSchedulesByEngineer:', error);
     throw Object.assign(new Error(error.message || 'An unexpected server error occurred.'), { statusCode: 500 });
   }
 }
@@ -900,11 +605,13 @@ export {
   getEngineerSchedulesByStatus,
   getSchedulesByEngineerAndStatus,
   markSchedulesAsRead,
+  getUnreadSchedulesByEngineer,
   getScheduleReceivingIntegratorId,
   getSchedulePayingIntegratorId,
   buildPaymentPendingUpdate,
   buildPaymentSucceededUpdate,
   buildPaymentFailedUpdate,
   removeAll,
-  getSchedule
+  getSchedule,
+  getSchedulesByEngineer
 };
