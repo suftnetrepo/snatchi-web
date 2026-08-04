@@ -41,6 +41,10 @@ const RenderChat = () => {
   const searchParams = useSearchParams();
   const id = searchParams.get('i');
 
+  console.log('Current chat room ID:', chatRoomId);
+   console.log('Current chats:', chats);
+   console.log('Current chat roomcurrentChatUser:', currentChatUser);
+
   useEffect(() => {
     const chat = chats.find((j) => j.id === id);
     if (chat) {

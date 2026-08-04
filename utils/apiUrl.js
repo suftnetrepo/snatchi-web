@@ -128,3 +128,7 @@ export const FENCE = {
   fetch: `${HOST}fence`,
   removeOne: `${HOST}fence/`
 };
+
+export const ENGINEER_SERVICE_RATE = {
+  fetchByEngineer: `${HOST}engineer-service-rate`
+};

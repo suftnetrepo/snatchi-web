@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Offcanvas, ListGroup, Alert } from 'react-bootstrap';
 import { useUserDocument } from '../../../../hooks/useUserDocument';
 import { IoChevronForwardCircleOutline } from 'react-icons/io5';

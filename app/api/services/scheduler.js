@@ -185,10 +185,6 @@ async function add(body) {
   try {
     const engineer = await User.findById(body.engineer).select('integrator');
 
-    if (!engineer) {
-      throw new Error('Engineer not found');
-    }
-
     schedulerData.receivingIntegratorId =
       body.receivingIntegratorId || engineer.integrator?.toString?.() || engineer.integrator;
     schedulerData.payingIntegrator = body.payingIntegrator || body.integrator;
@@ -196,7 +192,14 @@ async function add(body) {
     const scheduler = await Scheduler.create(schedulerData);
     await scheduler.populate([
       { path: 'engineer', select: 'first_name last_name email' },
-      { path: 'project', select: 'name description completeAddress location _id integrator priority' }
+      {
+        path: 'project',
+        select: 'name description completeAddress location _id integrator priority',
+        populate: {
+          path: 'integrator',
+          select: 'email'
+        }
+      }
     ]);
     return scheduler;
   } catch (error) {
@@ -415,7 +418,6 @@ const normalizeSingleScheduleStatus = (status) => {
  * @param {object}          [params.actor]     – normalised session actor
  */
 async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, actor = null }) {
- 
   const query = createEngineerScheduleQuery({ engineerId, date, status });
 
   try {
@@ -443,7 +445,6 @@ async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, a
  * @returns {Promise<object>} { total, byStatus: { Pending, Accepted, Approved, ... } }
  */
 async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses }) {
-  
   const query = createEngineerScheduleQuery({ engineerId, date, status: undefined });
 
   // ── Parse and expand status filters ──────────────────────────────────────
@@ -507,7 +508,6 @@ async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses }
 }
 
 async function getEngineerSchedulesByStatus({ engineerId, status }) {
-
   const normalizedStatus = normalizeSingleScheduleStatus(status);
 
   try {
@@ -550,8 +550,10 @@ async function getSchedulesByEngineer({ engineerId }) {
 
   try {
     const schedules = await Scheduler.find({
-      engineer: toObjectId(engineerId),
-    }).sort({ startDate: 1, startTime: 1 }).populate({ path: 'project', select: 'completeAddress' });
+      engineer: toObjectId(engineerId)
+    })
+      .sort({ startDate: 1, startTime: 1 })
+      .populate({ path: 'project', select: 'completeAddress' });
 
     return { data: schedules };
   } catch (error) {
@@ -560,15 +562,11 @@ async function getSchedulesByEngineer({ engineerId }) {
   }
 }
 
-async function markSchedulesAsRead( id ) {
- 
+async function markSchedulesAsRead(id) {
   try {
-    const result = await Scheduler.updateOne(
-      { _id: id },
-      { $set: { read: true } }
-    );
+    const result = await Scheduler.updateOne({ _id: id }, { $set: { read: true } });
 
-    return { data : true };
+    return { data: true };
   } catch (error) {
     console.error('Error in markSchedulesAsRead:', error);
     // throw Object.assign(new Error(error.message || 'An unexpected server error occurred.'), { statusCode: 500 });

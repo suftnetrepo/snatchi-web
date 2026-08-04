@@ -10,7 +10,10 @@ import {
   addDoc,
   getDocs,
   Timestamp,
-  where
+  where,
+  arrayUnion,
+  writeBatch,
+  getDoc
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { db, auth } from '../firebase';
@@ -53,7 +56,6 @@ const useChatRoom = (userId) => {
 
   const getUserRooms = async (userId) => {
 
-    console.log('Fetching user rooms for userId:', userId);
     try {
       const chatRoomsRef = collection(db, 'chats');
       const chatRoomsQuery = query(
@@ -180,14 +182,13 @@ const useChatRoom = (userId) => {
     }
   };
 
+
   const handleAddParticipant = async (chatRoomId, newUserEmail, invitedByUserId) => {
     const TEMP_PASSWORD = '12345!';
 
     try {
       let newUserId = await createNewUserAccount(newUserEmail, TEMP_PASSWORD, invitedByUserId);
-      await addUserToChatRoom(newUserId, chatRoomId);
-
-      console.log(`Successfully added user ${newUserId} to chat room ${chatRoomId}`);
+      await addUserToChatRoom(newUserId, chatRoomId)
       return newUserId;
     } catch (error) {
       if (error.code === 'auth/email-already-in-use') {

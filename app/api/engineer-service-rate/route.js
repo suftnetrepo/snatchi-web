@@ -1,6 +1,7 @@
 import {
   createEngineerServiceRate,
   getEngineerServiceRates,
+  getRatesByEngineer,
   getEngineerServiceRateById,
   updateEngineerServiceRate,
   deleteEngineerServiceRate
@@ -55,6 +56,13 @@ export const GET = async (req) => {
     if (action === 'list' || action === null) {
     
       const rates = await getEngineerServiceRates(user.id);
+      return successResponse(rates);
+    }
+
+    // Get active service rates for a specific engineer (used by integrator scheduler)
+    if (action === 'getByEngineer') {
+      const engineerId = url.searchParams.get('engineerId');
+      const rates = await getRatesByEngineer(engineerId);
       return successResponse(rates);
     }
 

@@ -1,9 +1,16 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
-import { PROJECT, SCHEDULER } from '../utils/apiUrl';
+import { PROJECT, SCHEDULER, ENGINEER_SERVICE_RATE } from '../utils/apiUrl';
 import { schedulerValidator, schedulerSearchValidator } from '../app/protected/integrator/rules';
 import { formatDateForInput, decodeHtmlToText } from '../utils/helpers';
+import { useUserChat } from './useUserChat';
+
+interface EngineerServiceRate {
+  _id: string;
+  service_name: string;
+  rate: number;
+}
 
 interface Schedule {
   _id: string;
@@ -23,6 +30,8 @@ interface Schedule {
   status: string;
   description: string;
   location?: string;
+  price_offer?: number | null;
+  service_rate?: string | null;
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -37,6 +46,8 @@ interface SchedulerState {
   rules: any;
   model?: Record<string, any>;
   modelRules: any;
+  engineerServiceRates: EngineerServiceRate[];
+  engineerServiceRatesLoading: boolean;
 }
 
 interface ApiResponse<T = any> {
@@ -54,8 +65,13 @@ const useScheduler = (engineerId: string) => {
     success: false,
     rules: schedulerValidator.rules,
     model: schedulerSearchValidator.model,
-    modelRules: schedulerSearchValidator.rules
+    modelRules: schedulerSearchValidator.rules,
+    engineerServiceRates: [],
+    engineerServiceRatesLoading: false
   });
+
+  // Get chat hook for creating booking conversations
+  const { handleCreateDirectChatByEmail } = useUserChat();
 
   const updateState = useCallback((updates: Partial<SchedulerState>) => {
     setState((prevState) => ({ ...prevState, ...updates }));
@@ -65,7 +81,45 @@ const useScheduler = (engineerId: string) => {
     updateState({ fields: schedulerValidator.reset(), success: false, loading: false, error: null });
   }, [updateState]);
 
-  const handleChange = useCallback((name: string, value: string) => {
+  const fetchEngineerServiceRates = useCallback(
+    async (engineerId: string) => {
+      if (!engineerId) {
+        updateState({ engineerServiceRates: [], engineerServiceRatesLoading: false });
+        return;
+      }
+
+      updateState({ engineerServiceRatesLoading: true });
+
+      try {
+        const params = new URLSearchParams({
+          action: 'getByEngineer',
+          engineerId
+        });
+
+        // @ts-ignore
+        const response: ApiResponse<EngineerServiceRate[]> = await zat(
+          ENGINEER_SERVICE_RATE.fetchByEngineer,
+          null,
+          VERBS.GET,
+          params
+        );
+
+        if (response.success && response.data) {
+          updateState({
+            engineerServiceRates: response.data,
+            engineerServiceRatesLoading: false
+          });
+        } else {
+          updateState({ engineerServiceRates: [], engineerServiceRatesLoading: false });
+        }
+      } catch (error) {
+        updateState({ engineerServiceRates: [], engineerServiceRatesLoading: false });
+      }
+    },
+    [updateState]
+  );
+
+  const handleChange = useCallback((name: string, value: string | number | null) => {
     setState((prevState) => ({
       ...prevState,
       fields: {
@@ -75,52 +129,72 @@ const useScheduler = (engineerId: string) => {
     }));
   }, []);
 
-  const handleSelection = useCallback((start: Date, end: Date, engineer: string, project: string) => {
-    // Format dates to datetime-local format (YYYY-MM-DDTHH:mm:ss)
-    const extractTimeFromDate = (date: Date): string => {
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      return `${hours}:${minutes}`;
-    };
+  const handleSelection = useCallback(
+    (start: Date, end: Date, engineer: string, project: string) => {
+      // Format dates to datetime-local format (YYYY-MM-DDTHH:mm:ss)
+      const extractTimeFromDate = (date: Date): string => {
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+      };
 
-    setState((prevState) => ({
-      ...prevState,
-      success: false,
-      loading: false,
-      fields: {
-        ...prevState.fields,
-        startDate: formatDateForInput(start),
-        endDate: formatDateForInput(end),
-        startTime: extractTimeFromDate(start),
-        endTime: extractTimeFromDate(end),
-        engineer,
-        project
+      setState((prevState) => ({
+        ...prevState,
+        success: false,
+        loading: false,
+        fields: {
+          ...prevState.fields,
+          startDate: formatDateForInput(start),
+          endDate: formatDateForInput(end),
+          startTime: extractTimeFromDate(start),
+          endTime: extractTimeFromDate(end),
+          engineer,
+          project,
+          price_offer: null,
+          service_rate: null
+        }
+      }));
+
+      // Fetch engineer service rates when engineer is selected
+      if (engineer) {
+        fetchEngineerServiceRates(engineer);
       }
-    }));
-  }, []);
+    },
+    [fetchEngineerServiceRates]
+  );
 
-    const handleViewEvent = useCallback((event: Schedule) => {
-    // Format dates to datetime-local format (YYYY-MM-DDTHH:mm:ss)
-    const extractTimeFromDate = (date: Date): string => {
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      return `${hours}:${minutes}`;
-    };
+  const handleViewEvent = useCallback(
+    (event: Schedule) => {
+      // Format dates to datetime-local format (YYYY-MM-DDTHH:mm:ss)
+      const extractTimeFromDate = (date: Date): string => {
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+      };
 
-    setState((prevState) => ({
-      ...prevState,
-      success: false,
-      loading: false,
-      fields: {
-        ...prevState.fields,
-        ...event,
-        startDate: formatDateForInput(new Date(event.startDate)),
-        endDate: formatDateForInput(new Date(event.endDate)),
-        startTime: extractTimeFromDate(new Date(event.startDate)),
-        endTime: extractTimeFromDate(new Date(event.endDate)),
+      setState((prevState) => ({
+        ...prevState,
+        success: false,
+        loading: false,
+        fields: {
+          ...prevState.fields,
+          ...event,
+          startDate: formatDateForInput(new Date(event.startDate)),
+          endDate: formatDateForInput(new Date(event.endDate)),
+          startTime: extractTimeFromDate(new Date(event.startDate)),
+          endTime: extractTimeFromDate(new Date(event.endDate))
+        }
+      }));
+
+      // Fetch engineer service rates when viewing event
+      if (event.engineer && typeof event.engineer === 'object' && '_id' in event.engineer) {
+        fetchEngineerServiceRates(event.engineer._id);
+      } else if (typeof event.engineer === 'string') {
+        fetchEngineerServiceRates(event.engineer);
       }
-    }));
-  }, []);
+    },
+    [fetchEngineerServiceRates]
+  );
 
   const buildScheduleDateTime = (dateValue: string, timeValue: string) => {
     const date = new Date(dateValue);
@@ -192,7 +266,7 @@ const useScheduler = (engineerId: string) => {
           last_name: item.lastName,
           role: item.role,
           secure_url: item.avatar,
-          status: item.status,
+          status: item.status
         }));
 
         const seenEngineers = new Set<string>();
@@ -341,13 +415,23 @@ const useScheduler = (engineerId: string) => {
       try {
         const { data, success, errorMessage } = await zat(SCHEDULER.createOne, body, VERBS.POST);
 
+        console.log('handleSave response:', { data, success, errorMessage });
+
         if (success) {
-          // Transform string dates to Date objects for the calendar
           const transformedSchedule = {
             ...data,
             startDate: new Date(data.startDate),
             endDate: new Date(data.endDate)
           };
+
+          handleCreateDirectChatByEmail(
+            data.engineer?.email,
+            data.project.integrator.email,
+            `Booking: ${data.title}`,
+            'direct'
+          ).catch((chatError) => {
+            console.error('Error creating chat for booking:', chatError);
+          });
 
           setState((prevState) => ({
             ...prevState,
@@ -355,6 +439,7 @@ const useScheduler = (engineerId: string) => {
             loading: false,
             success: true
           }));
+
           return true;
         } else {
           handleError(errorMessage || 'Failed to save the schedule.');
@@ -381,7 +466,7 @@ const useScheduler = (engineerId: string) => {
         fields: {
           ...prevState.fields,
           title: data.name,
-          location: data.completeAddress,  
+          location: data.completeAddress,
           description: decodeHtmlToText(data.description)
         },
         loading: false
@@ -415,7 +500,8 @@ const useScheduler = (engineerId: string) => {
     clearMessages,
     handleSelection,
     handleProjectSelect,
-    handleViewEvent
+    handleViewEvent,
+    fetchEngineerServiceRates
   };
 };
 

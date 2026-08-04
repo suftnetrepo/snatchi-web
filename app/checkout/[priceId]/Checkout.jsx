@@ -13,6 +13,7 @@ import ErrorDialogue from '@/components/elements/errorDialogue';
 import { useUserChat } from '../../../hooks/useUserChat';
 import { signIn, getCsrfToken } from 'next-auth/react';
 
+const CHAT_USER_PASSWORD = '12345!';
 const CheckOut = () => {
   const router = useRouter();
   const params = useParams();
@@ -20,22 +21,14 @@ const CheckOut = () => {
   const elements = useElements();
   const [csrfToken, setCsrfToken] = useState('');
   const { handleSignUp } = useUserChat();
-    const [enrichedFields, setEnrichedFields] = useState(null);
-      const userCreatedRef = useRef(false);
-    const [clientSecret, setClientSecret] = useState(null);
+  const [enrichedFields, setEnrichedFields] = useState(null);
+  const userCreatedRef = useRef(false);
+  const [clientSecret, setClientSecret] = useState(null);
   const [validationError, setValidationError] = useState({});
   const [fields, setFields] = useState(checkoutValidator.fields);
   const { priceId } = params;
-  const {
-    handleNewSubscriber,
-    handleErrorReset,
-    loading,
-    handleError,
-    error,
-    handleSuccess,
-    pricing,
-   
-  } = useSubscriber(priceId);
+  const { handleNewSubscriber, handleErrorReset, loading, handleError, error, handleSuccess, pricing } =
+    useSubscriber(priceId);
 
   useEffect(() => {
     getCsrfToken().then(setCsrfToken);
@@ -48,8 +41,8 @@ const CheckOut = () => {
       [name]: type === 'checkbox' ? checked : value
     });
   };
- 
- const ensureSubscriberRecord = async (userPayload) => {
+
+  const ensureSubscriberRecord = async (userPayload) => {
     if (userCreatedRef.current) {
       return true;
     }
@@ -85,6 +78,13 @@ const CheckOut = () => {
     }
 
     if (paymentIntent?.status === 'succeeded') {
+      handleSignUp({
+        email: fields.email,
+        password: CHAT_USER_PASSWORD
+      }).catch((error) => {
+        console.error('Error signing up user:', error);
+      });
+
       router.replace(
         `/checkout/success?stripeCustomerId=${userPayload?.stripeCustomerId}&email=${fields.email}&plan=${pricing?.planName}&amount=${pricing?.currency}${pricing?.raw_price}`
       );

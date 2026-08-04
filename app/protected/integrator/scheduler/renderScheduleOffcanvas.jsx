@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
 import { Offcanvas, Button, Form, Alert } from 'react-bootstrap';
-import { MdCancel } from 'react-icons/md';
+import { MdCancel, MdChat } from 'react-icons/md';
+import { useRouter } from 'next/navigation';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
 import { OkDialogue } from '../../../../src/components/elements/ConfirmDialogue';
 
@@ -15,8 +15,27 @@ const RenderScheduleOffcanvas = ({
   error,
   handleChange,
   handleDelete,
-  success
+  success,
+  engineerServiceRates = [],
+  engineerServiceRatesLoading = false
 }) => {
+  const router = useRouter();
+
+  const handleRateChange = (rateId) => {
+    handleChange('service_rate', rateId);
+    
+    // Auto-populate price_offer with the selected rate's amount
+    const selectedRate = engineerServiceRates.find(rate => rate._id === rateId);
+    if (selectedRate) {
+      handleChange('price_offer', selectedRate.rate);
+    }
+  };
+
+  const handleOpenConversation = () => {
+    if (fields.chat_id) {
+      router.push(`/protected/integrator/chat?i=${fields.chat_id}`);
+    }
+  };
 
   return (
     <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
@@ -61,6 +80,54 @@ const RenderScheduleOffcanvas = ({
             </div>
             <div className="col-md-6"></div>
           </div>
+
+          {/* Suggested Rate Section */}
+          <div className="row mb-3">
+            <div className="col-md-12">
+              <Form.Group controlId="formSuggestedRate">
+                <Form.Label className="text-dark">Suggested Rate</Form.Label>
+                <Form.Select
+                  className="border-dark"
+                  value={fields?.service_rate || ''}
+                  onChange={(e) => handleRateChange(e.target.value)}
+                  disabled={engineerServiceRatesLoading}
+                >
+                  <option value="">Select Rate</option>
+                  {engineerServiceRates.map((rate) => (
+                    <option key={rate._id} value={rate._id}>
+                      {rate.service_name} - £{rate.rate.toFixed(2)}
+                    </option>
+                  ))}
+                </Form.Select>
+                {engineerServiceRatesLoading && (
+                  <small className="text-muted">Loading rates...</small>
+                )}
+              </Form.Group>
+            </div>
+          </div>
+
+          {/* Price Offer Section */}
+          <div className="row mb-3">
+            <div className="col-md-12">
+              <Form.Group controlId="formPriceOffer">
+                <Form.Label className="text-dark">Offer (£)</Form.Label>
+                <Form.Control
+                  type="number"
+                  placeholder="Enter offer amount"
+                  name="price_offer"
+                  value={fields?.price_offer !== null && fields?.price_offer !== undefined ? fields.price_offer : ''}
+                  onChange={(e) => handleChange('price_offer', e.target.value ? parseFloat(e.target.value) : null)}
+                  className="border-dark"
+                  min="0"
+                  step="0.01"
+                />
+                {errorMessages?.price_offer?.message && (
+                  <span className="text-danger fs-13 ms-2">{errorMessages?.price_offer?.message}</span>
+                )}
+              </Form.Group>
+            </div>
+          </div>
+
           <div className="row mb-3">
             <div className="col-md-12">
               <div className="row">
@@ -166,10 +233,21 @@ const RenderScheduleOffcanvas = ({
               )}
             </Form.Group>
           </div>
-          <div className="d-flex justify-content-start">
+          <div className="d-flex justify-content-start gap-2">
             <Button type="button" variant="primary" onClick={() => handleSubmit()}>
               Save Changes
             </Button>
+            {fields.chat_id && (
+              <Button 
+                type="button" 
+                variant="info" 
+                onClick={handleOpenConversation}
+                className="d-flex align-items-center gap-2"
+              >
+                <MdChat size={18} />
+                Open Conversation
+              </Button>
+            )}
             <DeleteConfirmation
               onConfirm={async (id) => {
                 handleDelete(id);

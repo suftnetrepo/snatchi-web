@@ -1,4 +1,3 @@
-
 import EngineerServiceRate from '../models/engineerServiceRate';
 import { engineerServiceRateValidator } from '../validator/user';
 import { isValidObjectId } from '../utils/helps';
@@ -63,6 +62,36 @@ async function getEngineerServiceRates(engineerId) {
       .exec();
 
     return rates;
+  } catch (error) {
+    if (error.statusCode) {
+      throw error;
+    }
+    logger.error(error);
+    throw new Error('Failed to fetch service rates');
+  }
+}
+
+async function getRatesByEngineer(engineerId) {
+  try {
+    if (!isValidObjectId(engineerId)) {
+      const error = new Error('Invalid engineer ID');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const rates = await EngineerServiceRate.find({
+      engineer: engineerId,
+      active: true
+    })
+      .sort({ serviceName: 1 })
+      .select('_id serviceName rate')
+      .exec();
+
+    return rates.map((rate) => ({
+      _id: rate._id,
+      service_name: rate.serviceName,
+      rate: rate.rate
+    }));
   } catch (error) {
     if (error.statusCode) {
       throw error;
@@ -159,6 +188,7 @@ async function deleteEngineerServiceRate(rateId) {
 export {
   createEngineerServiceRate,
   getEngineerServiceRates,
+  getRatesByEngineer,
   getEngineerServiceRateById,
   updateEngineerServiceRate,
   deleteEngineerServiceRate

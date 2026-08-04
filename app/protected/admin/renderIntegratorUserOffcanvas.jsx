@@ -1,4 +1,3 @@
-import React from 'react';
 import { Container, Offcanvas, Table } from 'react-bootstrap';
 import Badge from 'react-bootstrap/Badge';
 import { FaRegCheckCircle, FaEraser } from 'react-icons/fa';

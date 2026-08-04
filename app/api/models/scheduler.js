@@ -52,6 +52,18 @@ const schedulerSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    // Price offer agreed for this booking (source of truth)
+    price_offer: {
+      type: Number,
+      default: null,
+      min: 0
+    },
+    // Reference to the engineer service rate selected (optional, for audit only)
+    service_rate: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'EngineerServiceRate',
+      default: null
+    },
     // Payment Fields (Cross-Integrator Payment)
     // Which integrator is paying for this engineer service
     payingIntegrator: {
@@ -170,6 +182,11 @@ const schedulerSchema = new mongoose.Schema(
     read: {
       type: Boolean,
       default: false
+    },
+    // Firebase group chat for booking discussion
+    chat_id: {
+      type: String,
+      default: null
     }
   },
   { timestamps: true }

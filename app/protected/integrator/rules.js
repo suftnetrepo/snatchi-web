@@ -281,6 +281,20 @@ const schedulerValidator = {
           return undefined;
         }
       }
+    ],
+    price_offer: [
+      {
+        validate: (value) => {
+          if (value === '' || value === null || value === undefined) {
+            return undefined;
+          }
+          const numericValue = Number(value);
+          if (Number.isNaN(numericValue) || numericValue < 0) {
+            return 'Offer must be a valid number greater than or equal to 0';
+          }
+          return undefined;
+        }
+      }
     ]
   },
   reset: () => {
@@ -292,7 +306,9 @@ const schedulerValidator = {
       description: '',
       engineer: '',
       project: '',
-      location: ''
+      location: '',
+      price_offer: '',
+      service_rate: ''
     };
   },
   fields: {
@@ -303,7 +319,9 @@ const schedulerValidator = {
     title: '',
     engineer: '',
     project: '',
-    location: ''
+    location: '',
+    price_offer: '',
+    service_rate: ''
   }
 };
 

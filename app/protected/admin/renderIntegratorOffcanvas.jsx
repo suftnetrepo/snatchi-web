@@ -1,4 +1,3 @@
-import React from 'react';
 import { Container, Offcanvas, Form, Row, Col } from 'react-bootstrap';
 import { dateFormatted } from '../../../utils/helpers';
 

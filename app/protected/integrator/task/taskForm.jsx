@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Form, Button } from 'react-bootstrap';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
 

@@ -1,5 +1,3 @@
-import React from 'react';
-
 const ProgressBar = ({ value, size, animated, striped }) => {
     const progressClass = `progress ${size ? `progress-${size}` : ''} ${animated ? 'progress-animate' : ''
         }`;

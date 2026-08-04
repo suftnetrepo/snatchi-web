@@ -61,7 +61,9 @@ function schedulerValidator(data) {
     status: { type: 'string', empty: false, max: 50 },
     startDate: { type: 'string', empty: false, max: 50 },
     endDate: { type: 'string', empty: false, max: 50 },
-    title: { type: 'string', empty: false, max: 100 }
+    title: { type: 'string', empty: false, max: 100 },
+    price_offer: { type: 'number', min: 0, optional: true, convert: true },
+    service_rate: { type: 'string', empty: false, optional: true }
   };
   return validator.validate(data, schema);
 }

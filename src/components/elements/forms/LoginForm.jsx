@@ -43,22 +43,22 @@ const LoginForm = () => {
       return;
     }
 
-    try {
-      await handleChatSignIn(fields.email, '12345!');
-    } catch (chatError) {
+    handleChatSignIn(fields.email, '12345!').catch((chatError) => {
       console.error('Chat sign-in failed:', chatError);
-    }
+    });
 
     const urlParams = new URLSearchParams(window.location.search);
     const returnUrl = urlParams.get('returnUrl');
 
     const updatedSession = await getSession();
 
-    const redirectPath = returnUrl ?? {
-      admin: '/protected/admin/dashboard',
-      integrator: '/protected/integrator/dashboard',
-      guest: '/protected/guest/dashboard'
-    }[updatedSession?.user?.role]; 
+    const redirectPath =
+      returnUrl ??
+      {
+        admin: '/protected/admin/dashboard',
+        integrator: '/protected/integrator/dashboard',
+        guest: '/protected/guest/dashboard'
+      }[updatedSession?.user?.role];
 
     router.push(redirectPath);
   };
@@ -80,8 +80,8 @@ const LoginForm = () => {
         <div className="form-floating mb-4">
           <input
             type="email"
-            aria-details='Email address'
-            aria-label='Email'
+            aria-details="Email address"
+            aria-label="Email"
             value={fields.email}
             id="email"
             placeholder="Email"
@@ -95,8 +95,8 @@ const LoginForm = () => {
         <div className="form-floating password-field mb-4">
           <input
             value={fields.password}
-            aria-label='Password'
-            aria-live='polite'
+            aria-label="Password"
+            aria-live="polite"
             id="loginPassword"
             placeholder="Password"
             className={`form-control ${validationError.password ? 'is-invalid' : ''}`}
@@ -110,7 +110,9 @@ const LoginForm = () => {
           >
             <i className={`uil ${visiblePassword ? 'uil-eye-slash' : 'uil-eye'}`} />
           </span>
-          <label aria-describedby='' htmlFor="password">Password</label>
+          <label aria-describedby="" htmlFor="password">
+            Password
+          </label>
           {validationError.password && <div className="invalid-feedback">{validationError.password.message}</div>}
         </div>
 
@@ -122,7 +124,13 @@ const LoginForm = () => {
               </LoadingButton>
             </div>
             <div className="col-md-3 col-lg-3 mt-2 mt-md-0">
-              <Button aria-description='' aria-label='' variant="outline-secondary" className="rounded-pill" onClick={() => router.push('/')}>
+              <Button
+                aria-description=""
+                aria-label=""
+                variant="outline-secondary"
+                className="rounded-pill"
+                onClick={() => router.push('/')}
+              >
                 Go Back
               </Button>
             </div>

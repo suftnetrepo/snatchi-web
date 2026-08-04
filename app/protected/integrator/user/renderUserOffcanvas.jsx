@@ -52,11 +52,12 @@ const RenderUserOffcanvas = ({
     }
 
     if (fields?.chat_status) {
-      try {
-        await handleSignUp(fields.email, '12345!');
-      } catch (chatError) {
-        console.error('Chat sign-in failed:', chatError);
-      }
+      handleSignUp({
+        email: fields.email,
+        password: '12345!'
+      }).catch((error) => {
+        console.error('Error signing up user:', error);
+      });
     }
   };
 

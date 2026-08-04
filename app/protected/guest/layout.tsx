@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import SidebarProvider from '../../../src/components/layouts/SidebarProvider';
 import SidebarOverlay from '../../../src/components/layouts/Sidebar/SidebarOverlay';
 import Sidebar from '../../../src/components/layouts/Sidebar/Sidebar';

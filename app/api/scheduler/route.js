@@ -13,7 +13,8 @@ import {
   markSchedulesAsRead,
   getUnreadSchedulesByEngineer,
   getSchedule,
-  getSchedulesByEngineer
+  getSchedulesByEngineer,
+  removeAll
 } from '../services/scheduler';
 import notificationService from '@/app/api/services/notificationService';
 import { logger } from '../utils/logger';
@@ -79,7 +80,7 @@ export const GET = async (req) => {
 
     console.log('GET /scheduler called with action:', action);
 
-    // await removeAll();
+     // await removeAll();
 
     // Handle getEngineerSchedules action — date + status filtering
     if (action === 'getEngineerSchedules') {

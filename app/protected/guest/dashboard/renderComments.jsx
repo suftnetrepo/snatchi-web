@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, Form, InputGroup, ListGroup, Row, Col, Image } from 'react-bootstrap';
 import { FaRegSmile, FaPaperPlane } from 'react-icons/fa';
 import { useTaskComments } from '@/hooks/useTaskComments';

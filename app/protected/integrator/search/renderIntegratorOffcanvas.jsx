@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Container, Offcanvas, Row, Col, Button, Image } from 'react-bootstrap';
 import { FaComment, FaEnvelope, FaPhone } from 'react-icons/fa';
 import { capitalizeFirstLetter } from '@/utils/helpers';

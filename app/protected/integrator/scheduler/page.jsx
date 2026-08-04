@@ -127,7 +127,9 @@ function SchedulerContent() {
     handleEdit,
     success,
     handleProjectSelect,
-    handleViewEvent
+    handleViewEvent,
+    engineerServiceRates = [],
+    engineerServiceRatesLoading = false
   } = useScheduler(engineerId);
   const [show, setShow] = useState(false);
   const [errorMessages, setErrorMessages] = useState({});
@@ -179,7 +181,9 @@ function SchedulerContent() {
       'engineer',
       'project',
       'description',
-      'location'
+      'location',
+      'price_offer',
+      'service_rate'
     ]);
 
     if (fields._id) {
@@ -238,6 +242,8 @@ function SchedulerContent() {
         show={show}
         handleClose={handleClose}
         handleDelete={handleDelete}
+        engineerServiceRates={engineerServiceRates}
+        engineerServiceRatesLoading={engineerServiceRatesLoading}
       />
     </div>
   );

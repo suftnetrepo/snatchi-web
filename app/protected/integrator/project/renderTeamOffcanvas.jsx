@@ -39,7 +39,10 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
   console.log('Fence data:', data);
 
   useEffect(() => {
-    fetchProjectSchedules(id);
+    // Only fetch schedules if a valid projectId is available
+    if (id) {
+      fetchProjectSchedules(id);
+    }
   }, [id]);
 
   const onClose = () => {

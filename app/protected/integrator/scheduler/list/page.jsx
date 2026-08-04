@@ -6,7 +6,7 @@ import { Button } from 'react-bootstrap';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { MdDelete, MdPayment } from 'react-icons/md';
+import { MdDelete, MdPayment, MdChat } from 'react-icons/md';
 import { TiEdit } from 'react-icons/ti';
 import DeleteConfirmation from '@/components/elements/ConfirmDialogue';
 import ErrorDialogue from '@/components/elements/errorDialogue';
@@ -52,6 +52,8 @@ function SchedulerListContent() {
   const [selectedSchedule, setSelectedSchedule] = useState(null);
 
   console.log('schedules:', schedules);
+  console.log('uiError:', uiError);
+    console.log('error:', error);
 
   useEffect(() => {
     fetchSchedules(filter);
@@ -60,6 +62,13 @@ function SchedulerListContent() {
   const handlePayment = (schedule) => {
     setSelectedSchedule(schedule);
     setShowPaymentModal(true);
+  };
+
+  const handleOpenConversation = (schedule) => {
+    if (schedule.chat_id) {
+      // Navigate to chat page with the conversation ID using the 'i' parameter
+      router.push(`/protected/integrator/chat?i=${schedule.chat_id}`);
+    }
   };
 
   // Resolve amount in pence: backend paymentAmount → estimatedAmount → MOCK_PAYMENT_AMOUNT
@@ -154,6 +163,11 @@ function SchedulerListContent() {
         Cell: ({ value }) => <div>£{value?.toFixed(2) || '0.00'}</div>
       },
       {
+        Header: 'Offer (£)',
+        accessor: 'price_offer',
+        Cell: ({ value }) => <div>{value !== null && value !== undefined ? `£${Number(value).toFixed(2)}` : '-'}</div>
+      },
+      {
         Header: 'Payment Status',
         accessor: 'paymentStatus',
         Cell: ({ value }) => (
@@ -238,6 +252,21 @@ function SchedulerListContent() {
               >
                 Mark Completed
               </Button>
+            )}
+
+            {/* Open Conversation button - show when chat_id exists */}
+            {row.original.chat_id && (
+              <Tooltip title="Open Conversation" arrow>
+                <span className="p-0">
+                  <MdChat
+                    size={24}
+                    className="pointer"
+                    data-testid="scheduler-open-conversation-button"
+                    onClick={() => handleOpenConversation(row.original)}
+                    style={{ color: '#007bff' }}
+                  />
+                </span>
+              </Tooltip>
             )}
 
             {/* Delete button — hidden for awaiting-payment schedules */}

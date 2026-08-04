@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Button } from 'react-bootstrap';
 import { Container, Row, Col, ListGroup, Table } from 'react-bootstrap';
 import { useParams, useRouter } from 'next/navigation';

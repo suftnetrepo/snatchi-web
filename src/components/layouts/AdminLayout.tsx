@@ -1,4 +1,3 @@
-import React from 'react';
 import SidebarProvider from '../layouts/SidebarProvider';
 import SidebarOverlay from '../layouts/Sidebar/SidebarOverlay';
 import Sidebar from '../layouts/Sidebar/Sidebar';
