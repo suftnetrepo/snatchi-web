@@ -71,7 +71,7 @@ const useScheduler = (engineerId: string) => {
   });
 
   // Get chat hook for creating booking conversations
-  const { handleCreateDirectChatByEmail } = useUserChat();
+  const { handleCreateDirectChat } = useUserChat();
 
   const updateState = useCallback((updates: Partial<SchedulerState>) => {
     setState((prevState) => ({ ...prevState, ...updates }));
@@ -409,13 +409,11 @@ const useScheduler = (engineerId: string) => {
   );
 
   const handleSave = useCallback(
-    async (body: Partial<Schedule>): Promise<boolean> => {
+    async (body: Partial<Schedule>, currentChatUserId?: string): Promise<boolean> => {
       updateState({ loading: true, error: null });
 
       try {
         const { data, success, errorMessage } = await zat(SCHEDULER.createOne, body, VERBS.POST);
-
-        console.log('handleSave response:', { data, success, errorMessage });
 
         if (success) {
           const transformedSchedule = {
@@ -424,14 +422,16 @@ const useScheduler = (engineerId: string) => {
             endDate: new Date(data.endDate)
           };
 
-          handleCreateDirectChatByEmail(
-            data.engineer?.email,
-            data.project.integrator.email,
-            `Booking: ${data.title}`,
-            'direct'
-          ).catch((chatError) => {
-            console.error('Error creating chat for booking:', chatError);
-          });
+          if (data?.engineerFirebaseUid && currentChatUserId) {
+            handleCreateDirectChat(
+              currentChatUserId,
+              data?.engineerFirebaseUid,
+              `Booking: ${data.title}`,
+              'direct'
+            ).catch((chatError) => {
+              console.error('Error creating chat for booking:', chatError);
+            });
+          }
 
           setState((prevState) => ({
             ...prevState,

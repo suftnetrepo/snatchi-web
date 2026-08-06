@@ -12,6 +12,8 @@ import { useScheduler } from '../../../../hooks/useScheduler';
 import { RenderScheduleOffcanvas } from './renderScheduleOffcanvas';
 import { chose, capitalize } from '../../../../utils/utils';
 import { validate } from '../../../../validator/validator';
+import { ChatContextProvider } from '../../../../hooks/ChatContext';
+import { useChatContext } from '../../../../hooks/ChatContext';
 
 const locales = {
   'en-GB': enGB
@@ -107,6 +109,7 @@ const PremiumCalendarEvent = ({ event }) => {
 
 function SchedulerContent() {
   const router = useRouter();
+  const { currentChatUser } = useChatContext();
   const searchParams = useSearchParams();
   const projectId = searchParams.get('projectId');
   const engineerId = searchParams.get('engineerId');
@@ -134,6 +137,9 @@ function SchedulerContent() {
   const [show, setShow] = useState(false);
   const [errorMessages, setErrorMessages] = useState({});
   const { data: session } = useSession();
+
+
+  console.log('Current Chat User:', currentChatUser); // Debugging line to check the current chat user
 
   useEffect(() => {
     if (projectId) {
@@ -190,7 +196,7 @@ function SchedulerContent() {
       await handleEdit(body, fields._id);
     } else {
       delete body._id;
-      await handleSave(body);
+      await handleSave(body, currentChatUser?.uid);
     }
   };
 
@@ -252,7 +258,9 @@ function SchedulerContent() {
 export default function Scheduler() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <SchedulerContent />
+      <ChatContextProvider>
+        <SchedulerContent />
+      </ChatContextProvider>
     </Suspense>
   );
 }

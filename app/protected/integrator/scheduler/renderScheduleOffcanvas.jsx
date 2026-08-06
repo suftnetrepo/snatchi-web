@@ -23,9 +23,9 @@ const RenderScheduleOffcanvas = ({
 
   const handleRateChange = (rateId) => {
     handleChange('service_rate', rateId);
-    
+
     // Auto-populate price_offer with the selected rate's amount
-    const selectedRate = engineerServiceRates.find(rate => rate._id === rateId);
+    const selectedRate = engineerServiceRates.find((rate) => rate._id === rateId);
     if (selectedRate) {
       handleChange('price_offer', selectedRate.rate);
     }
@@ -99,9 +99,7 @@ const RenderScheduleOffcanvas = ({
                     </option>
                   ))}
                 </Form.Select>
-                {engineerServiceRatesLoading && (
-                  <small className="text-muted">Loading rates...</small>
-                )}
+                {engineerServiceRatesLoading && <small className="text-muted">Loading rates...</small>}
               </Form.Group>
             </div>
           </div>
@@ -238,9 +236,9 @@ const RenderScheduleOffcanvas = ({
               Save Changes
             </Button>
             {fields.chat_id && (
-              <Button 
-                type="button" 
-                variant="info" 
+              <Button
+                type="button"
+                variant="info"
                 onClick={handleOpenConversation}
                 className="d-flex align-items-center gap-2"
               >

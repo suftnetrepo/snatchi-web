@@ -121,22 +121,18 @@ const useUserChat = () => {
     }
   };
 
-  const handleCreateDirectChat = async (currentUserId, email,  chatName, type = 'direct') => {
+  const handleCreateDirectChat = async (currentUserId, engineerId, chatName, type = 'direct') => {
     try {
-
-      const newUserId = await getExistingUserId(email)
-      const chatExist = await findDirectChat(currentUserId, newUserId)
-
-      if(chatExist) {
-        console.error('Error direct chat already existed');
-        return true
+      const existingChat = await findDirectChat(currentUserId, engineerId);
+      if (existingChat) {
+        return existingChat.id;
       }
 
       const currentUserDoc = await getDoc(doc(db, 'users', currentUserId));
-      const otherUserDoc = await getDoc(doc(db, 'users', newUserId));
+      const otherUserDoc = await getDoc(doc(db, 'users', engineerId));
 
-      const currentUserData = currentUserDoc.data();
-      const otherUserData = otherUserDoc.data();
+      const currentUserData = currentUserDoc.exists() ? currentUserDoc.data() : {};
+      const otherUserData = otherUserDoc.exists() ? otherUserDoc.data() : {};
 
       const chatRef = doc(collection(db, 'chats'));
       const timestamp = Timestamp.now();
@@ -144,14 +140,14 @@ const useUserChat = () => {
       const chatData = {
         name: chatName,
         type,
-        users: [currentUserId, newUserId],
+        users: [currentUserId, engineerId],
         userDetails: {
           [currentUserId]: {
-            displayName: currentUserData.displayName || currentUserData.email,
+            displayName: currentUserData.displayName || currentUserData.email || '',
             photoURL: currentUserData.photoURL || null
           },
-          [newUserId]: {
-            displayName: otherUserData.displayName || otherUserData.email,
+          [engineerId]: {
+            displayName: otherUserData.displayName || otherUserData.email || '',
             photoURL: otherUserData.photoURL || null
           }
         },
@@ -159,7 +155,7 @@ const useUserChat = () => {
         lastUpdated: timestamp,
         userReadTimestamps: {
           [currentUserId]: timestamp,
-          [newUserId]: null
+          [engineerId]: null
         }
       };
 
@@ -245,8 +241,8 @@ const useUserChat = () => {
 
       if (querySnapshot.empty) {
         let newUserId;
-        newUserId = createNewUserAccount(email, "")
-        return newUserId
+        newUserId = createNewUserAccount(email, '');
+        return newUserId;
       }
 
       return querySnapshot.docs[0].id;
@@ -267,7 +263,7 @@ const useUserChat = () => {
       let newUserId;
 
       newUserId = await getExistingUserId(email);
-      if(!newUserId) {
+      if (!newUserId) {
         newUserId = await createNewUserAccount(email, addedByUserId);
       }
 
@@ -401,6 +397,7 @@ const useUserChat = () => {
     handleSignOut,
     handleSignUp,
     handleReset,
+    findDirectChat,
     handleCreateDirectChat,
     handleCreateGroupChat,
     addMemberToGroupChat,

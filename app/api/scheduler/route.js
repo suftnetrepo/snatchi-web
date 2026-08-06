@@ -23,6 +23,7 @@ import { getUserSession } from '@/utils/generateToken';
 import { sendUserNotification } from '../services/notify';
 import User from '../models/user';
 import { getActiveDays } from '../../../utils/helpers';
+import { ensureFirebaseAuthUser } from '../services/firebaseAuthService';
 
 // Authentication middleware
 const authenticateUser = async (req) => {
@@ -77,8 +78,6 @@ export const GET = async (req) => {
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
-
-    console.log('GET /scheduler called with action:', action);
 
      // await removeAll();
 
@@ -291,12 +290,26 @@ export const POST = async (req) => {
 
     const body = await req.json();
     const result = await add({ ...body, integrator: user?.integrator });
+    
+    // Initialize Firebase UID variable
+    let engineerFirebaseUid = null;
 
     // Wire notification event: Booking created
     if (result) {
       try {
         // Get full schedule with populated fields
         const fullSchedule = (await result.execPopulate?.()) || result;
+        
+        // Ensure engineer has a Firebase user (creates if doesn't exist)
+        if (fullSchedule.engineer?.email) {
+          try {
+            const engineerDisplayName = fullSchedule.engineer?.name || fullSchedule.engineer?.email.split('@')[0];
+            engineerFirebaseUid = ensureFirebaseAuthUser(fullSchedule.engineer.email, engineerDisplayName);
+          } catch (firebaseError) {
+            console.error('Failed to ensure Firebase user for engineer:', { email: fullSchedule.engineer.email, error: firebaseError.message });
+          }
+        }
+        
         await sendPendingNotification(result._id, body, {
           scheduleId: result._id,
           engineerId: fullSchedule.engineer?._id,
@@ -314,19 +327,20 @@ export const POST = async (req) => {
           startTime: result.startTime,
           endTime: result.endTime,
           projectDescription: result.project?.description || '',
-          priority: result.project?.priority || ''
+          priority: result.project?.priority || '',
+          engineerFirebaseUid
         });
       } catch (notificationError) {
-        console.error('Failed to send booking created notification', {
+        logger.error('Failed to send booking created notification', {
           scheduleId: result._id,
           error: notificationError.message
         });
       }
     }
 
-    return successResponse(result);
+    return successResponse({ ...result.toObject?.() || result, engineerFirebaseUid });
   } catch (error) {
-    console.error('Error in POST /scheduler:', error);
+    logger.error('Error in POST /scheduler:', error);
     return errorResponse(error.message, 500, error);
   }
 };
