@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
 import { USER } from '../utils/apiUrl';
 import { userValidator } from '@/protected/integrator/rules';
 
 const useUser = (searchQuery, flag = true) => {
+  const lastFetchParams = useRef({ pageIndex: 0, pageSize: 10, sortBy: [], searchQuery: '' });
   const [state, setState] = useState({
     data: [],
     resources: [],
@@ -30,11 +31,11 @@ const useUser = (searchQuery, flag = true) => {
     }));
   };
 
-  const handleEdit = (data) => {
+  const handleEdit = useCallback((data) => {
     setState((pre) => {
       return { ...pre, editData: data };
     });
-  };
+  }, []);
 
   const handleError = (error) => {
     setState((pre) => {
@@ -42,11 +43,11 @@ const useUser = (searchQuery, flag = true) => {
     });
   };
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setState((pre) => {
       return { ...pre, editData: null, success: false, error: null };
     });
-  };
+  }, []);
 
   const handleSearchUser = async (searchTerm) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
@@ -139,7 +140,7 @@ const useUser = (searchQuery, flag = true) => {
     }
   };
 
-  const handleDeleteUser = async (id) => {
+  const handleDeleteUser = useCallback(async (id) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     const { success, errorMessage } = await zat(USER.removeOne, null, VERBS.DELETE, { id: id });
 
@@ -147,7 +148,7 @@ const useUser = (searchQuery, flag = true) => {
       setState((prevState) => ({
         ...prevState,
         data: prevState.data.filter((user) => user._id !== id),
-        totalCount: prevState.totalCount - 1,
+        totalCount: Math.max(0, prevState.totalCount - 1),
         loading: false
       }));
       return true;
@@ -155,19 +156,15 @@ const useUser = (searchQuery, flag = true) => {
       handleError(errorMessage || 'Failed to delete the user.');
       return false;
     }
-  };
+  }, []);
 
   async function handleSaveUser(body) {
     setState((prev) => ({ ...prev, loading: true, error: null }));
-    const { success, errorMessage, data } = await zat(USER.createOne, body, VERBS.POST);
+    const { success, errorMessage } = await zat(USER.createOne, body, VERBS.POST);
 
     if (success) {
-      setState((prevState) => ({
-        ...prevState,
-        data: [data, ...prevState.data],
-        loading: false,
-        success: true
-      }));
+      await handleFetchUsers(lastFetchParams.current);
+      setState((prevState) => ({ ...prevState, loading: false, success: true }));
       return true;
     } else {
       handleError(errorMessage || 'Failed to save the user.');
@@ -175,14 +172,16 @@ const useUser = (searchQuery, flag = true) => {
     }
   }
 
-  const handleFetchUsers = useCallback(async ({ pageIndex = 1, pageSize = 10, sortBy = [], searchQuery = '' }) => {
+  const handleFetchUsers = useCallback(async ({ pageIndex = 0, pageSize = 10, sortBy = [], searchQuery = '' }) => {
+    lastFetchParams.current = { pageIndex, pageSize, sortBy, searchQuery };
+    setState((prev) => ({ ...prev, loading: true, error: null }));
     const sortField = sortBy.length > 0 ? sortBy[0].id : null;
     const sortOrder = sortBy.length > 0 ? (sortBy[0].desc ? 'desc' : 'asc') : null;
 
     try {
       const { data, success, errorMessage, totalCount } = await zat(USER.fetch, null, VERBS.GET, {
         action: 'users',
-        page: pageIndex === 0 ? 1 : pageIndex,
+        page: pageIndex + 1,
         limit: pageSize,
         ...(sortField && { sortField }),
         ...(sortOrder && { sortOrder }),
@@ -224,7 +223,7 @@ const useUser = (searchQuery, flag = true) => {
     if (success) {
       setState((prevState) => ({
         ...prevState,
-        data: prevState.data.map((user) => (user._id === id ? body : user)),
+        data: prevState.data.map((user) => (user._id === id ? { ...user, ...(data || body), _id: user._id } : user)),
         loading: false,
         success: true
       }));
@@ -296,13 +295,9 @@ const useMultiUserSearch = () => {
   };
 
   const handleSearchUsersByMultipleCriteria = useCallback(
-    async ({ pageIndex = 1, pageSize = 10, sortBy = [], searchQuery = '' }) => {
+    async ({ pageIndex = 1, pageSize = 12, sortBy = [], searchQuery = '', scope = 'mine' }) => {
       const sortField = sortBy.length > 0 ? sortBy[0].id : null;
       const sortOrder = sortBy.length > 0 ? (sortBy[0].desc ? 'desc' : 'asc') : null;
-
-      if (!searchQuery) {
-        return { success: false, data: [] };
-      }
 
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
@@ -313,7 +308,8 @@ const useMultiUserSearch = () => {
           limit: pageSize,
           ...(sortField && { sortField }),
           ...(sortOrder && { sortOrder }),
-          searchQuery
+          searchQuery,
+          scope
         });
 
         if (success) {

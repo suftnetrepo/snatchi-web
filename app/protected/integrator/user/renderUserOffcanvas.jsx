@@ -15,7 +15,7 @@ const RenderUserOffcanvas = ({
   handleSaveUser,
   handleEditUser,
   userValidator,
-  handleSignUp
+  loading
 }) => {
   const [errorMessages, setErrorMessages] = useState({});
 
@@ -26,7 +26,7 @@ const RenderUserOffcanvas = ({
         ...userData
       };
     });
-  }, [userData]);
+  }, [setFields, userData]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -45,20 +45,8 @@ const RenderUserOffcanvas = ({
       return;
     }
 
-    if (userData) {
-      handleEditUser(fields, userData?._id).then((result) => {});
-    } else {
-      handleSaveUser(fields).then((result) => {});
-    }
-
-    if (fields?.chat_status) {
-      handleSignUp({
-        email: fields.email,
-        password: '12345!'
-      }).catch((error) => {
-        console.error('Error signing up user:', error);
-      });
-    }
+    if (userData) await handleEditUser(fields, userData?._id);
+    else await handleSaveUser(fields);
   };
 
   return (
@@ -152,6 +140,7 @@ const RenderUserOffcanvas = ({
                 <Form.Label className="text-dark">Role</Form.Label>
                 <Form.Select name="role" value={fields.role} className="border-dark" onChange={handleChange}>
                   <option value="">Select a role</option>
+                  {userData?.role === 'integrator' && <option value="integrator" disabled>Integrator</option>}
                   <option value="engineer">Engineer</option>
                   <option value="manager">Manager</option>
                   <option value="guest">Guest</option>
@@ -197,11 +186,11 @@ const RenderUserOffcanvas = ({
           </Form.Group>
 
           <div className="d-flex justify-content-end">
-            <Button variant="secondary" className="me-2" onClick={handleClose}>
+            <Button variant="secondary" className="me-2" onClick={handleClose} disabled={loading}>
               Cancel
             </Button>
-            <Button type="button" variant="primary" onClick={() => handleSubmit()}>
-              Save Changes
+            <Button type="button" variant="primary" onClick={() => handleSubmit()} disabled={loading}>
+              {loading ? 'Saving…' : 'Save Changes'}
             </Button>
           </div>
         </Form>

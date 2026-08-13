@@ -24,6 +24,8 @@ const useChatMessage = (chatRoomId, userId) => {
   };
 
   const handleFetchMessages = async (chatRoomId, userId) => {
+    if (!chatRoomId || !userId) return undefined;
+
     try {
 
       await markMessagesAsRead(chatRoomId,userId)
@@ -54,11 +56,16 @@ const useChatMessage = (chatRoomId, userId) => {
   };
 
   useEffect(() => {
-    const unsubscribe = handleFetchMessages(chatRoomId, userId);
+    let unsubscribe;
+    handleFetchMessages(chatRoomId, userId).then((stopListening) => {
+      unsubscribe = stopListening;
+    });
+
     return () => {
       if (typeof unsubscribe === 'function') {
         unsubscribe();
       }
+      activeChatIdRef.current = null;
     };
   }, [chatRoomId, userId]);
 

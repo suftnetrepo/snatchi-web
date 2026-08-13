@@ -19,14 +19,14 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 
 /**
  * SPARKLINE CHART COMPONENTS
- * 
+ *
  * NOTE: These charts currently display PLACEHOLDER data
  * TODO: Connect to real aggregation metrics:
  * - NumberofInvested: Real count of invested items
  * - Portfoliovalue: Real portfolio valuation
  * - Returnsrate: Real returns calculation
  * - TotalInvested: Real investment totals
- * 
+ *
  * For now, these render empty/minimal data to avoid
  * displaying misleading analytics to users.
  */
@@ -37,7 +37,7 @@ const NumberofInvested = () => {
     series: [
       {
         name: 'Value',
-        data: []  // PLACEHOLDER: Should be connected to real metrics
+        data: [] // PLACEHOLDER: Should be connected to real metrics
       }
     ],
     options: {
@@ -95,7 +95,7 @@ const Portfoliovalue = () => {
     series: [
       {
         name: 'Value',
-        data: []  // PLACEHOLDER: Should be connected to real metrics
+        data: [] // PLACEHOLDER: Should be connected to real metrics
       }
     ],
     options: {
@@ -153,7 +153,7 @@ const Returnsrate = () => {
     series: [
       {
         name: 'Value',
-        data: []  // PLACEHOLDER: Should be connected to real metrics
+        data: [] // PLACEHOLDER: Should be connected to real metrics
       }
     ],
     options: {
@@ -211,7 +211,7 @@ const TotalInvested = () => {
     series: [
       {
         name: 'Value',
-        data: []  // PLACEHOLDER: Should be connected to real metrics
+        data: [] // PLACEHOLDER: Should be connected to real metrics
       }
     ],
     options: {
@@ -269,7 +269,7 @@ const ProjectAnalysis = ({ data }) => {
   // Fallback to empty arrays if no data provided
   const projects = data?.projects || [];
   const dayLabels = data?.days || ['Sun 18', 'Mon 19', 'Tue 20', 'Wed 21', 'Thu 22', 'Fri 23', 'Sat 24'];
-  
+
   const [chartData, setChartData] = useState({
     series: [
       {
@@ -351,7 +351,10 @@ const UserAggregates = ({ data }) => {
   // Fallback to empty arrays if no data provided
   const safeData = data || [];
   const dataSeries = safeData.map((item) => parseInt(item.count)) || [];
-  const dataLabels = safeData.map((item) => item.role) || [];
+  const dataLabels = safeData.map((item) => {
+    const role = String(item.role || '').trim();
+    return role ? `${role.charAt(0).toUpperCase()}${role.slice(1).toLowerCase()}` : 'Unknown';
+  });
 
   const [chartData] = useState({
     series: dataSeries,

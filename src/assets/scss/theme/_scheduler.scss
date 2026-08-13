@@ -95,7 +95,7 @@
 
 .calendar-wrapper {
   width: 100%;
-  padding: 24px;
+  padding: 24px 24px 48px;
 }
 
 .calendar-wrapper .rbc-calendar {
@@ -150,7 +150,7 @@
   width: 100%;
    min-height: 100%;
 
-  padding: 18px 20px;
+  padding: 18px 20px 22px;
 
   display: flex;
   flex-direction: column;
@@ -254,6 +254,7 @@
 .premium-event-footer {
   flex-shrink: 0;
   margin-top: auto;
+  padding-bottom: 2px;
 }
 .premium-event-calendar {
   font-size: 17px;

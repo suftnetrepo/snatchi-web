@@ -7,7 +7,8 @@ import {
   faComment,
   faMoneyCheck,
   faStickyNote, faHome,
-  faCalendar
+  faCalendar,
+  faQuestionCircle
 } from '@fortawesome/free-solid-svg-icons';
 import {} from 'react-icons/ti';
 import React from 'react';
@@ -34,27 +35,34 @@ export default function SidebarNav() {
 
 const IntegratorSidebarNav = () => {
   return (
-    <ul className="list-unstyled mt-0">
-      <SidebarNavItem icon={faHome} href="/protected/integrator/dashboard">
-        Dashboard
-      </SidebarNavItem>
-      <SidebarNavItem icon={faProjectDiagram} href="/protected/integrator/project">
-        Projects
-      </SidebarNavItem>
-      <SidebarNavItem icon={faComment} href="/protected/integrator/chat">
-        Chats
-      </SidebarNavItem>
-      <SidebarNavItem icon={faMoneyCheck} href="/protected/integrator/invoice">
-        Invoices
-      </SidebarNavItem>
-      
-      <SidebarNavItem icon={faBuildingUser} href="/protected/integrator/user">
-        Users
-      </SidebarNavItem>
-      <SidebarNavItem icon={faCogs} href="/protected/integrator/settings">
-        Settings
-      </SidebarNavItem>
-    </ul>
+    <div className="integrator-sidebar-nav d-flex h-100 flex-column">
+      <ul className="list-unstyled mt-0 mb-0">
+        <SidebarNavItem icon={faHome} href="/protected/integrator/dashboard">
+          Dashboard
+        </SidebarNavItem>
+        <SidebarNavItem icon={faProjectDiagram} href="/protected/integrator/project">
+          Projects
+        </SidebarNavItem>
+        <SidebarNavItem icon={faComment} href="/protected/integrator/chat">
+          Chats
+        </SidebarNavItem>
+        <SidebarNavItem icon={faMoneyCheck} href="/protected/integrator/invoice">
+          Invoices
+        </SidebarNavItem>
+        <SidebarNavItem icon={faBuildingUser} href="/protected/integrator/user">
+          Users
+        </SidebarNavItem>
+        <SidebarNavItem icon={faCogs} href="/protected/integrator/settings">
+          Settings
+        </SidebarNavItem>
+      </ul>
+
+      <ul className="sidebar-help-nav list-unstyled mt-auto mb-0">
+        <SidebarNavItem icon={faQuestionCircle} href="/protected/integrator/help">
+          Help &amp; Guides
+        </SidebarNavItem>
+      </ul>
+    </div>
   );
 };
 

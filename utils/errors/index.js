@@ -1,5 +1,5 @@
 // const { logger } = require("../logger");
-const Exception = require("./exception");
+const Exception = require('./exception');
 // const Sentry = require("@sentry/node");
 
 const handleCastErrorDB = (error) => {
@@ -13,22 +13,22 @@ const handleDuplicateFieldsDB = (error) => {
   return new Exception(message, 400);
 };
 
-const handleValidationErrorDB = (error, msg = "") => {
+const handleValidationErrorDB = (error, msg = '') => {
   const errors = Object.values(error?.errors).map((el) => el.message);
-  const message = `Invalid input data. ${errors.join(". ")}`;
+  const message = `Invalid input data. ${errors.join('. ')}`;
   return new Exception(msg.length ? msg : message, 400);
 };
 
 const handleJWTError = () => {
-  return new Exception("Invalid token. Please log in again!", 401);
+  return new Exception('Invalid token. Please log in again!', 401);
 };
 
 const handleJWTExpiredError = () => {
-  return new Exception("Your token has expired! Please log in again.", 401);
+  return new Exception('Your token has expired! Please log in again.', 401);
 };
 
 const handleUnknown = () => {
-  return new Exception("An Internal Error has occurred, Please try later", 500);
+  return new Exception('An Internal Error has occurred, Please try later', 500);
 };
 
 exports.handleFastestValidation = (message) => {
@@ -36,19 +36,16 @@ exports.handleFastestValidation = (message) => {
   // Sentry.captureException(error);
 };
 
-
-exports.errorHandler = (
-  error,
-  msg = "Unknown Error has occurred, Please try later"
-) => {  
-
+exports.errorHandler = (error, msg = 'Unknown Error has occurred, Please try later') => {
   if (error === null || error === undefined) return msg;
- 
+
   switch (error.code || error.statusCode) {
     case 11000:
       error = handleDuplicateFieldsDB(error);
       break;
     case 400:
+    case 409:
+    case 422:
       error = error;
       break;
     default:
@@ -56,11 +53,10 @@ exports.errorHandler = (
       break;
   }
 
-  if (error.name === "CastError") error = handleCastErrorDB(error);
-  if (error.name === "ValidationError")
-    error = handleValidationErrorDB(error, msg);
-  if (error.name === "JsonWebTokenError") error = handleJWTError();
-  if (error.name === "TokenExpiredError") error = handleJWTExpiredError();
+  if (error.name === 'CastError') error = handleCastErrorDB(error);
+  if (error.name === 'ValidationError') error = handleValidationErrorDB(error, msg);
+  if (error.name === 'JsonWebTokenError') error = handleJWTError();
+  if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
 
   console.log(error);
 

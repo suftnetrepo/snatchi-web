@@ -84,6 +84,31 @@ const userSchema = new Schema(
         public_id: {
           type: String,
           required: true,
+        },
+        document_type: {
+          type: String,
+          required: false,
+          default: 'Document'
+        },
+        original_filename: {
+          type: String,
+          required: false,
+          default: ''
+        },
+        resource_type: {
+          type: String,
+          required: false,
+          default: 'raw'
+        },
+        mime_type: {
+          type: String,
+          required: false,
+          default: ''
+        },
+        bytes: {
+          type: Number,
+          required: false,
+          default: 0
         }
       }
     ],

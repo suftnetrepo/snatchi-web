@@ -14,7 +14,11 @@ export async function PUT(req) {
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     const body = await req.json();
-    const result = await updateByStatus(id, body);
+    const result = await updateByStatus(id, body, {
+      userId: user.id,
+      integratorId: user.integrator,
+      role: user.role
+    });
 
     return NextResponse.json({ success: true, data: result }, { status: 200 });
   } catch (error) {

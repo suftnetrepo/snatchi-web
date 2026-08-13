@@ -20,16 +20,16 @@ export default function Header({ showSearch = true, showNotifications = true }) 
           <div className="col-md-3 col-lg-3 d-flex align-items-center justify-content-start">
             <HeaderSidebarToggler />
           </div>
-          {showSearch ? (
+          {/* {showSearch ? (
             <div className="col-md-6 col-lg-6">
               <HeaderSearch onSearch={(searchTerm) => handleSearch(searchTerm)} />
             </div>
           ) : (
             <div className="col-md-6 col-lg-6"> </div>
-          )}
-
+          )} */}
+          <div className="col-md-6 col-lg-6"> </div>
           <div className="col-md-3 col-lg-3 d-flex align-items-center justify-content-end gap-2">
-            {showNotifications && <NotificationDropdown />}
+           
             <HeaderProfileNav />
           </div>
         </div>

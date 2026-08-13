@@ -142,7 +142,7 @@ const RenderProjectOffcanvas = ({ show, handleClose, project }) => {
               <Tabs defaultActiveKey="description" className="mb-3">
                 <Tab eventKey="description" title="Description">
                    <div className="mb-3 mt-3">
-                    <div dangerouslySetInnerHTML={{ __html: project?.description }} className="text-gray-600" />
+                    <div className="text-gray-600" style={{ whiteSpace: 'pre-wrap' }}>{project?.description}</div>
                   </div>
                 </Tab>
                 <Tab eventKey="attachments" title="Documents">

@@ -187,6 +187,17 @@ export async function POST(req) {
       );
     }
 
+    // Internal engineers belong to the booking integrator and never enter the
+    // marketplace payment workflow. Keep this guard before Connect validation
+    // so a self-booking cannot fail with a misleading payout setup message.
+    if (payingIntegratorId.toString() === receivingIntegratorId.toString()) {
+      logger.warn('Attempted self-payment', { integratorId: payingIntegratorId });
+      return NextResponse.json(
+        { success: false, error: 'Payment is not required for your own engineer.' },
+        { status: 409 }
+      );
+    }
+
     const receivingIntegrator = await Integrator.findById(receivingIntegratorId);
     if (!receivingIntegrator) {
       logger.warn('Receiving integrator not found', { receivingIntegratorId });
@@ -210,14 +221,6 @@ export async function POST(req) {
       );
     }
 
-    // Security: Prevent self-payment
-    if (payingIntegratorId === receivingIntegratorId.toString()) {
-      logger.warn('Attempted self-payment', { integratorId: payingIntegratorId });
-      return NextResponse.json(
-        { success: false, error: 'Cannot pay yourself. Book engineers from other companies.' },
-        { status: 400 }
-      );
-    }
 
     const existingPayment = await Payment.findOne({ scheduler: schedulerId });
 

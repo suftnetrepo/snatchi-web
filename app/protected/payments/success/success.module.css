@@ -60,7 +60,7 @@
 .continueButton {
   display: inline-block;
   padding: 12px 24px;
-  background-color: #28a745;
+  background-color: #4f46e5;
   color: white;
   text-decoration: none;
   border-radius: 4px;
@@ -70,7 +70,7 @@
 }
 
 .continueButton:hover {
-  background-color: #218838;
+  background-color: #4338ca;
 }
 
 .supportLink {
@@ -81,7 +81,7 @@
 }
 
 .supportLink a {
-  color: #007bff;
+  color: #4f46e5;
   text-decoration: none;
 }
 

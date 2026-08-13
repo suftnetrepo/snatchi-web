@@ -76,7 +76,7 @@ export const useSchedulerList = () => {
         } else if (filter === 'approval') {
           filtered = filtered.filter(s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.APPROVED);
         } else if (filter === 'awaiting-payment') {
-          filtered = filtered.filter(s => isSchedulerAwaitingPayment(s));
+          filtered = filtered.filter(s => !isSelfPaymentSchedule(s) && isSchedulerAwaitingPayment(s));
         } else if (filter === 'pending') {
           filtered = filtered.filter(s => normalizeSchedulerStatus(s.status) === SCHEDULER_STATUS.PENDING);
         } else if (filter === 'in-progress') {

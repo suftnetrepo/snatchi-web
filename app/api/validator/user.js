@@ -88,11 +88,26 @@ function projectValidator(data) {
   const validator = new Validator();
   const schema = {
     name: { type: 'string', empty: false, max: 250 },
-    status: { type: 'string', empty: false, max: 50 },
-    priority: { type: 'string', empty: false, max: 50 },
-    description: { type: 'string', empty: true, max: 5000 }
+    project_number: { type: 'string', empty: false, max: 50 },
+    status: { type: 'enum', values: ['Pending', 'Progress', 'Completed', 'Canceled'] },
+    priority: { type: 'enum', values: ['Low', 'Medium', 'High'] },
+    description: { type: 'string', empty: false, max: 5000 },
+    startDate: { type: 'date', convert: true },
+    endDate: { type: 'date', convert: true },
+    email: { type: 'email', empty: true, max: 254, optional: true },
+    first_name: { type: 'string', max: 100, optional: true },
+    last_name: { type: 'string', max: 100, optional: true },
+    mobile: { type: 'string', max: 50, optional: true },
+    completeAddress: { type: 'string', max: 255, optional: true }
   };
-  return validator.validate(data, schema);
+  const result = validator.validate(data, schema);
+  if (result !== true) return result;
+
+  if (new Date(data.startDate) > new Date(data.endDate)) {
+    return [{ field: 'endDate', message: 'End date cannot be before start date' }];
+  }
+
+  return true;
 }
 
 function taskValidator(data) {
@@ -111,9 +126,10 @@ function integratorValidator(data) {
   const schema = {
     email: { type: 'email', empty: false, max: 50 },
     name: { type: 'string', empty: false, max: 50 },
-    subscriptionId: { type: 'string', empty: false },
+    // Stripe identifiers are assigned after the local pending account exists.
+    subscriptionId: { type: 'string', empty: false, optional: true },
     priceId: { type: 'string', empty: false },
-    stripeCustomerId: { type: 'string', empty: false },
+    stripeCustomerId: { type: 'string', empty: false, optional: true },
     mobile: { type: 'string', empty: false, max: 50 }
   };
   return validator.validate(data, schema);
@@ -141,8 +157,8 @@ function codeValidator(data) {
 function fenceValidator(data) {
   const v = new Validator();
   const schema = {
-    integrator: { type: 'string', empty: false, },
-    user: { type: 'string', empty: false},
+    integrator: { type: 'string', empty: false },
+    user: { type: 'string', empty: false },
     project: { type: 'string', empty: false },
 
     date: { type: 'date', convert: true, optional: true },
@@ -150,8 +166,7 @@ function fenceValidator(data) {
 
     status: { type: 'enum', values: ['Enter', 'Exit'], empty: false },
 
-    completeAddress: { type: 'string', max: 255, optional: true },
-   
+    completeAddress: { type: 'string', max: 255, optional: true }
   };
 
   return v.validate(data, schema);
@@ -167,7 +182,6 @@ function engineerServiceRateValidator(data) {
   };
   return validator.validate(data, schema);
 }
-
 
 export {
   userEditValidator,

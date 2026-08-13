@@ -16,10 +16,10 @@ async function getDocuments(suid, userId) {
   }
 
   try {
-    const user = await User.findOne({ integrator: suid, _id: userId }, { attachments: 1, _id : 0 });
+    const user = await User.findOne({ integrator: suid, _id: userId }, { attachments: 1, _id : 0 }).lean();
 
     if (!user) {
-      throw new Error('User not found for the given integrator ID');
+      throw Object.assign(new Error('User not found'), { statusCode: 404 });
     }
 
     const result = user.attachments;
@@ -27,6 +27,7 @@ async function getDocuments(suid, userId) {
     return result
   } catch (error) {
     logger.error(error);
+    if (error.statusCode) throw error;
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
@@ -35,23 +36,29 @@ async function createDocument(suid, userId, body) {
   if (!isValidObjectId(suid)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
+  if (!isValidObjectId(userId)) {
+    throw Object.assign(new Error('Invalid user ID'), { statusCode: 400 });
+  }
 
   const bodyErrors = documentValidator(body);
   if (bodyErrors.length) {
-    throw new Error(bodyErrors.map((it) => it.message).join(','));
+    throw Object.assign(new Error(bodyErrors.map((it) => it.message).join(',')), { statusCode: 400 });
   }
 
   try {
     const user = await User.findOneAndUpdate(
       { integrator: suid , _id: userId },
       { $push: { attachments: body } },
-      { new: true }
+      { new: true, runValidators: true }
     );
+
+    if (!user) throw Object.assign(new Error('User not found'), { statusCode: 404 });
 
     const createdDocument = user.attachments[user.attachments.length - 1];
     return createdDocument;
   } catch (error) {
     logger.error(error);
+    if (error.statusCode) throw error;
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
@@ -70,21 +77,40 @@ async function removeDocument(suid, userId, id) {
   }
 
   try {
+    const existingUser = await User.findOne(
+      { integrator: suid, _id: userId, 'attachments._id': id },
+      { attachments: { $elemMatch: { _id: id } } }
+    ).lean();
+    if (!existingUser?.attachments?.length) {
+      throw Object.assign(new Error('Document not found'), { statusCode: 404 });
+    }
+    const document = existingUser.attachments[0];
     const user = await User.findOneAndUpdate(
-      { integrator: suid, _id: userId },
+      { integrator: suid, _id: userId, 'attachments._id': id },
       { $pull: { attachments: { _id: id } } },
       { new: true }
     );
 
     if (!user) {
-      throw new Error('User not found for the given integrator ID');
+      throw Object.assign(new Error('User not found'), { statusCode: 404 });
     }
 
-    return true;
+    return document;
   } catch (error) {
     logger.error(error);
+    if (error.statusCode) throw error;
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
 
-export { getDocuments, removeDocument, createDocument };
+async function restoreDocument(suid, userId, document) {
+  const restored = await User.findOneAndUpdate(
+    { integrator: suid, _id: userId },
+    { $push: { attachments: document } },
+    { new: true, runValidators: true }
+  );
+  if (!restored) throw Object.assign(new Error('User not found while restoring document'), { statusCode: 404 });
+  return true;
+}
+
+export { getDocuments, removeDocument, createDocument, restoreDocument };

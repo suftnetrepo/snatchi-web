@@ -114,7 +114,12 @@ export const isSchedulerInProgress = (status) => {
 
 export const isSchedulerAwaitingPayment = (schedule) => {
   const normalizedStatus = normalizeSchedulerStatus(schedule?.status);
+  const payingIntegratorId = schedule?.payingIntegrator?._id || schedule?.payingIntegrator || schedule?.integrator?._id || schedule?.integrator;
+  const receivingIntegratorId = schedule?.receivingIntegratorId?._id || schedule?.receivingIntegratorId;
+  const isInternalBooking = payingIntegratorId && receivingIntegratorId &&
+    payingIntegratorId.toString() === receivingIntegratorId.toString();
   return (
+    !isInternalBooking &&
     (normalizedStatus === SCHEDULER_STATUS.APPROVED || normalizedStatus === SCHEDULER_STATUS.AWAITING_PAYMENT) &&
     (!schedule?.paymentStatus || schedule.paymentStatus === 'pending')
   );

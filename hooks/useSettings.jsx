@@ -44,6 +44,7 @@ const useSettings = () => {
   }; 
 
   const handleFetchIntegrator = async () => {
+    setState((previous) => ({ ...previous, loading: true, error: null }));
     const { data, success, errorMessage } = await zat(INTEGRATOR.fetchSingle, null, VERBS.GET);
 
     if (success) {
@@ -61,12 +62,13 @@ const useSettings = () => {
   };
 
   const handleSave = async (body)=> {
-    setState((prev) => ({ ...prev, loading: true, success : false }));
-    const { success, errorMessage } = await zat(INTEGRATOR.uploadOne, body, VERBS.POST);
+    setState((prev) => ({ ...prev, loading: true, success : false, error: null }));
+    const { success, errorMessage, data } = await zat(INTEGRATOR.uploadOne, body, VERBS.POST);
 
     if (success) {
       setState((prevState) => ({
         ...prevState,
+        fields: { ...prevState.fields, ...(data || {}) },
         success: true,
         loading: false
       }));

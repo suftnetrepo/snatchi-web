@@ -218,9 +218,11 @@ const useScheduler = (engineerId: string) => {
         const transformedData = (response.data || []).map((schedule) => {
           const startDateStr =
             schedule.startDate instanceof Date ? schedule.startDate.toISOString().split('T')[0] : schedule.startDate;
+          const endDateStr =
+            schedule.endDate instanceof Date ? schedule.endDate.toISOString().split('T')[0] : schedule.endDate;
 
           const start = buildScheduleDateTime(startDateStr, schedule.startTime);
-          const end = buildScheduleDateTime(startDateStr, schedule.endTime);
+          const end = buildScheduleDateTime(endDateStr, schedule.endTime);
 
           return {
             ...schedule,
@@ -416,26 +418,30 @@ const useScheduler = (engineerId: string) => {
         const { data, success, errorMessage } = await zat(SCHEDULER.createOne, body, VERBS.POST);
 
         if (success) {
-          const transformedSchedule = {
-            ...data,
-            startDate: new Date(data.startDate),
-            endDate: new Date(data.endDate)
-          };
+
+          console.log('Schedule created successfully:', data);
+          console.log('Current Chat User ID:', currentChatUserId);
+          console.log('Engineer Firebase UID:', data?.engineerFirebaseUid);
 
           if (data?.engineerFirebaseUid && currentChatUserId) {
-            handleCreateDirectChat(
+            await handleCreateDirectChat(
               currentChatUserId,
               data?.engineerFirebaseUid,
               `Booking: ${data.title}`,
               'direct'
-            ).catch((chatError) => {
-              console.error('Error creating chat for booking:', chatError);
-            });
+            );
           }
+
+          const createdBookings = Array.isArray(data?.bookings) ? data.bookings : [data];
+          const transformedSchedules = createdBookings.map((booking) => ({
+            ...booking,
+            startDate: new Date(booking.startDate),
+            endDate: new Date(booking.endDate)
+          }));
 
           setState((prevState) => ({
             ...prevState,
-            data: [transformedSchedule, ...prevState.data],
+            data: [...transformedSchedules, ...prevState.data],
             loading: false,
             success: true
           }));
@@ -450,7 +456,7 @@ const useScheduler = (engineerId: string) => {
         return false;
       }
     },
-    [handleError]
+    [handleCreateDirectChat, handleError]
   );
 
   async function handleProjectSelect(id: string) {

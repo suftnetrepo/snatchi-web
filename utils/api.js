@@ -33,7 +33,7 @@ export const zat = async (url, body, method, queryParams = null) => {
     const response = await fetch(url, requestOptions);
 
     // Handle error statuses
-    if ([400, 401, 403].includes(response.status)) {
+    if ([400, 401, 403, 404, 409, 422].includes(response.status)) {
       const errorData = await response.json();
       return { success: false, status: response.status,  errorMessage: errorData.error || errorData };
     }
@@ -53,7 +53,8 @@ export const zat = async (url, body, method, queryParams = null) => {
     return {
       success: true,
       data: results?.data || results,
-      totalCount: results?.totalCount
+      totalCount: results?.totalCount,
+      summary: results?.summary
     };
   } catch (error) {
     // Return error result

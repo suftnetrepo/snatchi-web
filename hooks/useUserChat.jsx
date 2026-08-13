@@ -144,10 +144,12 @@ const useUserChat = () => {
         userDetails: {
           [currentUserId]: {
             displayName: currentUserData.displayName || currentUserData.email || '',
+            email: currentUserData.email || '',
             photoURL: currentUserData.photoURL || null
           },
           [engineerId]: {
             displayName: otherUserData.displayName || otherUserData.email || '',
+            email: otherUserData.email || '',
             photoURL: otherUserData.photoURL || null
           }
         },

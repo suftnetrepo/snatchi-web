@@ -1,6 +1,6 @@
 .button {
   padding: 8px 16px;
-  background-color: #3b82f6;
+  background-color: #4f46e5;
   color: white;
   border: none;
   border-radius: 6px;
@@ -12,9 +12,9 @@
 }
 
 .button:hover:not(:disabled) {
-  background-color: #2563eb;
+  background-color: #4338ca;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
 }
 
 .button:active:not(:disabled) {

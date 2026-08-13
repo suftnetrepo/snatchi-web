@@ -3,7 +3,7 @@ import ChatMessage from '../chat-message';
 import './chat-window.scss';
 import { convertTimestampToDate } from '@/utils/helpers';
 
-const ChatWindow = ({ messages, onMessageSent, sender_Id }) => {
+const ChatWindow = ({ messages, onMessageSent, sender_Id, senderAliases = [] }) => {
   const chatWindow = useRef();
   const chatWindowBody = useRef();
   const userInput = useRef();
@@ -14,16 +14,16 @@ const ChatWindow = ({ messages, onMessageSent, sender_Id }) => {
   }, []);
 
   const handleKeyDown = async (e) => {
-    if (e.key === 'Enter' && text.length) {
+    if (e.key === 'Enter' && !e.shiftKey && message.trim()) {
       e.preventDefault();
-      onMessageSent(message);
+      await onMessageSent(message.trim());
       setMessage('');
     }
   };
 
   const handleSubmit = useCallback(() => {
     if (message.trim()) {
-      onMessageSent(message);
+      onMessageSent(message.trim());
       setMessage('');
     }
   }, [message, onMessageSent]);
@@ -44,7 +44,7 @@ const ChatWindow = ({ messages, onMessageSent, sender_Id }) => {
   }, []);
 
   useEffect(() => {
-    setChatWindowScrollPosition;
+    setChatWindowScrollPosition();
   }, [messages, setChatWindowScrollPosition]);
 
   useEffect(() => {
@@ -54,15 +54,21 @@ const ChatWindow = ({ messages, onMessageSent, sender_Id }) => {
   return (
     <div ref={chatWindow} className='chat-panel__body'>
       <div ref={chatWindowBody} className="messages-scroll-container">
-        {messages.map((message, index) => (
-          <ChatMessage
-            key={index}
-            text={message.text}
-            dateTimeStamp={convertTimestampToDate(message.timestamp)}
-            isSameOrigin={message.senderId === sender_Id}
-            message={message}
-          />
-        ))}
+        {messages.map((message, index) => {
+          const knownSenderIds = new Set([sender_Id, ...senderAliases].filter(Boolean).map(String));
+          const messageSenderIds = [message.senderId, message.user?._id].filter(Boolean).map(String);
+          const isSameOrigin = messageSenderIds.some((id) => knownSenderIds.has(id));
+
+          return (
+            <ChatMessage
+              key={message.id || message._id || index}
+              text={message.text}
+              dateTimeStamp={convertTimestampToDate(message.timestamp)}
+              isSameOrigin={isSameOrigin}
+              message={message}
+            />
+          );
+        })}
       </div>
       <div className="chat-panel__footer chat-input-container">
         <textarea
@@ -72,15 +78,17 @@ const ChatWindow = ({ messages, onMessageSent, sender_Id }) => {
           placeholder="Enter your message..."
           value={message}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          aria-label="Message"
         />
         <button
           className="chat-panel__send-btn"
           type="button"
-          onKeyDown={(e) => handleKeyDown(e)}
           onClick={handleSubmit}
           disabled={!message.trim()}
         >
-          Send
+          <span>Send</span>
+          <span aria-hidden="true">➤</span>
         </button>
       </div>
     </div>

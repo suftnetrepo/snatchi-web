@@ -1,0 +1,44 @@
+.page { min-height: calc(100vh - 72px); padding: 18px 48px 40px; color: #26364a; background: #fff; }
+.hero { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 5px 2px 16px; }
+.eyebrow { color: #778497; font-size: 9px; font-weight: 750; letter-spacing: .8px; text-transform: uppercase; }
+.hero h1 { margin: 3px 0; color: #26364a; font-size: 20px; font-weight: 700; }
+.hero p { margin: 0; color: #778497; font-size: 11px; }
+.heroActions { display: flex; align-items: center; gap: 9px; }
+.seedButton, .addButton { display: inline-flex; min-height: 36px; align-items: center; gap: 7px; padding: 0 13px; border-radius: 5px; font-size: 11px; font-weight: 700; }
+.seedButton { border: 1px solid #d7dee6; color: #425269; background: #fff; }
+.seedButton:hover:not(:disabled) { background: #f5f6f8; }
+.addButton { border: 1px solid #4f46e5; color: #fff; background: #4f46e5; }
+.addButton:hover { border-color: #4338ca; background: #4338ca; }
+.seedButton:disabled { cursor: wait; opacity: .6; }
+.summaryGrid { display: grid; margin-bottom: 18px; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.summaryGrid article { display: flex; min-height: 88px; padding: 14px 16px; border: 1px solid #e1e5ea; border-radius: 4px; background: #fff; flex-direction: column; }
+.summaryGrid span { color: #728398; font-size: 11px; font-weight: 750; letter-spacing: .6px; text-transform: uppercase; }
+.summaryGrid strong { margin-top: 4px; color: #26364a; font-size: 20px; font-weight: 700; }
+.summaryGrid small { margin-top: auto; color: #91a0b1; font-size: 11px; }
+.panel { background: #fff; }
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 13px; }
+.toolbar h2 { margin: 0; color: #26364a; font-size: 15px; font-weight: 700; }
+.toolbar p { margin: 3px 0 0; color: #7b8b9e; font-size: 12px; }
+.filters { display: flex; align-items: center; justify-content: flex-end; gap: 9px; flex: 1; }
+.dateRange { display: flex; height: 38px; align-items: center; gap: 7px; padding: 0 9px; border: 1px solid #d9dfe6; border-radius: 5px; background: #fff; }
+.dateRange > svg { flex: 0 0 auto; color: #4f46e5; font-size: 19px; }
+.dateRange label { display: flex; align-items: center; gap: 5px; margin: 0; color: #7b8b9e; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.dateRange input { width: 118px; border: 0; outline: 0; color: #28465e; background: transparent; font-size: 11px; }
+.dateRange > span { color: #a0adba; font-size: 10px; }
+.clearDate { display: grid; width: 25px; height: 25px; place-items: center; border: 0; border-radius: 5px; color: #607387; background: #eef1f5; font-size: 16px; }
+.searchBox { display: flex; width: min(350px, 38%); height: 38px; align-items: center; gap: 9px; padding: 0 11px; border: 1px solid #d9dfe6; border-radius: 5px; color: #8392a5; background: #fff; }
+.searchBox:focus-within, .dateRange:focus-within { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+.searchBox input { width: 100%; min-width: 0; border: 0; outline: 0; color: #102a43; background: transparent; font-size: 13px; }
+.tableWrap { min-height: 280px; }
+.tableWrap :global(.table) { margin-bottom: 0; font-size: 14px; }
+.tableWrap :global(th) { padding: 14px 15px; color: #566276; background: #fff; font-size: 14px; font-weight: 700; }
+.tableWrap :global(td) { padding: 15px; color: #5d6a7d; font-size: 14px; vertical-align: middle; }
+.tableWrap :global(tbody tr:hover) { background: #f3f4f7; }
+.tableWrap :global(.pointer) { color: #26364a; }
+.tableWrap :global(.pointer:hover) { color: #4f46e5; }
+.tableWrap :global(.btn-secondary) { color: #1f2937; border-color: #dfe5ec; background: #fff; }
+.tableWrap :global(.btn-secondary:hover:not(:disabled)) { color: #4338ca; border-color: #a5b4fc; background: #eef2ff; }
+.loading { display: flex; min-height: 280px; align-items: center; justify-content: center; color: #718195; }
+@media (max-width: 1100px) { .toolbar { align-items: stretch; flex-direction: column; } .filters { justify-content: flex-start; } .searchBox { width: min(350px, 100%); } }
+@media (max-width: 900px) { .summaryGrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 650px) { .page { padding: 12px; } .hero { align-items: flex-start; flex-direction: column; } .summaryGrid { grid-template-columns: 1fr; } .filters { align-items: stretch; flex-direction: column; } .dateRange { height: auto; padding: 10px; flex-wrap: wrap; } .dateRange label { align-items: flex-start; flex-direction: column; } .searchBox { width: 100%; } }

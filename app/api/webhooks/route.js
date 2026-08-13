@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
+import { webhookDeduplicationMiddleware, recordWebhookEvent } from '../middleware/webhook-deduplication';
 
 const {
   invoicePaymentSuccess,
@@ -59,12 +60,17 @@ export async function POST(req) {
       event = stripe.webhooks.constructEvent(
         rawBody,
         req.headers.get('stripe-signature'),
-        process.env.STRIPE_WEBHOOK_SECRET_LOCAL
+        process.env.STRIPE_WEBHOOK_SECRET
       );
       console.info('Webhook event constructed successfully:', { type: event.type });
     } catch (signatureError) {
       console.error('Signature verification failed:', signatureError.message);
       return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 });
+    }
+
+    const deduplication = await webhookDeduplicationMiddleware(req, event);
+    if (!deduplication.shouldProcess) {
+      return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
     }
 
     // Handle the verified event
@@ -90,11 +96,28 @@ export async function POST(req) {
     try {
       if (handlers[event.type]) {
         await handlers[event.type](event);
+        await recordWebhookEvent(
+          event.id,
+          event.type,
+          deduplication.customerId,
+          deduplication.subscriptionId,
+          event,
+          'completed'
+        );
         console.info(`Successfully processed ${event.type} event: ${event.id}`);
       } else {
         console.warn(`Unhandled event type: ${event.type}`);
       }
     } catch (handlerError) {
+      await recordWebhookEvent(
+        event.id,
+        event.type,
+        deduplication.customerId,
+        deduplication.subscriptionId,
+        event,
+        'failed',
+        handlerError.message
+      ).catch((recordError) => logger.error(recordError));
       console.error(`Error processing ${event.type} event:`, handlerError);
       // Return error to Stripe so it will retry
       return NextResponse.json({ error: 'Webhook processing failed', details: handlerError.message }, { status: 500 });

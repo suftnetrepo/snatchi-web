@@ -1,148 +1,83 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Offcanvas, Form, Table } from 'react-bootstrap';
+import { useEffect, useState } from 'react';
+import { Offcanvas } from 'react-bootstrap';
+import { MdClose, MdCalendarMonth, MdPersonOutline, MdPictureAsPdf } from 'react-icons/md';
+import { FaFileCsv } from 'react-icons/fa';
 import { formatCurrency, formatReadableDate } from '../../../../utils/helpers';
 import { OkDialogue } from '../../../../src/components/elements/ConfirmDialogue';
-import { MdCancel } from 'react-icons/md';
+import styles from './invoice.module.scss';
 
-const RenderInvoiceOffcanvas = ({ show, success, handleClose, invoice, handleEditInvoice }) => {
-  const [status, setStatus] = useState(invoice?.status);
+const RenderInvoiceOffcanvas = ({ show, success, loading, handleClose, invoice, handleEditInvoice }) => {
+  const [status, setStatus] = useState(invoice?.status || 'Unpaid');
 
-  const handleStatusChange = (e) => {
-    setStatus(e.target.value);
+  useEffect(() => setStatus(invoice?.status || 'Unpaid'), [invoice]);
+
+  const saveStatus = async () => {
+    if (status === invoice.status) return;
+    await handleEditInvoice({ status }, invoice._id);
   };
 
-  const getStatusBadgeClass = () => {
-    switch (status) {
-      case 'Paid':
-        return 'bg-success';
-      case 'Unpaid':
-        return 'bg-warning';
-      case 'Cancelled':
-        return 'bg-danger';
-      default:
-        return 'bg-secondary';
-    }
-  };
+  const engineerName = invoice.user
+    ? `${invoice.user.first_name || ''} ${invoice.user.last_name || ''}`.trim()
+    : 'Unassigned';
 
   return (
-    <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
-      <div className="d-flex flex-row justify-content-between align-items-center p-7">
-        <div className="d-flex flex-column justify-content-start align-items-start">
-          <p className="text-dark fw-normal fs-18">
-            Invoice - <strong>{invoice?._id?.toString().slice(-8) || ''}</strong>{' '}
-          </p>
-          <span
-            className={`badge rounded-pill me-2 px-3 text-white fw-normal fs-12 text-uppercase ${getStatusBadgeClass()}`}
-          >
-            {status}
-          </span>
-        </div>
+    <Offcanvas show={show} onHide={handleClose} placement="end" className={styles.invoiceDrawer}>
+      <header className={styles.drawerHeader}>
         <div>
-          <MdCancel size={48} color="black" onClick={handleClose} className="pointer" />
+          <span className={styles.eyebrow}>Invoice details</span>
+          <h2>#{invoice?._id?.slice(-8).toUpperCase()}</h2>
+          <span className={`${styles.status} ${styles[`status${status}`] || styles.statusDefault}`}>{status}</span>
         </div>
-      </div>
-      <Offcanvas.Body>
-        <Form.Label htmlFor="invoice_description" className="text-dark">
-          Description
-        </Form.Label>
-        <Form.Control
-          className="text-dark "
-          readOnly
-          value={invoice.invoice_description}
-          id="invoice_description"
-          aria-describedby="invoice_description"
-        />
-        <Form.Label htmlFor="issueDate" className="text-dark mt-2">
-          Issue Date
-        </Form.Label>
-        <Form.Control
-          className="text-dark "
-          readOnly
-          value={formatReadableDate(invoice.issueDate)}
-          id="issueDate"
-          aria-describedby="issueDate"
-        />
+        <button type="button" onClick={handleClose} aria-label="Close invoice"><MdClose /></button>
+      </header>
 
-        <div className="table-responsive mt-4">
-          <Table striped bordered hover>
-            <thead className="thead-light">
-              <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Unit</th>
-                <th className="text-end">Time</th>
-                <th className="text-end">Rate</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoice.items.map((item) => (
-                <tr key={item._id}>
-                  <td className="text-dark">{item.date}</td>
-                  <td className="text-dark">{item.description}</td>
-                  <td className="text-dark">{item.unit}</td>
-                  <td className="text-end text-dark">{item.duration}</td>
-                  <td className="text-end text-dark">{formatCurrency('£', item.rate || 0)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+      <Offcanvas.Body className={styles.drawerBody}>
+        <div className={styles.exportActions}>
+          <a href={`/api/invoice/export?id=${invoice._id}&format=pdf`} download><MdPictureAsPdf /> Download PDF</a>
+          <a href={`/api/invoice/export?id=${invoice._id}&format=csv`} download><FaFileCsv /> Download CSV</a>
         </div>
+        <section className={styles.invoiceMeta}>
+          <div><MdPersonOutline /><span>Engineer<small>{engineerName}</small></span></div>
+          <div><MdCalendarMonth /><span>Issued<small>{formatReadableDate(invoice.issueDate)}</small></span></div>
+          <div><MdCalendarMonth /><span>Due date<small>{formatReadableDate(invoice.due_on)}</small></span></div>
+        </section>
 
-        <div className="row p-2">
-          <div className="col-md-4"></div>
-          <div className="col-md-4"></div>
-          <div className="col-md-4">
-            <div className="d-flex justify-content-between">
-              <span className="text-dark">Subtotal</span>
-              <span className="fw-bold text-dark">{formatCurrency('£', invoice.subtotal || 0)} </span>
-            </div>
-            <div className="d-flex justify-content-between">
-              <span className="text-dark">Tax</span>
-              <span className="fw-bold text-dark">{formatCurrency('£', invoice.tax || 0)} </span>
-            </div>
-            <div className="d-flex justify-content-between">
-              <span className="fw-bold text-dark">Total</span>
-              <span className="fw-bold text-dark">{formatCurrency('£', invoice.totalAmount || 0)} </span>
-            </div>
+        <section className={styles.detailSection}>
+          <span className={styles.sectionTitle}>Description</span>
+          <p>{invoice.invoice_description || 'No description provided.'}</p>
+        </section>
+
+        <section className={styles.detailSection}>
+          <div className={styles.sectionHeading}><span className={styles.sectionTitle}>Line items</span><span>{invoice.items?.length || 0} item{invoice.items?.length === 1 ? '' : 's'}</span></div>
+          <div className={styles.itemList}>
+            {(invoice.items || []).map((item, index) => (
+              <article key={item._id || index}>
+                <div><strong>{item.description || 'Service item'}</strong><small>{item.date || 'Date not specified'} · {item.duration || 0} {item.unit || 'unit'}{Number(item.duration) === 1 ? '' : 's'}</small></div>
+                <span>{formatCurrency('£', Number(item.rate || 0) * Number(item.duration || 0))}</span>
+              </article>
+            ))}
+            {!invoice.items?.length && <div className={styles.noItems}>No line items are attached to this invoice.</div>}
           </div>
-        </div>
+        </section>
 
-        <Form.Label htmlFor="notes">Note</Form.Label>
-        <Form.Control value={invoice.notes} id="notes" aria-describedby="notes" className='border-dark' />
-        <div className="row">
-          <div className="col-md-4">
-            <div className="d-flex flex-column justify-content-md-start gap-2 mt-3">
-              <select
-                className="form-select w-auto border-dark"
-                value={status}
-                onChange={handleStatusChange}
-                aria-label="Invoice status"
-              >
-                <option value="Paid">PAID</option>
-                <option value="Unpaid">UNPAID</option>
-                <option value="Cancelled">CANCELLED</option>
-              </select>
-              <button
-                className="btn btn-primary"
-                onClick={() => {
-                  handleEditInvoice && handleEditInvoice({ status: status }, invoice._id).then(() => { });
-                }}
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
+        <section className={styles.totalsCard}>
+          <div><span>Subtotal</span><strong>{formatCurrency('£', invoice.subtotal || 0)}</strong></div>
+          {Number(invoice.discount || 0) > 0 && <div><span>Discount</span><strong>−{formatCurrency('£', invoice.discount)}</strong></div>}
+          <div><span>Tax</span><strong>{formatCurrency('£', invoice.tax || 0)}</strong></div>
+          <div className={styles.grandTotal}><span>Total</span><strong>{formatCurrency('£', invoice.totalAmount || 0)}</strong></div>
+        </section>
 
-        <OkDialogue
-          show={success}
-          message="Your changes was save successfully"
-          onConfirm={() => {
-            handleClose();
-          }}
-        />
+        {invoice.notes && <section className={styles.detailSection}><span className={styles.sectionTitle}>Notes</span><p>{invoice.notes}</p></section>}
+
+        <section className={styles.statusEditor}>
+          <div><span className={styles.sectionTitle}>Invoice status</span><p>Keep the billing record aligned with its current outcome.</p></div>
+          <select value={status} onChange={(event) => setStatus(event.target.value)} disabled={loading} aria-label="Invoice status"><option value="Paid">Paid</option><option value="Unpaid">Unpaid</option><option value="Cancelled">Cancelled</option></select>
+          <button type="button" onClick={saveStatus} disabled={loading || status === invoice.status}>{loading ? 'Saving…' : 'Save status'}</button>
+        </section>
+
+        <OkDialogue show={success} message="Invoice status updated successfully." onConfirm={handleClose} />
       </Offcanvas.Body>
     </Offcanvas>
   );

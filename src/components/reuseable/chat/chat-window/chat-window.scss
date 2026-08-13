@@ -28,29 +28,34 @@
   .messages-scroll-container {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 15px;
+    padding: 28px 30px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 16px;
+    min-height: 0;
   }
 
   .chat-input-container {
     display: flex;
+    width: 100%;
     padding: 10px;
     background-color: #f8f9fa;
     border-top: 1px solid #e0e0e0;
 
     .chat-input {
+      min-width: 0;
       flex-grow: 1;
       margin-right: 10px;
     }
   }
 
   &__body {
+    display: flex;
+    min-height: 0;
     flex: 1;
-    padding: 16px;
-    overflow: auto;
-    height: fit-content;
+    padding: 0;
+    overflow: hidden;
+    flex-direction: column;
 
     & > * + * {
       margin-top: 16px;
@@ -60,34 +65,42 @@
   &__footer {
     align-items: flex-end;
     display: flex;
-    padding: 16px;
+    padding: 18px 22px 20px;
+    border-top: 1px solid #e4eaf0;
+    background: #fff;
   }
 
   &__input {
     background: #fff;
-    border: 1px solid #bbb;
-    border-radius: 4px;
+    border: 1px solid #dbe3ea;
+    border-radius: 13px;
     flex: 1;
     font-size: inherit;
-    min-height: 44px;
+    min-height: 48px;
     max-height: 125px;
-    padding: 10px;
+    padding: 12px 14px;
     resize: none;
   }
 
   &__send-btn {
-    background: #333;
+    display: inline-flex;
+    min-width: 96px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #4f46e5;
     border: 0;
-    border-radius: 4px;
+    border-radius: 12px;
     color: #fff;
     font-family: inherit;
     font-size: inherit;
     margin-left: 16px;
-    min-height: 44px;
+    min-height: 48px;
     padding: 0 16px;
 
     &:disabled {
-      background: #bbb;
+      background: #cbd5df;
+      cursor: not-allowed;
     }
   }
 
@@ -119,17 +132,13 @@
   &__send-btn:focus,
   &__input:focus {
     outline: 0;
-    box-shadow: 0 0 0 3px #99ceff;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
   }
 
   @media (min-width: 576px) {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     overflow: hidden;
-
-    &__body {
-      flex: 350px 0 0;
-    }
 
     &--top-right {
       bottom: auto;

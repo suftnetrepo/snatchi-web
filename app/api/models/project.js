@@ -11,7 +11,7 @@ const projectSchema = new mongoose.Schema(
     },
     project_number: {
       type: String,
-      required: false,
+      required: true,
       trim: true
     },
     stakeholder: {
@@ -41,6 +41,7 @@ const projectSchema = new mongoose.Schema(
     ppe: [],
     description: {
       type: String,
+      required: true,
       trim: true
     },
     startDate: {
@@ -91,6 +92,21 @@ const projectSchema = new mongoose.Schema(
           type: String,
           required: false,
           default: ''
+        },
+        resource_type: {
+          type: String,
+          required: false,
+          default: ''
+        },
+        mime_type: {
+          type: String,
+          required: false,
+          default: ''
+        },
+        bytes: {
+          type: Number,
+          required: false,
+          default: 0
         }
       }
     ],

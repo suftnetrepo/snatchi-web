@@ -45,6 +45,10 @@ async function createDocument(suid, projectId, body) {
       { new: true }
     );
 
+    if (!project) {
+      throw new Error('Project not found for the given integrator ID');
+    }
+
     const createdDocument = project.attachments[project.attachments.length - 1];
     
     return createdDocument;
@@ -68,6 +72,16 @@ async function removeDocument(suid, projectId, id) {
   }
 
   try {
+    const existingProject = await Project.findOne(
+      { integrator: suid, _id: projectId, 'attachments._id': id },
+      { attachments: { $elemMatch: { _id: id } } }
+    );
+
+    if (!existingProject?.attachments?.length) {
+      throw new Error('Document not found for the given project');
+    }
+
+    const document = existingProject.attachments[0].toObject();
     const project = await Project.findOneAndUpdate(
       { integrator: suid, _id: projectId },
       { $pull: { attachments: { _id: id } } },
@@ -78,7 +92,7 @@ async function removeDocument(suid, projectId, id) {
       throw new Error('Project not found for the given integrator ID');
     }
 
-    return true;
+    return document;
   } catch (error) {
     logger.error(error);
     throw new Error('An unexpected error occurred. Please try again.');

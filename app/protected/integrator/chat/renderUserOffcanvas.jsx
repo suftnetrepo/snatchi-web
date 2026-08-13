@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
-import { Offcanvas, ListGroup, Form, Alert } from 'react-bootstrap';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Offcanvas, Alert, Spinner } from 'react-bootstrap';
 import { useUser } from '../../../../hooks/useUser';
-import { MdAddCircleOutline } from 'react-icons/md';
-import { MdCancel } from 'react-icons/md';
-import Tooltip from '@mui/material/Tooltip';
+import { MdClose, MdSearch, MdChatBubbleOutline } from 'react-icons/md';
+import styles from './chat.module.scss';
 
 const RenderUserOffcanvas = ({
   show,
@@ -14,21 +13,40 @@ const RenderUserOffcanvas = ({
   firstname,
   handleCreateDirectChat
 }) => {
-  const { data, handleFetchUser } = useUser();
+  const { data, loading, handleFetchUser } = useUser();
+  const [query, setQuery] = useState('');
+  const [startingUserId, setStartingUserId] = useState(null);
 
   useEffect(() => {
-    handleFetchUser();
-  }, []);
+    if (show) handleFetchUser();
+  }, [show]);
+
+  const users = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    return (Array.isArray(data) ? data : [])
+      .filter((user) => user._id !== currentUserId)
+      .filter((user) => !term || `${user.first_name || ''} ${user.last_name || ''} ${user.email || ''}`.toLowerCase().includes(term));
+  }, [currentUserId, data, query]);
+
+  const startChat = async (user) => {
+    setStartingUserId(user._id);
+    try {
+      await handleCreateDirectChat(currentUserChatId, user.email, `${user.first_name}-${firstname}`);
+      handleClose();
+    } finally {
+      setStartingUserId(null);
+    }
+  };
 
   return (
-    <Offcanvas show={show} onHide={handleClose} placement="end" style={{ width: '30%', backgroundColor: 'white' }}>
-      <div className="d-flex flex-row justify-content-between align-items-center p-7">
-        <div className="d-flex flex-column justify-content-start align-items-start">
-        <p className="text-dark fw-normal fs-18">Chat with user </p>
-        </div>
+    <Offcanvas show={show} onHide={handleClose} placement="end" className={styles.userDrawer}>
+      <div className={styles.drawerHeader}>
         <div>
-          <MdCancel size={48} color="black" onClick={handleClose} className="pointer" />
+          <span className={styles.eyebrow}>New conversation</span>
+          <h2>Chat with your team</h2>
+          <p>Choose a colleague to start or continue a private conversation.</p>
         </div>
+        <button type="button" className={styles.closeButton} onClick={handleClose} aria-label="Close"><MdClose /></button>
       </div>
       <Offcanvas.Body>
         {error && (
@@ -38,76 +56,34 @@ const RenderUserOffcanvas = ({
             </div>
           </div>
         )}
-        <Form>
-          <div>
-            <div className="mt-1">
-              <ListGroup>
-                {data
-                  .filter((j) => j._id !== currentUserId)
-                  .map((user, index) => {
-                    return (
-                      <ListGroup.Item
-                        key={`${index}-${user._id}`}
-                        as="li"
-                        className="d-flex justify-content-between align-items-center"
-                      >
-                        <div className="d-flex align-items-center">
-                          {user.secure_url ? (
-                            <img
-                              src={user.secure_url}
-                              alt={user.name}
-                              className="rounded-circle me-2"
-                              width="40"
-                              height="40"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = '/img/blank.png';
-                              }}
-                            />
-                          ) : (
-                            <img
-                              src={'/img/blank.png'}
-                              alt={user.name}
-                              className="rounded-circle me-2"
-                              width="60"
-                              height="60"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = '/img/blank.png';
-                              }}
-                            />
-                          )}
-                          <div className="d-flex flex-column justify-content-start align-items-start">
-                            <span>
-                              {' '}
-                              {user.first_name} {user.last_name}
-                            </span>
-                            <span className="badge bg-pale-leaf text-leaf rounded-pill">{user.role}</span>
-                          </div>
-                        </div>
-
-                        <Tooltip title="Create to chat" arrow>
-                          <span className="p-0">
-                            <MdAddCircleOutline
-                              size={48}
-                              className="pointer"
-                              onClick={async () =>
-                                await handleCreateDirectChat(
-                                  currentUserChatId,
-                                  user?.email,
-                                  `${user.first_name}-${firstname}`
-                                )
-                              }
-                            />
-                          </span>
-                        </Tooltip>
-                      </ListGroup.Item>
-                    );
-                  })}
-              </ListGroup>
+        <div className={styles.userSearch}>
+          <MdSearch />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name or email" aria-label="Search team members" />
+        </div>
+        <div className={styles.drawerSectionLabel}><span>Team members</span><span>{users.length}</span></div>
+        <div className={styles.userList}>
+          {loading && <div className={styles.loadingUsers}><Spinner size="sm" /><span>Loading team members…</span></div>}
+          {users.map((user) => (
+            <button key={user._id} type="button" className={styles.userCard} onClick={() => startChat(user)} disabled={!!startingUserId}>
+              <img src={user.secure_url || '/img/blank.png'} alt="" onError={(e) => { e.currentTarget.src = '/img/blank.png'; }} />
+              <span className={styles.userInfo}>
+                <strong>{user.first_name} {user.last_name}</strong>
+                <small>{user.email || 'Team member'}</small>
+                <em>{user.role}</em>
+              </span>
+              <span className={styles.userAction}>
+                {startingUserId === user._id ? <Spinner size="sm" /> : <><MdChatBubbleOutline /> Chat</>}
+              </span>
+            </button>
+          ))}
+          {!loading && users.length === 0 && (
+            <div className={styles.noUsers}>
+              <MdChatBubbleOutline />
+              <strong>{query ? 'No matching team members' : 'No team members available'}</strong>
+              <span>{query ? 'Try a different name or email.' : 'Add engineers to your organisation before starting a team chat.'}</span>
             </div>
-          </div>
-        </Form>
+          )}
+        </div>
       </Offcanvas.Body>
     </Offcanvas>
   );

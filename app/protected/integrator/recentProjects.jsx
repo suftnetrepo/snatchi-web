@@ -3,14 +3,13 @@ import { Table } from 'react-bootstrap';
 import { useRouter } from 'next/navigation';
 import { useProjectDashboard } from '../../../hooks/useProjectDashboard';
 import { dateFormatted, getStatusColorCode } from '../../../utils/helpers';
-import ProgressBar from '../../../src/components/common/ProgressBar';
 import RenderProjectOffcanvas from '../../protected/guest/dashboard/renderProjectOffcanvas';
 
 const RecentProjects = () => {
 	const router = useRouter();
 	const [showProjectOffcanvas, setShowProjectOffcanvas] = useState(false);
 	const [project, setProject] = useState({});
-	const { handleRecent, handleSelect, recent, data } = useProjectDashboard();
+	const { handleRecent, handleSelect, recent, data, loading, error } = useProjectDashboard();
 
 	useEffect(() => {
 		handleRecent();
@@ -29,16 +28,24 @@ const RecentProjects = () => {
 						<th>Start Date</th>
 						<th>End Date</th>
 
-						<th>Progress</th>
 						<th>Status</th>
 					</tr>
 				</thead>
 				<tbody>
+					{loading && (
+						<tr><td colSpan={4} className="text-center text-muted py-4">Loading recent projects…</td></tr>
+					)}
+					{!loading && error && (
+						<tr><td colSpan={4} className="text-center text-danger py-4">Recent projects could not be loaded.</td></tr>
+					)}
+					{!loading && !error && Array.isArray(data) && data.length === 0 && (
+						<tr><td colSpan={4} className="text-center text-muted py-4">No projects yet.</td></tr>
+					)}
 					{data?.map((item, index) => (
 						<tr key={item.projectId || index}>
 							<td>
 								<a
-									className="pointer"
+									className="pointer text-dark "
 									onClick={() => {
 										handleSelect(item?.projectId )
 										setShowProjectOffcanvas(true);
@@ -49,11 +56,6 @@ const RecentProjects = () => {
 							</td>
 							<td>{dateFormatted(item.startDate)}</td>
 							<td>{dateFormatted(item.endDate)}</td>
-							<td>
-								<div className="d-flex row align-items-center">
-									<ProgressBar value={item.progress ?? item.percentage ?? 0} max={100} />
-								</div>
-							</td>
 							<td>
 								<span className={`badge ${getStatusColorCode(item.status)}`}>
 									{item.status}

@@ -15,6 +15,31 @@ import {
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUD_NAME,
+  api_key: process.env.NEXT_PUBLIC_CLOUD_API_KEY,
+  api_secret: process.env.NEXT_PUBLIC_CLOUD_SECRETE
+});
+
+const deleteProjectAttachment = async (attachment) => {
+  if (!attachment?.public_id) return;
+
+  const resourceTypes = attachment.resource_type
+    ? [attachment.resource_type]
+    : attachment.document_type?.toLowerCase() === 'image'
+      ? ['image', 'raw']
+      : ['raw', 'image'];
+
+  for (const resourceType of resourceTypes) {
+    const result = await cloudinary.uploader.destroy(attachment.public_id, {
+      resource_type: resourceType,
+      invalidate: true
+    });
+    if (result.result !== 'not found') return;
+  }
+};
 
 // Authentication middleware
 const authenticateUser = async (req) => {
@@ -44,10 +69,29 @@ const parsePaginationParams = (url) => {
     sortField: url.searchParams.get('sortField'),
     sortOrder: url.searchParams.get('sortOrder'),
     searchQuery: url.searchParams.get('searchQuery'),
+    dateFrom: url.searchParams.get('dateFrom'),
+    dateTo: url.searchParams.get('dateTo'),
     page: parseInt(url.searchParams.get('page') || '1', 10),
     limit: parseInt(url.searchParams.get('limit') || '10', 10)
   };
 };
+
+const PROJECT_MUTABLE_FIELDS = new Set([
+  'name', 'project_number', 'stakeholder', 'first_name', 'last_name', 'mobile', 'email', 'ppe',
+  'description', 'startDate', 'endDate', 'status', 'priority', 'addressLine1', 'completeAddress',
+  'county', 'town', 'country', 'postcode', 'location', 'budget'
+]);
+
+const sanitizeProjectBody = (body) => Object.fromEntries(
+  Object.entries(body || {}).filter(([key]) => PROJECT_MUTABLE_FIELDS.has(key))
+);
+
+const canManageProjects = (user) => ['integrator', 'manager'].includes(user?.role);
+
+const forbiddenResponse = () => NextResponse.json(
+  { success: false, error: 'You do not have permission to manage projects' },
+  { status: 403 }
+);
 
 export const GET = async (req) => {
   try {
@@ -64,69 +108,79 @@ export const GET = async (req) => {
 
     // Handle paginate action
     if (action === 'paginate') {
-      const { sortField, sortOrder, searchQuery, page, limit } = parsePaginationParams(url);
+      if (!canManageProjects(user)) return forbiddenResponse();
+      const { sortField, sortOrder, searchQuery, dateFrom, dateTo, page, limit } = parsePaginationParams(url);
       
-      const { data, success, totalCount } = await getProjects({
+      const { data, success, totalCount, summary } = await getProjects({
         suid: user?.integrator,
         page,
         limit,
         sortField,
         sortOrder,
-        searchQuery
+        searchQuery,
+        dateFrom,
+        dateTo
       });
       
-      return NextResponse.json({ data, success, totalCount });
+      return NextResponse.json({ data, success, totalCount, summary });
     }
 
     // Handle userProjects action
     if (action === 'userProjects') {
-      const id = url.searchParams.get('id');
-      const { data } = await getUserProjects(id);
+      const { data } = await getUserProjects(user.id);
       return successResponse(data);
     }
 
     // Handle getMyProjects action
     if (action === 'getMyProjects') {
-      const id = url.searchParams.get('id');
-      const { data } = await getMyProjects(id);
+      const { data } = await getMyProjects(user.id);
       return successResponse(data);
     }
 
     // Handle single action
     if (action === 'single') {
+      if (!canManageProjects(user)) return forbiddenResponse();
       const id = url.searchParams.get('id');
-      const { data } = await getProjectById(id);
+      const { data } = await getProjectById(id, user.integrator);
+      if (!data) {
+        return NextResponse.json({ success: false, error: 'Project not found' }, { status: 404 });
+      }
       return successResponse(data);
     }
 
     // Handle getUserProjectById action
     if (action === 'getUserProjectById') {
       const id = url.searchParams.get('id');
-      const { data } = await getUserProjectById(id);
+      const { data } = await getUserProjectById(id, user.id);
+      if (!data) {
+        return NextResponse.json({ success: false, error: 'Project not found' }, { status: 404 });
+      }
       return successResponse(data);
     }
 
     // Handle getMyProjectAggregates action
     if (action === 'getMyProjectAggregates') {
-      const id = url.searchParams.get('id');
-      const { data } = await getMyProjectAggregates(id);
+      const { data } = await getMyProjectAggregates(user.id);
       return successResponse(data);
     }
 
     // Handle aggregate action
     if (action === 'aggregate') {
+      if (!canManageProjects(user)) return forbiddenResponse();
       const aggregated = await getProjectStatusAggregates(user?.integrator);
       return successResponse(aggregated);
     }
 
     // Handle recent action
     if (action === 'recent') {
+      if (!canManageProjects(user)) return forbiddenResponse();
       const aggregated = await getProjectSummaryByIntegrator(user?.integrator);
       return successResponse(aggregated);
     }
 
     // Handle chart action
     if (action === 'chart') {
+      if (!canManageProjects(user)) return forbiddenResponse();
       const aggregated = await getProjectWeeklySummary(user?.integrator);
       return successResponse(aggregated);
     }
@@ -137,7 +191,7 @@ export const GET = async (req) => {
       { status: 400 }
     );
   } catch (error) {
-    return errorResponse(error.message, 500, error);
+    return errorResponse(error.message, error.statusCode || 500, error);
   }
 };
 
@@ -148,34 +202,44 @@ export const DELETE = async (req) => {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
+    if (!canManageProjects(user)) return forbiddenResponse();
 
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
 
     const deleted = await removeProject(user?.integrator, id);
+    const cleanupResults = await Promise.allSettled(
+      (deleted.attachments || []).map(deleteProjectAttachment)
+    );
+    cleanupResults.forEach((result) => {
+      if (result.status === 'rejected') {
+        logger.error('Project deleted, but Cloudinary attachment cleanup failed', result.reason);
+      }
+    });
     return successResponse(deleted);
   } catch (error) {
-    return errorResponse(error.message, 500, error);
+    return errorResponse(error.message, error.statusCode || 500, error);
   }
 };
 
 export const PUT = async (req) => {
   try {
-    const { error } = await authenticateUser(req);
+    const { user, error } = await authenticateUser(req);
     
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
+    if (!canManageProjects(user)) return forbiddenResponse();
 
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
-    const body = await req.json();
+    const body = sanitizeProjectBody(await req.json());
 
-    const result = await updateProject(id, body);
+    const result = await updateProject(user.integrator, id, body);
 
     return successResponse(result);
   } catch (error) {
-    return errorResponse(error.message, 500, error);
+    return errorResponse(error.message, error.statusCode || 500, error);
   }
 };
 
@@ -186,11 +250,12 @@ export const POST = async (req) => {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
+    if (!canManageProjects(user)) return forbiddenResponse();
 
-    const body = await req.json();
+    const body = sanitizeProjectBody(await req.json());
     const result = await createProject(user?.integrator, body);
     return successResponse(result);
   } catch (error) {
-    return errorResponse(error.message, 500, error);
+    return errorResponse(error.message, error.statusCode || 500, error);
   }
 };

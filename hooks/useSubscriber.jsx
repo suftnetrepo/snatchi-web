@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { VERBS } from '../config';
 import { STRIPE, SUBSCRIBER } from '../utils/apiUrl';
 import { zat } from '../utils/api';
@@ -16,7 +16,7 @@ const useSubscriber = (priceId) => {
   });
 
   const handlePricing = (priceId) => {
-    const plan = pricingList.find((j) => j.priceId === priceId);
+    const plan = pricingList.find((item) => item.priceId === priceId || item.live_priceId === priceId);
     setState((pre) => {
       return { ...pre, pricing: plan };
     });
@@ -94,6 +94,8 @@ const useSubscriber = (priceId) => {
   }
 
   async function handleCustomerPortalSession(body) {   
+    handleSpinner();
+    setState((previous) => ({ ...previous, error: null }));
     const { success, errorMessage, data } = await zat(STRIPE.createCustomerPortalSession, body, VERBS.POST);
 
     if (success) {
@@ -109,9 +111,9 @@ const useSubscriber = (priceId) => {
     }
   }
 
-    async function handleVerifySubscriptionStatus(stripeCustomerId) {   
+  const handleVerifySubscriptionStatus = useCallback(async (checkoutToken) => {
     const { success, errorMessage, data } = await zat(STRIPE.verifySubscriptionStatus, null, VERBS.GET , {
-      stripeCustomerId: stripeCustomerId
+      token: checkoutToken
     });
 
     if (success) {
@@ -120,7 +122,7 @@ const useSubscriber = (priceId) => {
       handleError(errorMessage || 'Failed to verify subscription status.');
       return false;
     }
-  }
+  }, []);
 
   useEffect(() => {
     handlePricing(priceId);

@@ -17,7 +17,7 @@ export async function checkWebhookDuplicate(stripeEventId, eventType, customerId
       stripeEventId: stripeEventId
     });
 
-    if (existingEvent) {
+    if (existingEvent?.processingStatus === 'completed') {
       console.log(`⚠️ Webhook deduplication: Event ${stripeEventId} already processed`);
       return {
         isDuplicate: true,
@@ -58,18 +58,23 @@ export async function recordWebhookEvent(
   errorMessage = ''
 ) {
   try {
-    const webhookEvent = new StripeWebhookEvent({
-      stripeEventId,
-      eventType,
-      customerId,
-      subscriptionId: subscriptionId || '',
-      processed: status === 'completed',
-      processingStatus: status,
-      errorMessage: errorMessage || '',
-      eventData: eventData || {}
-    });
-
-    const saved = await webhookEvent.save();
+    const saved = await StripeWebhookEvent.findOneAndUpdate(
+      { stripeEventId },
+      {
+        $set: {
+          eventType,
+          customerId,
+          subscriptionId: subscriptionId || '',
+          processed: status === 'completed',
+          processingStatus: status,
+          errorMessage: errorMessage || '',
+          eventData: eventData || {},
+          processedAt: new Date()
+        },
+        ...(status === 'failed' && { $inc: { retryCount: 1 } })
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
     console.log(`✅ Webhook event recorded: ${stripeEventId}`);
     return saved;
   } catch (error) {

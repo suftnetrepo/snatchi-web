@@ -119,6 +119,7 @@ function SchedulerContent() {
   const from = searchParams.get('from');
   const {
     data,
+    loading,
     error,
     fields,
     rules,
@@ -166,14 +167,14 @@ function SchedulerContent() {
     setShow(true);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (bookingOptions = {}) => {
     setErrorMessages({});
 
     const validationResult = validate(fields, rules);
 
     if (validationResult.hasError) {
       setErrorMessages(validationResult.errors);
-      return;
+      return false;
     }
 
     const body = chose(fields, [
@@ -191,12 +192,15 @@ function SchedulerContent() {
       'price_offer',
       'service_rate'
     ]);
+    if (Array.isArray(bookingOptions.bookingDates)) {
+      body.bookingDates = bookingOptions.bookingDates;
+    }
 
     if (fields._id) {
-      await handleEdit(body, fields._id);
+      return await handleEdit(body, fields._id);
     } else {
       delete body._id;
-      await handleSave(body, currentChatUser?.uid);
+      return await handleSave(body, currentChatUser?.uid);
     }
   };
 
@@ -244,6 +248,7 @@ function SchedulerContent() {
         errorMessages={errorMessages}
         handleChange={handleChange}
         success={success}
+        loading={loading}
         handleSubmit={handleSubmit}
         show={show}
         handleClose={handleClose}

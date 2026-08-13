@@ -1,0 +1,183 @@
+.page {
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #172033;
+}
+
+.checkoutCard {
+  overflow: hidden;
+  border: 1px solid #e4e9f2;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(23, 32, 51, 0.08);
+}
+
+.benefits {
+  height: 100%;
+  padding: clamp(2rem, 4vw, 4.5rem);
+  background: #f4f6ff;
+}
+
+.eyebrow {
+  margin-bottom: 0.75rem;
+  color: #4f46e5;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  max-width: 520px;
+  color: #172033;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1.12;
+}
+
+.featureCard {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #e5e9f3;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.formPanel {
+  padding: clamp(2rem, 4vw, 4.5rem);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid #e2e7f0;
+  border-radius: 14px;
+  background: #fafbff;
+}
+
+.summaryLabel {
+  margin: 0;
+  color: #172033;
+  font-weight: 700;
+}
+
+.summaryMeta {
+  margin: 0.2rem 0 0;
+  color: #697386;
+  font-size: 0.86rem;
+}
+
+.summaryPrice {
+  color: #172033;
+  font-size: 1.35rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.fieldLabel {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: #344054;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.cardField {
+  padding: 1.05rem 1rem;
+  border: 1px solid #dce2ec;
+  border-radius: 12px;
+  background: #fff;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.cardField:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.13);
+}
+
+.cardFieldError {
+  border-color: #dc3545;
+}
+
+.terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 1.25rem 0;
+}
+
+.terms input {
+  flex: 0 0 auto;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.payButton,
+.closeButton {
+  min-height: 52px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.payButton {
+  flex: 1;
+  border-color: #4f46e5 !important;
+  background: #4f46e5 !important;
+}
+
+.closeButton {
+  border: 1px solid #d9e0eb !important;
+  background: #fff !important;
+  color: #25324a !important;
+}
+
+.security {
+  margin: 1rem 0 0;
+  color: #697386;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.securityIcon {
+  margin-right: 0.35rem;
+  color: #4f46e5;
+}
+
+@media (max-width: 991.98px) {
+  .checkoutCard {
+    border-radius: 18px;
+  }
+
+  .benefits,
+  .formPanel {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .benefits,
+  .formPanel {
+    padding: 1.5rem;
+  }
+
+  .summary,
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .summaryPrice {
+    font-size: 1.15rem;
+  }
+}

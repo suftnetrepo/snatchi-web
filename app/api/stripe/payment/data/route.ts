@@ -103,6 +103,14 @@ export async function GET(req: Request) {
       );
     }
 
+    if (schedulePayingIntegratorId && scheduleReceivingIntegratorId &&
+        schedulePayingIntegratorId === scheduleReceivingIntegratorId) {
+      return NextResponse.json(
+        { success: false, error: 'Payment is not required for your own engineer' },
+        { status: 409 }
+      );
+    }
+
     logger.info('Payment data loaded for modal', {
       engineerId,
       receivingIntegratorId,

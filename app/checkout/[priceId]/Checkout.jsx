@@ -12,6 +12,7 @@ import { useRouter, useParams } from 'next/navigation';
 import ErrorDialogue from '@/components/elements/errorDialogue';
 import { useUserChat } from '../../../hooks/useUserChat';
 import { signIn, getCsrfToken } from 'next-auth/react';
+import styles from './checkout.module.scss';
 
 const CHAT_USER_PASSWORD = '12345!';
 const CheckOut = () => {
@@ -22,9 +23,11 @@ const CheckOut = () => {
   const [csrfToken, setCsrfToken] = useState('');
   const { handleSignUp } = useUserChat();
   const [enrichedFields, setEnrichedFields] = useState(null);
-  const userCreatedRef = useRef(false);
+  const userCreatedRef = useRef(null);
   const [clientSecret, setClientSecret] = useState(null);
   const [validationError, setValidationError] = useState({});
+  const [cardError, setCardError] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   const [fields, setFields] = useState(checkoutValidator.fields);
   const { priceId } = params;
   const { handleNewSubscriber, handleErrorReset, loading, handleError, error, handleSuccess, pricing } =
@@ -44,7 +47,7 @@ const CheckOut = () => {
 
   const ensureSubscriberRecord = async (userPayload) => {
     if (userCreatedRef.current) {
-      return true;
+      return userCreatedRef.current;
     }
 
     const userData = await handleSuccess(userPayload);
@@ -53,12 +56,14 @@ const CheckOut = () => {
       return false;
     }
 
-    userCreatedRef.current = true;
-    return true;
+    userCreatedRef.current = userData;
+    return userData;
   };
 
   const handleCheckout = async (clientSecret, userPayload) => {
     if (!stripe || !elements || !clientSecret) return false;
+
+    setIsProcessing(true);
 
     const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
       payment_method: {
@@ -68,12 +73,15 @@ const CheckOut = () => {
 
     if (error) {
       handleError(error.message);
+      setCardError(error.message || 'Please check your card details.');
       const cardElement = elements.getElement(CardElement);
       cardElement?.clear();
+      setIsProcessing(false);
       return false;
     }
 
     if (paymentIntent?.status === 'requires_payment_method') {
+      setIsProcessing(false);
       return false;
     }
 
@@ -85,17 +93,19 @@ const CheckOut = () => {
         console.error('Error signing up user:', error);
       });
 
-      router.replace(
-        `/checkout/success?stripeCustomerId=${userPayload?.stripeCustomerId}&email=${fields.email}&plan=${pricing?.planName}&amount=${pricing?.currency}${pricing?.raw_price}`
-      );
+      router.replace(`/checkout/success?token=${encodeURIComponent(userPayload?.checkoutToken || '')}`);
       return true;
     }
 
+    setIsProcessing(false);
     return false;
   };
 
   const handleSubmit = async () => {
+    if (loading || isProcessing) return;
+
     setValidationError({});
+    setCardError('');
     const validationResult = validate(fields, checkoutValidator.rules);
 
     if (validationResult.hasError) {
@@ -108,24 +118,23 @@ const CheckOut = () => {
       return;
     }
 
+    const pendingAccount = await ensureSubscriberRecord({ ...fields, priceId });
+    if (!pendingAccount) return;
+
     handleNewSubscriber({
       priceId,
       contact: `${fields.first_name} ${fields.last_name}`,
-      email: fields.email
+      email: fields.email,
+      integratorId: pendingAccount.integrator_id
     }).then(async (subscriptionResult) => {
       if (subscriptionResult) {
         const fullFields = {
           ...fields,
           priceId,
           stripeCustomerId: subscriptionResult.customerId,
-          subscriptionId: subscriptionResult.subscriptionId
+          subscriptionId: subscriptionResult.subscriptionId,
+          checkoutToken: subscriptionResult.checkoutToken
         };
-
-        const subscriberCreated = await ensureSubscriberRecord(fullFields);
-
-        if (!subscriberCreated) {
-          return;
-        }
 
         setClientSecret(subscriptionResult.clientSecret);
         setEnrichedFields(fullFields);
@@ -139,17 +148,18 @@ const CheckOut = () => {
   };
 
   return (
-    <section className="wrapper bg-light">
+    <section className={styles.page}>
       <div className="container py-14 py-md-16">
-        <div className="card bg-soft-primary mb-8">
-          <div className="card-body p-12">
-            <div className="row gx-md-8 gx-xl-12 gy-10">
-              <div className="col-lg-6 ">
-                <h2 className="display-5 mb-3 pe-lg-10 ps-2">Achieve More, Faster, and Smarter.</h2>
-                <p className="ps-2 fn-20">Sign up today and see the difference!</p>
+        <div className={styles.checkoutCard}>
+          <div className="row g-0">
+            <div className="col-lg-6">
+              <div className={styles.benefits}>
+                <p className={styles.eyebrow}>Snatchi subscription</p>
+                <h1 className={styles.title}>Start your {pricing?.planName || 'selected'} plan</h1>
+                <p className="mb-0 text-dark">Everything you need to organise projects and engineering teams.</p>
 
-                <div className="bg-white p-3 rounded shadow-sm mt-4">
-                  <h6 className="ps-2">{`Included with your ${pricing?.planName} subscription`}:</h6>
+                <div className={styles.featureCard}>
+                  <h6>{`Included with your ${pricing?.planName || ''} subscription:`}</h6>
                   <ul className="icon-list bullet-bg bullet-soft-primary  ps-2">
                     {pricing?.features?.map((feature, index) => {
                       return (
@@ -162,9 +172,21 @@ const CheckOut = () => {
                   </ul>
                 </div>
               </div>
+            </div>
 
-              <div className="col-lg-6 d-flex align-items-center justify-content-center">
-                <form className="contact-form needs-validation">
+            <div className="col-lg-6">
+              <div className={styles.formPanel}>
+                <div className={styles.summary} aria-label="Order summary">
+                  <div>
+                    <p className={styles.summaryLabel}>{pricing?.planName || 'Subscription plan'}</p>
+                    <p className={styles.summaryMeta}>{pricing?.billingCycle || pricing?.duration}</p>
+                  </div>
+                  <div className={styles.summaryPrice}>
+                    {pricing?.currency}
+                    {pricing?.raw_price}
+                  </div>
+                </div>
+                <form className="contact-form needs-validation" onSubmit={(event) => event.preventDefault()}>
                   <div className="row gx-4 mb-3">
                     <div className="col-12 mb-2">
                       <div className="form-floating ">
@@ -189,7 +211,7 @@ const CheckOut = () => {
                     <div className="col-md-6">
                       <div className="form-floating">
                         <input
-                          type="first_name"
+                          type="text"
                           name="first_name"
                           id="first_name"
                           value={fields.first_name}
@@ -199,11 +221,11 @@ const CheckOut = () => {
                           onChange={handleChange}
                         />
                         <label htmlFor="first_name" className="text-dark">
-                          FirstName *
+                          First name *
                         </label>
                       </div>
                       {validationError.first_name?.message && (
-                        <span className="text-danger ps-2 fs-12">FirstName is Required.</span>
+                        <span className="text-danger ps-2 fs-12">First name is required.</span>
                       )}
                     </div>
 
@@ -220,11 +242,11 @@ const CheckOut = () => {
                           onChange={handleChange}
                         />
                         <label htmlFor="last_name" className="text-dark">
-                          LastName *
+                          Last name *
                         </label>
                       </div>
                       {validationError.last_name?.message && (
-                        <span className="text-danger ps-2 fs-12">LastName is Required.</span>
+                        <span className="text-danger ps-2 fs-12">Last name is required.</span>
                       )}
                     </div>
                     <div className="col-md-6 mt-2">
@@ -269,8 +291,12 @@ const CheckOut = () => {
                       )}
                     </div>
                   </div>
-                  <CheckoutForm />
-                  <div className="form-check mb-3 mt-3">
+                  <label className={styles.fieldLabel}>Card details *</label>
+                  <div className={`${styles.cardField} ${cardError ? styles.cardFieldError : ''}`}>
+                    <CheckoutForm onChange={(event) => setCardError(event.error?.message || '')} />
+                  </div>
+                  {cardError && <span className="text-danger fs-12">{cardError}</span>}
+                  <div className={styles.terms}>
                     <input
                       type="checkbox"
                       className="form-check-input"
@@ -291,38 +317,31 @@ const CheckOut = () => {
                       .
                     </label>
                   </div>
-                  <div className="col-12 mt-3">
-                    {loading ? (
-                      <Button
-                        variant="primary"
-                        onClick={() => handleSubmit()}
-                        value={`Pay Now ${pricing?.currency}${pricing?.raw_price}`}
-                      >
-                        <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
-                        <span className="visually-hidden">Loading...</span>
-                      </Button>
-                    ) : (
-                      <div className="col-12 mt-3 ms-1">
-                        <Button
-                          className="text-white rounded-pill"
-                          variant="primary"
-                          size="sm"
-                          disabled={!fields.terms}
-                          onClick={() => handleSubmit()}
-                        >
-                          {`Pay Now ${pricing?.currency}${pricing?.raw_price}`}
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="ms-2 text-white rounded-pill"
-                          onClick={() => handleClose()}
-                        >
-                          Close
-                        </Button>
-                      </div>
-                    )}
+                  <div className={styles.actions}>
+                    <Button
+                      className={styles.payButton}
+                      variant="primary"
+                      type="button"
+                      disabled={!fields.terms || loading || isProcessing || !stripe}
+                      onClick={() => handleSubmit()}
+                    >
+                      {(loading || isProcessing) && (
+                        <Spinner as="span" animation="border" size="sm" className="me-2" aria-hidden="true" />
+                      )}
+                      {loading || isProcessing
+                        ? 'Processing secure payment…'
+                        : `Pay securely ${pricing?.currency || ''}${pricing?.raw_price || ''}`}
+                    </Button>
+                    <Button className={styles.closeButton} type="button" onClick={() => handleClose()}>
+                      Close
+                    </Button>
                   </div>
+                  <p className={styles.security}>
+                    <span className={styles.securityIcon} aria-hidden="true">
+                      ●
+                    </span>
+                    Secure, encrypted payment powered by Stripe
+                  </p>
                 </form>
               </div>
             </div>

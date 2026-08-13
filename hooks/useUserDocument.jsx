@@ -1,100 +1,69 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
 import { USER_DOCUMENTS } from '../utils/apiUrl';
-import { fileValidator } from '../app/protected/integrator/rules';
 
-const useUserDocument = (userId) => {
-  const [state, setState] = useState({
-    data: [],
-    loading: false,
-    fields: fileValidator.fields,
-    error: null,
-    success: false,
-    rules: fileValidator.rules
-  });
+const useUserDocument = (userId, enabled = true) => {
+  const requestSequence = useRef(0);
+  const [state, setState] = useState({ data: [], loading: false, error: null });
 
-  const handleReset = () => {
-    setState((pre) => {
-      return { ...pre, fields: fileValidator.fields };
-    });
-  };
+  const handleReset = useCallback(() => {
+    setState((previous) => ({ ...previous, error: null }));
+  }, []);
 
-  const handleChange = (name, value) => {
-    setState((prevState) => ({
-      ...prevState,
-      fields: {
-        ...prevState.fields,
-        [name]: value
-      }
-    }));
-  };
+  const handleError = useCallback((error) => {
+    setState((previous) => ({ ...previous, error, loading: false }));
+  }, []);
 
-  const handleError = (error) => {                               
-    setState((pre) => {
-      return { ...pre, error, loading: false };
-    });
-  };
-
-  const handleUpload = async (body) => {
-    setState((prev) => ({ ...prev, loading: true, error : null }));
-    const { data, success, errorMessage } = await zat(USER_DOCUMENTS.uploadOne, body, VERBS.POST);
-
-    if (success) {
-      setState((prevState) => ({
-        ...prevState,
-        data: [data, ...prevState.data],
-        loading: false
-      }));
-
-      return true;
-    } else {
-      handleError(errorMessage);
+  const handleFetch = useCallback(async (targetUserId) => {
+    if (!targetUserId) return false;
+    const sequence = ++requestSequence.current;
+    setState((previous) => ({ ...previous, data: [], loading: true, error: null }));
+    const { data, success, errorMessage } = await zat(USER_DOCUMENTS.fetch, null, VERBS.GET, { userId: targetUserId });
+    if (sequence !== requestSequence.current) return false;
+    if (!success) {
+      handleError(errorMessage || 'Unable to load documents.');
+      return false;
     }
-  };
+    setState((previous) => ({ ...previous, data: Array.isArray(data) ? data : [], loading: false }));
+    return true;
+  }, [handleError]);
 
-  const handleFetch = async (userId) => {
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-    const { data, success, errorMessage } = await zat(USER_DOCUMENTS.fetch, null, VERBS.GET, {
-      userId: userId,
-    });
-
-    if (success) {
-      setState((pre) => {
-        return { ...pre, data: data, loading: false };
-      });
-      return true;
-    } else {
-      handleError(errorMessage);
+  const handleUpload = useCallback(async (body) => {
+    setState((previous) => ({ ...previous, loading: true, error: null }));
+    const { data, success, errorMessage } = await zat(USER_DOCUMENTS.addOne, body, VERBS.POST);
+    if (!success) {
+      handleError(errorMessage || 'Unable to upload the document.');
+      return false;
     }
-  };
+    setState((previous) => ({ ...previous, data: [data, ...previous.data], loading: false }));
+    return true;
+  }, [handleError]);
 
-  const handleDelete = async (document_id) => {
-     setState((prev) => ({ ...prev, loading: true, error: null }));
+  const handleDelete = useCallback(async (documentId) => {
+    setState((previous) => ({ ...previous, loading: true, error: null }));
     const { success, errorMessage } = await zat(USER_DOCUMENTS.removeOne, null, VERBS.DELETE, {
-      id: document_id,
-      userId: userId,
+      id: documentId,
+      userId
     });
-
-    if (success) {
-      setState((pre) => ({
-        ...pre,
-        data: pre.data.filter((document) => document._id !== document_id),
-        loading: false
-      }));
-      return true;
-    } else {
+    if (!success) {
       handleError(errorMessage || 'Failed to delete the document.');
       return false;
     }
-  };
+    setState((previous) => ({
+      ...previous,
+      data: previous.data.filter((document) => document._id !== documentId),
+      loading: false
+    }));
+    return true;
+  }, [handleError, userId]);
 
   useEffect(() => {
-    userId && handleFetch(userId);
-  }, [userId]);
+    if (enabled && userId) handleFetch(userId);
+    if (!enabled) requestSequence.current += 1;
+  }, [enabled, handleFetch, userId]);
 
-  return { ...state, handleUpload, handleChange, handleFetch, handleDelete, handleReset };
+  return { ...state, handleUpload, handleFetch, handleDelete, handleReset };
 };
 
 export { useUserDocument };

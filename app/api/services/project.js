@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 import { projectValidator } from '../validator/user';
 import Project from '../models/project';
 import Task from '../models/task';
+import Scheduler from '../models/scheduler';
+import Fence from '../models/fence';
+import Payment from '../models/payment';
+import Notification from '../models/notification';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
 import { PROJECT_STATUS, TASK_STATUS } from '../constants/statuses';
@@ -9,7 +13,7 @@ const { logger } = require('../utils/logger');
 
 mongoConnect();
 
-async function getProjects({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
+async function getProjects({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery, dateFrom, dateTo }) {
   if (!isValidObjectId(suid)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
@@ -17,6 +21,23 @@ async function getProjects({ suid, page = 1, limit = 10, sortField, sortOrder, s
   const skip = (page - 1) * limit;
 
   try {
+    const isDateKey = (value) => {
+      if (!value) return true;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+      const parsed = new Date(`${value}T00:00:00.000Z`);
+      return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+    };
+    if (!isDateKey(dateFrom) || !isDateKey(dateTo)) {
+      const error = new Error('Invalid project date range');
+      error.statusCode = 400;
+      throw error;
+    }
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+      const error = new Error('Start date must be on or before end date');
+      error.statusCode = 400;
+      throw error;
+    }
+
     const sortOptions = sortField ? { [sortField]: sortOrder === 'desc' ? -1 : 1 } : { createdAt: -1 };
 
     const searchFilter = searchQuery
@@ -31,22 +52,39 @@ async function getProjects({ suid, page = 1, limit = 10, sortField, sortOrder, s
       }
       : {};
 
+    const dateConditions = [];
+    // A project matches when any part of its delivery window overlaps the selected range.
+    if (dateFrom) dateConditions.push({ endDate: { $gte: new Date(`${dateFrom}T00:00:00.000Z`) } });
+    if (dateTo) dateConditions.push({ startDate: { $lte: new Date(`${dateTo}T23:59:59.999Z`) } });
+
     const query = {
       integrator: suid,
-      ...searchFilter
+      ...searchFilter,
+      ...(dateConditions.length > 0 && { $and: dateConditions })
     };
 
-    const [projects, totalCount] = await Promise.all([
+    const [projects, totalCount, statusCounts] = await Promise.all([
       Project.find(query).sort(sortOptions).skip(skip).limit(limit).exec(),
-      Project.countDocuments({ integrator: suid })
+      Project.countDocuments(query),
+      Project.aggregate([
+        { $match: { ...query, integrator: new mongoose.Types.ObjectId(suid) } },
+        { $group: { _id: '$status', count: { $sum: 1 } } }
+      ])
     ]);
+
+    const summary = statusCounts.reduce(
+      (result, item) => ({ ...result, [item._id]: item.count }),
+      { Pending: 0, Progress: 0, Completed: 0, Canceled: 0 }
+    );
 
     return {
       data: projects,
-      totalCount
+      totalCount,
+      summary
     };
   } catch (error) {
     logger.error(error);
+    if (error.statusCode) throw error;
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
@@ -358,7 +396,7 @@ const getUserProjects = async (userId, excludeProjectStatuses = [PROJECT_STATUS.
   }
 };
 
-const getUserProjectById = async (projectId) => {
+const getUserProjectById = async (projectId, userId) => {
   try {
    
     if (!mongoose.Types.ObjectId.isValid(projectId)) {
@@ -367,6 +405,7 @@ const getUserProjectById = async (projectId) => {
 
     const matchStage = {
       _id: new mongoose.Types.ObjectId(projectId),
+      'assignedTo.id': new mongoose.Types.ObjectId(userId)
     };
 
     const projectResult = await Project.aggregate([
@@ -548,13 +587,15 @@ const getMyProjectAggregates = async (userId) => {
 };
 
 
-async function getProjectById(id) {
-  if (!isValidObjectId(id)) {
-    throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
+async function getProjectById(id, integratorId) {
+  if (!isValidObjectId(id) || !isValidObjectId(integratorId)) {
+    const error = new Error('Invalid project ID');
+    error.statusCode = 400;
+    throw error;
   }
 
   try {
-    return Project.findOne({ _id: id })
+    return Project.findOne({ _id: id, integrator: integratorId })
       .populate({
         path: 'assignedTo.id',
         select: 'first_name last_name fcm secure_url role id'
@@ -568,18 +609,22 @@ async function getProjectById(id) {
       });
   } catch (error) {
     logger.error(error);
-    throw new Error('An unexpected error occurred. Please try again.');
+    throw error;
   }
 }
 
 async function createProject(id, body) {
   if (!isValidObjectId(id)) {
-    throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
+    const error = new Error('Invalid integrator ID');
+    error.statusCode = 400;
+    throw error;
   }
 
   const bodyErrors = projectValidator(body);
-  if (bodyErrors.length) {
-    throw new Error(bodyErrors.map((it) => it.message).join(','));
+  if (bodyErrors !== true) {
+    const error = new Error(bodyErrors.map((it) => it.message).join(','));
+    error.statusCode = 400;
+    throw error;
   }
 
   try {
@@ -598,47 +643,94 @@ async function createProject(id, body) {
     return newProject;
   } catch (error) {
     logger.error(error);
-    throw new Error('An unexpected error occurred. Please try again.');
+    throw error;
   }
 }
 
-async function updateProject(id, body) {
-  if (!isValidObjectId(id)) {
-    throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
+async function updateProject(integratorId, id, body) {
+  if (!isValidObjectId(id) || !isValidObjectId(integratorId)) {
+    const error = new Error('Invalid project ID');
+    error.statusCode = 400;
+    throw error;
   }
 
   const bodyErrors = projectValidator(body);
-  if (bodyErrors.length) {
-    throw new Error(bodyErrors.map((it) => it.message).join(','));
+  if (bodyErrors !== true) {
+    const error = new Error(bodyErrors.map((it) => it.message).join(','));
+    error.statusCode = 400;
+    throw error;
   }
 
   try {
 
-    const updatedProject = await Project.findByIdAndUpdate(id, body, {
-      new: true
+    const updatedProject = await Project.findOneAndUpdate({ _id: id, integrator: integratorId }, body, {
+      new: true,
+      runValidators: true
     }).populate({
       path: 'assignedTo.id',
       select: 'first_name last_name fcm secure_url role id'
     });
 
+    if (!updatedProject) {
+      const error = new Error('Project not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
     return updatedProject;
   } catch (error) {
     logger.error(error);
-    throw new Error('An unexpected error occurred. Please try again.');
+    throw error;
   }
 }
 
 async function removeProject(suid, id) {
   if (!isValidObjectId(suid)) {
-    throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
+    const error = new Error('Invalid integrator ID');
+    error.statusCode = 400;
+    throw error;
   }
 
   try {
-    await Project.findOneAndDelete({ _id: id, integrator: suid });
-    return true;
+    if (!isValidObjectId(id)) {
+      const error = new Error('Invalid project ID');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const project = await Project.findOne({ _id: id, integrator: suid });
+    if (!project) {
+      const error = new Error('Project not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const [taskCount, scheduleCount, fenceCount, paymentCount, notificationCount] = await Promise.all([
+      Task.countDocuments({ project: id }),
+      Scheduler.countDocuments({ project: id }),
+      Fence.countDocuments({ project: id }),
+      Payment.countDocuments({ project: id }),
+      Notification.countDocuments({ 'relatedTo.project': id })
+    ]);
+
+    if (taskCount || scheduleCount || fenceCount || paymentCount || notificationCount) {
+      const error = new Error(
+        'This project has related work records and cannot be permanently deleted. Mark it as Canceled instead.'
+      );
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const deletedProject = await Project.findOneAndDelete({ _id: id, integrator: suid });
+    if (!deletedProject) {
+      const error = new Error('Project not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    return deletedProject;
   } catch (error) {
     logger.error(error);
-    throw new Error('An unexpected error occurred. Please try again.');
+    throw error;
   }
 }
 
@@ -694,53 +786,16 @@ const getProjectSummaryByIntegrator = async (integratorId) => {
 
     const summary = await Project.aggregate([
       { $match: { integrator: new mongoose.Types.ObjectId(integratorId) } },
-      {
-        $lookup: {
-          from: 'tasks',
-          localField: '_id',
-          foreignField: 'project',
-          as: 'tasks'
-        }
-      },
-      {
-        $addFields: {
-          totalTasks: { $size: '$tasks' },
-          completedTasks: {
-            $size: {
-              $filter: {
-                input: '$tasks',
-                as: 'task',
-                cond: { $eq: ['$$task.status', TASK_STATUS.COMPLETED] }
-              }
-            }
-          }
-        }
-      },
-      {
-        $addFields: {
-          progress: {
-            $cond: [
-              { $gt: ['$totalTasks', 0] },
-              { $multiply: [{ $divide: ['$completedTasks', '$totalTasks'] }, 100] },
-              0
-            ]
-          }
-        }
-      },
-      {
-        $addFields: {
-          progress: { $round: ['$progress', 2] }
-        }
-      },
+      { $sort: { updatedAt: -1, createdAt: -1, _id: -1 } },
+      { $limit: 5 },
       {
         $project: {
           _id: 0,
           projectId: { $toString: '$_id' },
           name: '$name',
           assignedTo: { $size: '$assignedTo' },
-          tasks: { $concat: [{ $toString: '$completedTasks' }, '/', { $toString: '$totalTasks' }] },
-          progress: '$progress',
           status: '$status',
+          updatedAt: '$updatedAt',
           endDate: {
             $dateToString: { format: '%Y-%m-%d', date: '$endDate' }
           },

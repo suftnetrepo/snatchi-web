@@ -200,7 +200,7 @@ async function updateIntegrator(id, body) {
   }
 }
 
-async function updateIntegratorStatus(stripeCustomerId, body) {
+async function updateIntegratorStatus(stripeCustomerId, body, integratorId = '') {
 
   try {
     // Normalize status to lowercase if provided
@@ -209,7 +209,16 @@ async function updateIntegratorStatus(stripeCustomerId, body) {
       updateData.status = updateData.status.toLowerCase();
     }
 
-    const result = await Integrator.updateOne({ stripeCustomerId }, { $set: updateData });
+    const identity = [];
+    if (stripeCustomerId) identity.push({ stripeCustomerId });
+    if (integratorId && isValidObjectId(integratorId)) identity.push({ _id: integratorId });
+    if (!identity.length) throw new Error('Missing integrator identity');
+
+    const result = await Integrator.updateOne(identity.length === 1 ? identity[0] : { $or: identity }, { $set: updateData });
+
+    if (result.matchedCount !== 1) {
+      throw new Error(`Integrator not found for Stripe customer ${stripeCustomerId || 'unknown'}`);
+    }
 
     return result;
   } catch (error) {

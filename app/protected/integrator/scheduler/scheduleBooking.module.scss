@@ -1,0 +1,13 @@
+.offcanvas { width:min(560px,100vw) !important; color:#1f2937; background:#fff; }
+.modePanel,.daysPanel,.summary { margin-bottom:18px; padding:14px; border:1px solid #dfe7ee; border-radius:14px; background:#fff; }
+.sectionLabel { display:block; margin-bottom:9px; color:#344256; font-size:12px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; }
+.modeSwitch { display:grid; grid-template-columns:1fr 1fr; gap:5px; padding:4px; border-radius:11px; background:#edf2f6; }
+.modeSwitch button { padding:9px; border:0; border-radius:8px; color:#65748a; background:transparent; font-weight:700; }
+.modeSwitch .activeMode { color:#fff; background:#4f46e5; box-shadow:none; }
+.modeHint { margin:10px 2px 0; color:#718096; font-size:12px; }
+.weekdays { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.weekdays button { padding:8px 2px; border:1px solid #d8e0e8; border-radius:9px; color:#64748b; background:#fff; font-size:12px; font-weight:700; }
+.weekdays .selectedDay { color:#4338ca; border-color:#a5b4fc; background:#eef2ff; }
+.summary { display:flex; align-items:flex-start; gap:12px; color:#1f2937; border-color:#dfe5ec; background:#fff; }
+.summaryIcon { display:grid; width:38px; height:38px; flex:0 0 38px; place-items:center; border-radius:10px; color:#fff; background:#4f46e5; font-size:20px; }
+.summary strong { font-size:14px; }.summary p { margin:3px 0; color:#617086; font-size:12px; }.summary small { color:#4338ca; font-weight:700; }

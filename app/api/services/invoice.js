@@ -7,7 +7,7 @@ const { logger } = require('../utils/logger');
 
 mongoConnect()
 
-async function getInvoices({ suid, page = 1, limit = 10, sortField = 'status', sortOrder = 'desc', searchQuery = '' }) {
+async function getInvoices({ suid, page = 1, limit = 10, sortField = 'status', sortOrder = 'desc', searchQuery = '', dateFrom, dateTo }) {
   if (!isValidObjectId(suid)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
@@ -15,19 +15,40 @@ async function getInvoices({ suid, page = 1, limit = 10, sortField = 'status', s
   const skip = (page - 1) * limit;
 
   try {
+    const parseDateBoundary = (value, endOfDay = false) => {
+      if (!value) return null;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw Object.assign(new Error('Invalid invoice date range'), { statusCode: 400 });
+      const date = new Date(`${value}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}Z`);
+      if (Number.isNaN(date.getTime())) throw Object.assign(new Error('Invalid invoice date range'), { statusCode: 400 });
+      return date;
+    };
+    const from = parseDateBoundary(dateFrom);
+    const to = parseDateBoundary(dateTo, true);
+    if (from && to && from > to) throw Object.assign(new Error('From date must be before or equal to To date'), { statusCode: 400 });
+    const issueDateFilter = from || to ? { issueDate: { ...(from && { $gte: from }), ...(to && { $lte: to }) } } : {};
     const sortOptions = sortField ? { [sortField]: sortOrder === 'desc' ? -1 : 1 } : { createdAt: -1 };
 
-    const searchFilter = searchQuery
-      ? {
-          $or: [
-            { status: { $regex: searchQuery, $options: 'i' } },
-          ]
-        }
-      : {};
+    const escapedSearch = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = escapedSearch ? new RegExp(escapedSearch, 'i') : null;
+    const matchingUsers = regex
+      ? await User.find({
+          integrator: suid,
+          $or: [{ first_name: regex }, { last_name: regex }, { email: regex }]
+        }).distinct('_id')
+      : [];
+    const searchFilter = regex ? {
+      $or: [
+        { status: regex },
+        { invoice_type: regex },
+        { invoice_description: regex },
+        { user: { $in: matchingUsers } }
+      ]
+    } : {};
 
     const query = {
       integrator: suid,
       invoice_type: { $in: ['Quote', 'Save'] },
+      ...issueDateFilter,
       ...searchFilter
     };
 
@@ -41,7 +62,7 @@ async function getInvoices({ suid, page = 1, limit = 10, sortField = 'status', s
           select: 'first_name last_name'
         })
         .exec(),
-      Invoice.countDocuments({ integrator: suid })
+      Invoice.countDocuments(query)
     ]);
 
     return {
@@ -50,6 +71,7 @@ async function getInvoices({ suid, page = 1, limit = 10, sortField = 'status', s
     };
   } catch (error) {
     console.error('Error fetching invoices:', error);
+    if (error.statusCode) throw error;
     throw new Error('An unexpected error occurred while retrieving invoices. Please try again.');
   }
 }
@@ -79,9 +101,9 @@ async function createInvoice(integratorId, userId, body) {
 
   try {
     const newInvoice = await Invoice.create({
+      ...body,
       integrator: integratorId,
-      user: userId,
-      ...body
+      user: userId
     });
 
     if (!newInvoice) {
@@ -95,24 +117,33 @@ async function createInvoice(integratorId, userId, body) {
   }
 }
 
-async function updateInvoice(id, body) {
+async function updateInvoice(suid, id, body) {
+  if (!isValidObjectId(suid)) {
+    throw Object.assign(new Error('Invalid integrator ID'), { statusCode: 400 });
+  }
   if (!isValidObjectId(id)) {
-    throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
+    throw Object.assign(new Error('Invalid invoice ID'), { statusCode: 400 });
   }
 
   try {
-    const updatedInvoice = await Invoice.findByIdAndUpdate(id, body, {
-      new: true
+    const updatedInvoice = await Invoice.findOneAndUpdate(
+      { _id: id, integrator: suid },
+      body,
+      { new: true, runValidators: true }
+    ).populate({
+      path: 'user',
+      select: 'first_name last_name'
     });
 
     if (!updatedInvoice) {
-      throw new Error('Invoice not found or update failed');
+      throw Object.assign(new Error('Invoice not found'), { statusCode: 404 });
     }
 
-    return true;
+    return updatedInvoice;
   } catch (error) {
     logger.error(error);
-    throw new Error('An unexpected error occurred. Please try again.');
+    if (error.statusCode) throw error;
+    throw Object.assign(new Error('The invoice could not be updated. Please try again.'), { statusCode: 500 });
   }
 }
 
@@ -122,29 +153,37 @@ async function removeInvoice(suid, id) {
   }
 
   try {
-    await Invoice.findOneAndDelete({ _id: id, integrator: suid });
-    return true;
+    if (!isValidObjectId(id)) throw Object.assign(new Error('Invalid invoice ID'), { statusCode: 400 });
+    const deleted = await Invoice.findOneAndDelete({ _id: id, integrator: suid });
+    if (!deleted) throw Object.assign(new Error('Invoice not found'), { statusCode: 404 });
+    return deleted;
   } catch (error) {
     logger.error(error);
-    throw new Error('An unexpected error occurred. Please try again.');
+    if (error.statusCode) throw error;
+    throw Object.assign(new Error('The invoice could not be deleted. Please try again.'), { statusCode: 500 });
   }
 }
 
-async function searchInvoiceByUser(searchTerm) {
+async function searchInvoiceByUser(searchTerm, integratorId) {
+  if (!isValidObjectId(integratorId)) throw Object.assign(new Error('Invalid integrator ID'), { statusCode: 400 });
   try {
-    const regex = new RegExp(searchTerm, 'i');
+    const escapedSearch = String(searchTerm || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (!escapedSearch) return [];
+    const regex = new RegExp(escapedSearch, 'i');
 
     const users = await User.find({
-      $or: [{ firstName: regex }, { lastName: regex }, { email: regex }]
+      integrator: integratorId,
+      $or: [{ first_name: regex }, { last_name: regex }, { email: regex }]
     }).limit(10);
 
     const userIds = users.map((user) => user._id);
 
     return await Invoice.find({
+      integrator: integratorId,
       user: { $in: userIds }
     }).populate({
       path: 'user',
-      select: 'firstName lastName email'
+      select: 'first_name last_name email'
     });
   } catch (error) {
     logger.error(error);

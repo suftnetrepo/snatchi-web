@@ -1,8 +1,10 @@
 /* eslint-disable react/jsx-key */
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTable, usePagination, useSortBy } from 'react-table';
 
-function Table({ data, columns, loading, pageCount: controlledPageCount, fetchData }) {
+function Table({ data, columns, loading, pageCount: controlledRecordCount, fetchData, searchQuery = '' }) {
+  const [controlledPageSize, setControlledPageSize] = useState(10);
+  const previousSearchQuery = useRef(searchQuery);
   const {
     getTableProps,
     getTableBodyProps,
@@ -26,15 +28,26 @@ function Table({ data, columns, loading, pageCount: controlledPageCount, fetchDa
       initialState: { pageIndex: 0 },
       manualPagination: true,
       manualSortBy: true,
-      pageCount: controlledPageCount
+      pageCount: Math.max(1, Math.ceil((Number(controlledRecordCount) || 0) / controlledPageSize))
     },
     useSortBy,
     usePagination
   );
 
   useEffect(() => {
-    fetchData && fetchData({ pageIndex, pageSize, sortBy, searchQuery: '' });
-  }, [fetchData, pageIndex, pageSize, sortBy]);
+    fetchData && fetchData({ pageIndex, pageSize, sortBy, searchQuery });
+  }, [fetchData, pageIndex, pageSize, searchQuery, sortBy]);
+
+  useEffect(() => {
+    if (previousSearchQuery.current !== searchQuery) {
+      previousSearchQuery.current = searchQuery;
+      gotoPage(0);
+    }
+  }, [gotoPage, searchQuery]);
+
+  useEffect(() => {
+    if (!loading && pageIndex > 0 && data.length === 0) previousPage();
+  }, [data.length, loading, pageIndex, previousPage]);
 
   return (
     <>
@@ -112,16 +125,26 @@ function Table({ data, columns, loading, pageCount: controlledPageCount, fetchDa
           | Go to page:{' '}
           <input
             type="number"
+            min="1"
+            max={Math.max(1, pageCount)}
             className="form-control d-inline-block w-auto"
-            defaultValue={pageIndex + 1}
+            value={pageIndex + 1}
             onChange={(e) => {
-              const page = e.target.value ? Number(e.target.value) - 1 : 0;
-              gotoPage(page);
+              const requestedPage = e.target.value ? Number(e.target.value) - 1 : 0;
+              gotoPage(Math.min(Math.max(0, requestedPage), Math.max(0, pageCount - 1)));
             }}
           />
         </span>
 
-        <select className="form-select w-auto" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
+        <select
+          className="form-select w-auto"
+          value={pageSize}
+          onChange={(e) => {
+            const nextPageSize = Number(e.target.value);
+            setControlledPageSize(nextPageSize);
+            setPageSize(nextPageSize);
+          }}
+        >
           {[10, 20, 30, 40, 50].map((size) => (
             <option key={size} value={size}>
               Show {size}

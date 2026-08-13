@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
 import { INVOICE } from '../utils/apiUrl';
@@ -54,7 +54,8 @@ const useInvoice = ( searchQuery) => {
     });
   };
 
-  const handleFetch = useCallback(async ({ pageIndex = 1, pageSize = 10, sortBy = [], searchQuery = '' }) => {
+  const handleFetch = useCallback(async ({ pageIndex = 1, pageSize = 10, sortBy = [], searchQuery = '', dateFrom = '', dateTo = '' }) => {
+    setState((prev) => ({ ...prev, loading: true, error: null }));
     const sortField = sortBy.length > 0 ? sortBy[0].id : null;
     const sortOrder = sortBy.length > 0 ? (sortBy[0].desc ? 'desc' : 'asc') : 'null';
 
@@ -65,7 +66,9 @@ const useInvoice = ( searchQuery) => {
         limit: pageSize,
         ...(sortField && { sortField }),
         ...(sortOrder && { sortOrder }),
-        searchQuery
+        searchQuery,
+        ...(dateFrom && { dateFrom }),
+        ...(dateTo && { dateTo })
       });
 
       if (success) {
@@ -81,14 +84,14 @@ const useInvoice = ( searchQuery) => {
         return false;
       }
     } catch (error) {
-      handleError('An unexpected error occurred while fetching projects.');
+      handleError('An unexpected error occurred while fetching invoices.');
       return false;
     }
   }, []);
 
   async function handleEditInvoice(body, invoice_id) {
     setState((prev) => ({ ...prev, loading: true, error: null }));
-    const { success, errorMessage } = await zat(INVOICE.updateOne, body, VERBS.PUT, { id: invoice_id });
+    const { data: updatedInvoice, success, errorMessage } = await zat(INVOICE.updateOne, body, VERBS.PUT, { id: invoice_id });
 
     if (success) {
       setState((prevState) => ({
@@ -96,7 +99,17 @@ const useInvoice = ( searchQuery) => {
         loading: false,
         data: prevState.data
           ? prevState.data.map((invoice) =>
-              invoice._id === invoice_id ? { ...invoice, status: body.status } : invoice
+              invoice._id === invoice_id
+                ? {
+                    ...invoice,
+                    ...(updatedInvoice || body),
+                    // A status-only response must never replace the populated engineer
+                    // with its MongoDB id and make the register name disappear.
+                    user: updatedInvoice?.user && typeof updatedInvoice.user === 'object'
+                      ? updatedInvoice.user
+                      : invoice.user
+                  }
+                : invoice
             )
           : [], 
         success: true,
@@ -109,6 +122,7 @@ const useInvoice = ( searchQuery) => {
   }
 
   const handleDelete = async (invoice_id) => {
+    setState((prev) => ({ ...prev, loading: true, error: null }));
     const { success, errorMessage } = await zat(INVOICE.removeOne, null, VERBS.DELETE, {
       id: invoice_id
     });
@@ -125,10 +139,6 @@ const useInvoice = ( searchQuery) => {
       return false;
     }
   };
-
-  useEffect(() => {
-    handleFetch({ searchQuery });
-  }, [searchQuery, handleFetch]);
 
   return {
     ...state,

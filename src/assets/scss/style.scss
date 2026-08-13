@@ -37,6 +37,7 @@ Author:		ui-lib
 // Theme layout & components
 @import './theme/theme';
 
-// User custom styles
-
 @import './variables';
+
+// User custom styles (keep last so application tokens win over template defaults)
+@import './app-theme';

@@ -2,6 +2,7 @@ import {
   remove,
   update,
   add,
+  addMany,
   updateByStatus,
   getByUser,
   getByProjectDateRange,
@@ -13,10 +14,8 @@ import {
   markSchedulesAsRead,
   getUnreadSchedulesByEngineer,
   getSchedule,
-  getSchedulesByEngineer,
-  removeAll
+  getSchedulesByEngineer
 } from '../services/scheduler';
-import notificationService from '@/app/api/services/notificationService';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
@@ -47,7 +46,46 @@ const successResponse = (data, status = 200) => {
   return NextResponse.json({ success: true, data }, { status });
 };
 
-// Send notification for pending schedules
+const canManageSchedules = (user) => ['integrator', 'manager'].includes(user?.role);
+const forbiddenResponse = () => errorResponse('You do not have permission to manage bookings', 403);
+const scheduleActor = (user) => ({ userId: user?.id, integratorId: user?.integrator, role: user?.role });
+const canReadEngineer = (user, engineerId) =>
+  canManageSchedules(user) || user?.id?.toString() === engineerId?.toString();
+const SCHEDULE_CREATE_FIELDS = new Set([
+  'title',
+  'description',
+  'status',
+  'engineer',
+  'project',
+  'startDate',
+  'endDate',
+  'startTime',
+  'endTime',
+  'price_offer',
+  'service_rate',
+  'bookingDates'
+]);
+const sanitizeScheduleBody = (body) =>
+  Object.fromEntries(Object.entries(body || {}).filter(([key]) => SCHEDULE_CREATE_FIELDS.has(key)));
+
+const provisionEngineerChatUser = async (schedule) => {
+  const engineer = schedule?.engineer;
+  if (!engineer?.email) return null;
+
+  try {
+    const displayName =
+      [engineer.first_name, engineer.last_name].filter(Boolean).join(' ') || engineer.email.split('@')[0];
+    return await ensureFirebaseAuthUser(engineer.email, displayName);
+  } catch (error) {
+    logger.error('Failed to provision Firebase chat user for engineer', {
+      engineerId: engineer?._id,
+      email: engineer.email,
+      error: error.message
+    });
+    return null;
+  }
+};
+
 const sendPendingNotification = async (scheduleId, body, additionalParams = {}) => {
   const { status, engineer, title, startDate } = body;
   const formattedDate = new Date(startDate).toLocaleDateString('en-US', {
@@ -79,11 +117,10 @@ export const GET = async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
-     // await removeAll();
-
     // Handle getEngineerSchedules action — date + status filtering
     if (action === 'getEngineerSchedules') {
       const engineerId = url.searchParams.get('engineerId');
+      if (!canReadEngineer(user, engineerId)) return forbiddenResponse();
       const date = url.searchParams.get('date') || undefined;
       const statusArray = url.searchParams.getAll('status[]');
       const statusScalar = url.searchParams.get('status');
@@ -100,6 +137,7 @@ export const GET = async (req) => {
     // Handle engineerStatusAggregate action — count schedules by status
     if (action === 'engineerStatusAggregate') {
       const engineerId = url.searchParams.get('engineerId');
+      if (!canReadEngineer(user, engineerId)) return forbiddenResponse();
       const date = url.searchParams.get('date') || undefined;
       // Support both ?status=A,B and ?status[]=A&status[]=B array notation
       const statusArray = url.searchParams.getAll('status[]');
@@ -116,6 +154,7 @@ export const GET = async (req) => {
 
     if (action === 'engineerSchedulesByStatus') {
       const engineerId = url.searchParams.get('engineerId');
+      if (!canReadEngineer(user, engineerId)) return forbiddenResponse();
       const status = url.searchParams.get('status');
 
       try {
@@ -128,6 +167,7 @@ export const GET = async (req) => {
 
     if (action === 'getSchedulesByEngineerStatus') {
       const engineerId = url.searchParams.get('engineerId');
+      if (!canReadEngineer(user, engineerId)) return forbiddenResponse();
       const status = url.searchParams.get('status');
 
       try {
@@ -158,6 +198,7 @@ export const GET = async (req) => {
 
     // Handle getByEngineer action
     if (action === 'getByEngineer') {
+      if (!canManageSchedules(user)) return forbiddenResponse();
       const id = url.searchParams.get('id');
       const results = await getByUser(id);
       return successResponse(results.data);
@@ -165,13 +206,15 @@ export const GET = async (req) => {
 
     // Handle getByProjectDateRange action
     if (action === 'getByProjectDateRange') {
+      if (!canManageSchedules(user)) return forbiddenResponse();
       const projectId = url.searchParams.get('projectId');
-      const results = await getByProjectDateRange(projectId);
+      const results = await getByProjectDateRange(projectId, user.integrator);
       return successResponse(results.data);
     }
 
     // Handle getAllSchedules action
     if (action === 'getAllSchedules') {
+      if (!canManageSchedules(user)) return forbiddenResponse();
       const results = await getAllSchedules(user.integrator);
       return successResponse(results.data);
     }
@@ -189,6 +232,7 @@ export const DELETE = async (req) => {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
+    if (!canManageSchedules(user)) return forbiddenResponse();
 
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
@@ -196,6 +240,8 @@ export const DELETE = async (req) => {
     if (!id) {
       return NextResponse.json({ success: false, error: 'id is required' }, { status: 400 });
     }
+
+    await remove(user?.integrator, id);
 
     const schedule = await getSchedule(id);
     if (schedule?.data?.engineer) {
@@ -211,14 +257,9 @@ export const DELETE = async (req) => {
       });
     }
 
-    const result = await remove(user?.integrator, id);
-    if (result) {
-      notificationService.deleteByScheduleId(id);
-    }
-
-    return successResponse(result);
+    return successResponse(true);
   } catch (error) {
-    return errorResponse(error.message, 500, error);
+    return errorResponse(error.message, error.statusCode || 500, error);
   }
 };
 
@@ -236,17 +277,17 @@ export const PUT = async (req) => {
 
     // Handle status update action
     if (action === 'status') {
-      const body = await req.json();
-      const result = await updateByStatus(id, body);
+      const body = sanitizeScheduleBody(await req.json());
+      const result = await updateByStatus(id, body, scheduleActor(user));
       return successResponse(result);
     }
 
     // Handle general update action
     if (action === 'update') {
+      if (!canManageSchedules(user)) return forbiddenResponse();
       const body = await req.json();
 
       const result = await update(user?.integrator, id, body);
-
       if (result) {
         await sendPendingNotification(id, body, {
           startDate: body.startDate,
@@ -287,67 +328,74 @@ export const POST = async (req) => {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
+    if (!canManageSchedules(user)) return forbiddenResponse();
 
-    const body = await req.json();
+    const body = sanitizeScheduleBody(await req.json());
+    if (Array.isArray(body.bookingDates)) {
+      const result = await addMany({ ...body, integrator: user?.integrator });
+      const fullSchedule = result.bookings?.[0];
+      const engineerFirebaseUid = await provisionEngineerChatUser(fullSchedule);
+      return successResponse(
+        {
+          ...result,
+          title: fullSchedule?.title,
+          engineerFirebaseUid
+        },
+        201
+      );
+    }
     const result = await add({ ...body, integrator: user?.integrator });
-    
-    // Initialize Firebase UID variable
     let engineerFirebaseUid = null;
 
-    // Wire notification event: Booking created
     if (result) {
-      try {
-        // Get full schedule with populated fields
-        const fullSchedule = (await result.execPopulate?.()) || result;
-        
-        // Ensure engineer has a Firebase user (creates if doesn't exist)
-        if (fullSchedule.engineer?.email) {
-          try {
-            const engineerDisplayName = fullSchedule.engineer?.name || fullSchedule.engineer?.email.split('@')[0];
-            engineerFirebaseUid = ensureFirebaseAuthUser(fullSchedule.engineer.email, engineerDisplayName);
-          } catch (firebaseError) {
-            console.error('Failed to ensure Firebase user for engineer:', { email: fullSchedule.engineer.email, error: firebaseError.message });
-          }
-        }
-        
-        await sendPendingNotification(result._id, body, {
-          scheduleId: result._id,
-          engineerId: fullSchedule.engineer?._id,
-          projectId: fullSchedule.project?._id,
-          integratorId: fullSchedule.project?.integrator,
-          projectName: fullSchedule.project?.name,
-          completeAddress: fullSchedule.project?.completeAddress || '',
-          latitude: fullSchedule.project?.location?.coordinates[0],
-          longitude: fullSchedule.project?.location?.coordinates[1],
-          radius: 200,
-          activeDays: getActiveDays(result.startDate, result.endDate),
-          startDate: result.startDate,
-          endDate: result.endDate,
-          status: result.status,
-          startTime: result.startTime,
-          endTime: result.endTime,
-          projectDescription: result.project?.description || '',
-          priority: result.project?.priority || '',
-          engineerFirebaseUid
-        });
-      } catch (notificationError) {
-        logger.error('Failed to send booking created notification', {
-          scheduleId: result._id,
-          error: notificationError.message
-        });
+      const fullSchedule = (await result.execPopulate?.()) || result;
+
+      // Ensure engineer has a Firebase user (creates if doesn't exist)
+      if (fullSchedule.engineer?.email) {
+        engineerFirebaseUid = await provisionEngineerChatUser(fullSchedule);
       }
+      await sendPendingNotification(result._id, body, {
+        scheduleId: result._id,
+        engineerId: result.engineer?._id,
+        projectId: result.project?._id,
+        integratorId: result.project?.integrator,
+        projectName: result.project?.name,
+        completeAddress: result.project?.completeAddress || '',
+        latitude: result.project?.location?.coordinates[0],
+        longitude: result.project?.location?.coordinates[1],
+        radius: 200,
+        activeDays: getActiveDays(result.startDate, result.endDate),
+        startDate: result.startDate,
+        endDate: result.endDate,
+        status: result.status,
+        startTime: result.startTime,
+        endTime: result.endTime,
+        projectDescription: result.project?.description || '',
+        priority: result.project?.priority || '',
+        engineerFirebaseUid
+      });
     }
 
-    return successResponse({ ...result.toObject?.() || result, engineerFirebaseUid });
+    return successResponse(
+      {
+        ...(result.toObject?.() || result),
+        engineerFirebaseUid
+      },
+      201
+    );
   } catch (error) {
-    logger.error('Error in POST /scheduler:', error);
-    return errorResponse(error.message, 500, error);
+    const status = error.statusCode || 500;
+    if (status < 500) {
+      logger.warn(`Scheduler request rejected (${status}): ${error.message}`);
+      return NextResponse.json({ success: false, error: error.message }, { status });
+    }
+    return errorResponse(error.message, status, error);
   }
 };
 
 export const PATCH = async (req) => {
   try {
-    const { error } = await authenticateUser(req);
+    const { user, error } = await authenticateUser(req);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
@@ -356,7 +404,7 @@ export const PATCH = async (req) => {
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
 
-    const result = await markSchedulesAsRead(id);
+    const result = await markSchedulesAsRead(id, user.id);
     return successResponse(result);
   } catch (error) {
     return errorResponse(error.message, 500, error);

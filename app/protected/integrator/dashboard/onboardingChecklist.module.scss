@@ -1,0 +1,28 @@
+.onboarding { margin: 0 5px 22px; overflow: hidden; border: 1px solid #e0e5eb; border-radius: 14px; color: #182433; background: #fff; box-shadow: 0 5px 18px rgba(16, 34, 52, .05); }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 21px 23px 17px; }
+.eyebrow { display: block; margin-bottom: 4px; color: #687789; font-size: 10px; font-weight: 800; letter-spacing: 1.25px; text-transform: uppercase; }
+.heading h2 { margin: 0; color: #17283a; font-size: 20px; font-weight: 750; }
+.heading p { margin: 5px 0 0; color: #748294; font-size: 12px; }
+.headerActions { display: flex; align-items: center; gap: 15px; }
+.progressText { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+.progressText strong { color: #17283a; font-size: 19px; }
+.progressText span { color: #7b8898; font-size: 10px; }
+.collapseButton { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #dce3e9; border-radius: 9px; color: #425467; background: #fff; }
+.collapseButton:hover { background: #f6f8fa; }
+.progressTrack { height: 4px; background: #edf0f3; }
+.progressTrack span { display: block; height: 100%; background: #4f46e5; transition: width .35s ease; }
+.stepList { display: grid; padding: 7px 23px 14px; }
+.step { display: grid; min-width: 0; align-items: center; gap: 13px; padding: 13px 0; border-bottom: 1px solid #edf0f3; grid-template-columns: auto minmax(0, 1fr) auto; }
+.step:last-child { border-bottom: 0; }
+.stepIcon { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid #dbe2e8; border-radius: 10px; color: #32495f; background: #f8f9fb; font-size: 14px; }
+.stepCopy { min-width: 0; }
+.stepTitle { display: flex; align-items: center; gap: 8px; }
+.stepTitle h3 { margin: 0; color: #223548; font-size: 13px; font-weight: 720; }
+.stepTitle span { padding: 3px 7px; border-radius: 999px; color: #697786; background: #f0f2f4; font-size: 8px; font-weight: 800; letter-spacing: .35px; text-transform: uppercase; }
+.stepCopy p { margin: 3px 0 0; color: #7a8796; font-size: 10px; }
+.actionButton { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; gap: 7px; padding: 0 12px; border: 1px solid #4f46e5; border-radius: 7px; color: #fff; background: #4f46e5; font-size: 10px; font-weight: 750; white-space: nowrap; }
+.actionButton:hover { border-color: #4338ca; background: #4338ca; }
+.completed .stepIcon { color: #176f5d; border-color: #c9e5dd; background: #eef8f5; }
+.completed .stepTitle h3 { color: #607080; }
+.doneLabel { display: inline-flex; align-items: center; gap: 5px; color: #267361; font-size: 10px; font-weight: 750; }
+@media (max-width: 700px) { .header { align-items: flex-start; padding: 18px; flex-direction: column; } .headerActions { width: 100%; justify-content: space-between; } .stepList { padding: 6px 18px 13px; } .step { align-items:start; grid-template-columns:auto 1fr; } .actionButton, .doneLabel { margin-left: 51px; grid-column: 1 / -1; justify-self: start; } }

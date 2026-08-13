@@ -20,19 +20,13 @@ dotenv.config();
 
 const invoicePaymentSuccess = async (event) => {
   try {
-    const { lines, hosted_invoice_url, amount_paid, period_end } = event.data.object;
+    const { hosted_invoice_url, amount_paid, period_end, customer, subscription: subscriptionId } = event.data.object;
 
     // Validate required fields
-    if (!lines || !lines.data || lines.data.length === 0) {
-      throw new Error('Invalid invoice data: missing lines array');
-    }
-
-    const invoice = lines.data[0];
-    if (!invoice || !invoice.metadata) {
-      throw new Error('Invalid invoice line: missing metadata');
-    }
-
-    const { contact, email, stripeCustomerId } = invoice.metadata;
+    const subscription = subscriptionId ? await stripe.subscriptions.retrieve(subscriptionId) : null;
+    const metadata = subscription?.metadata || {};
+    const stripeCustomerId = metadata.stripeCustomerId || customer;
+    const { contact, email, integratorId } = metadata;
 
     if (!stripeCustomerId) {
       throw new Error('Invalid invoice data: missing stripeCustomerId in metadata');
@@ -59,10 +53,41 @@ const invoicePaymentSuccess = async (event) => {
     );
 
     // Update status to 'active' when payment succeeds
-    const updated = await updateIntegratorStatus(stripeCustomerId, { status: 'active' });
+    const updated = await updateIntegratorStatus(stripeCustomerId, { status: 'active' }, integratorId);
 
     if (!updated) {
       throw new Error(`Failed to update integrator status for customer ${stripeCustomerId}`);
+    }
+
+    const Integrator = require('../models/integrator').default || require('../models/integrator');
+    const integrator = await Integrator.findOne(
+      integratorId ? { _id: integratorId } : { stripeCustomerId }
+    );
+    if (integrator && !integrator.welcomeEmailSentAt) {
+      const priceId = subscription?.items?.data?.[0]?.price?.id;
+      const priceInfo = findPrice(priceId, process.env.NODE_ENV === 'production');
+      if (!priceInfo?.planName) throw new Error(`Unknown price ID: ${priceId}`);
+      const welcomeHtml = await compileEmailTemplate(emailTemplates.subscriptionWelcomeMessage({
+        userName: email,
+        contact,
+        price: priceInfo.price,
+        plan: priceInfo.planName,
+        url: process.env.LOGIN_URL || `${process.env.NEXTAUTH_URL}/login`,
+        billingCycle: priceInfo.billingCycle,
+        contactEmail: process.env.CONTACT_EMAIL,
+        team: process.env.TEAM,
+        duration: priceInfo.duration,
+        password: '12345!'
+      }));
+      await sendBrevoEmail({
+        sender: { email: process.env.USER_NAME, name: 'Snatchi' },
+        to: [{ email }],
+        subject: 'Welcome to Snatchi',
+        textContent: welcomeHtml,
+        htmlContent: welcomeHtml
+      });
+      integrator.welcomeEmailSentAt = new Date();
+      await integrator.save();
     }
 
     const mailOptions = {
@@ -121,19 +146,13 @@ const setDefaultPaymentMethod = async (event) => {
 
 const invoicePaymentFailed = async (event) => {
   try {
-    const { lines, hosted_invoice_url, period_end } = event.data.object;
+    const { hosted_invoice_url, period_end, customer, subscription: subscriptionId } = event.data.object;
 
     // Validate required fields
-    if (!lines || !lines.data || lines.data.length === 0) {
-      throw new Error('Invalid invoice data: missing lines array');
-    }
-
-    const invoice = lines.data[0];
-    if (!invoice || !invoice.metadata) {
-      throw new Error('Invalid invoice line: missing metadata');
-    }
-
-    const { contact, email, stripeCustomerId } = invoice.metadata;
+    const subscription = subscriptionId ? await stripe.subscriptions.retrieve(subscriptionId) : null;
+    const metadata = subscription?.metadata || {};
+    const stripeCustomerId = metadata.stripeCustomerId || customer;
+    const { contact, email, integratorId } = metadata;
 
     if (!stripeCustomerId) {
       throw new Error('Invalid invoice data: missing stripeCustomerId in metadata');
@@ -153,7 +172,7 @@ const invoicePaymentFailed = async (event) => {
     );
 
     // Update status to 'suspended' when payment fails
-    const updated = await updateIntegratorStatus(stripeCustomerId, { status: 'suspended' });
+    const updated = await updateIntegratorStatus(stripeCustomerId, { status: 'suspended' }, integratorId);
 
     if (!updated) {
       throw new Error(`Failed to update integrator status for customer ${stripeCustomerId}`);
@@ -229,7 +248,7 @@ const updateSubscription = async (event) => {
       throw new Error('Missing metadata field in subscription object');
     }
 
-    const { email, contact, stripeCustomerId } = metadata;
+    const { email, contact, stripeCustomerId, integratorId } = metadata;
 
     if (!stripeCustomerId) {
       throw new Error('Missing stripeCustomerId in metadata');
@@ -239,8 +258,8 @@ const updateSubscription = async (event) => {
       throw new Error('Missing plan information in subscription');
     }
 
-    const priceInfo = findPrice(plan.id, false);
-    if (!priceInfo) {
+    const priceInfo = findPrice(plan.id, live);
+    if (!priceInfo?.planName) {
       throw new Error(`Unknown price ID: ${plan.id}`);
     }
 
@@ -272,7 +291,7 @@ const updateSubscription = async (event) => {
       stripeCustomerId: stripeCustomerId
     };
 
-    const updated = await updateIntegratorStatus(stripeCustomerId, updateData);
+    const updated = await updateIntegratorStatus(stripeCustomerId, updateData, integratorId);
 
     if (!updated) {
       throw new Error(`Failed to update integrator for customer ${stripeCustomerId}`);
@@ -287,7 +306,7 @@ const updateSubscription = async (event) => {
     };
 
     // Send email only if subscription is active or trialing
-    if (['active', 'trialing'].includes(mappedStatus)) {
+    if (['active', 'trialing'].includes(mappedStatus) && metadata.checkoutFlow !== 'initial') {
       await sendBrevoEmail(mailOptions);
     }
 
@@ -307,7 +326,7 @@ const createSubscription = async (event) => {
       throw new Error('Missing metadata field in subscription object');
     }
 
-    const { email, contact, stripeCustomerId } = metadata;
+    const { email, contact, stripeCustomerId, integratorId } = metadata;
 
     if (!stripeCustomerId) {
       throw new Error('Missing stripeCustomerId in metadata');
@@ -317,8 +336,8 @@ const createSubscription = async (event) => {
       throw new Error('Missing plan information in subscription');
     }
 
-    const priceInfo = findPrice(plan.id, false);
-    if (!priceInfo) {
+    const priceInfo = findPrice(plan.id, live);
+    if (!priceInfo?.planName) {
       throw new Error(`Unknown price ID: ${plan.id}`);
     }
 
@@ -338,7 +357,8 @@ const createSubscription = async (event) => {
         contactEmail: process.env.CONTACT_EMAIL,
         team: process.env.TEAM,
         duration: duration,
-        resetPasswordUrl: `${process.env.NEXTAUTH_URL}/reset-password`
+        password: '12345!',
+        resetPasswordUrl: `${process.env.NEXTAUTH_URL}/resetPassword`
       })
     );
 
@@ -356,7 +376,7 @@ const createSubscription = async (event) => {
     };
 
     // Update integrator with subscription details
-    const updated = await updateIntegratorStatus(stripeCustomerId, createData);
+    const updated = await updateIntegratorStatus(stripeCustomerId, createData, integratorId);
 
     if (!updated) {
       throw new Error(`Failed to create subscription record for customer ${stripeCustomerId}`);
@@ -370,7 +390,9 @@ const createSubscription = async (event) => {
       htmlContent: html
     };
 
-    await sendBrevoEmail(mailOptions);
+    if (mappedStatus !== 'incomplete' && metadata.checkoutFlow !== 'initial') {
+      await sendBrevoEmail(mailOptions);
+    }
     logger.info(`Successfully created subscription for ${stripeCustomerId}: status=${mappedStatus}`);
   } catch (error) {
     logger.error('Error in createSubscription handler:', error);
@@ -386,7 +408,7 @@ const cancelSubscription = async (event) => {
       throw new Error('Missing metadata field in subscription object');
     }
 
-    const { contact, email, stripeCustomerId } = metadata;
+    const { contact, email, stripeCustomerId, integratorId } = metadata;
 
     if (!stripeCustomerId) {
       throw new Error('Missing stripeCustomerId in metadata');
@@ -408,7 +430,7 @@ const cancelSubscription = async (event) => {
       endDate: formatUnix(current_period_end, DATE_FORMAT_DD_MM_YYYY_HH_mm_ss_sz),
       status: 'cancelled', // Always 'cancelled' for canceled subscriptions
       subscriptionId: id
-    });
+    }, integratorId);
 
     if (!updated) {
       throw new Error(`Failed to update integrator for customer ${stripeCustomerId}`);

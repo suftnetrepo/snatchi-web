@@ -2,13 +2,13 @@
 
 import React, { useMemo, useState } from 'react';
 import { Table } from '@/components/elements/table/table';
-import { Button } from 'react-bootstrap';
 import { useProject } from '../../../../hooks/useProject';
 import { useProjectEdit } from '../../../../hooks/useProject';
 import { MdDelete } from 'react-icons/md';
 import { TiEdit, TiDocument, TiUser } from 'react-icons/ti';
-import { FaTasks } from 'react-icons/fa';
+import { FaSearch } from 'react-icons/fa';
 import { GiPlantSeed } from 'react-icons/gi';
+import { MdClose, MdDateRange } from 'react-icons/md';
 import DeleteConfirmation from '../../../../src/components/elements/ConfirmDialogue';
 import ErrorDialogue from '../../../../src/components/elements/errorDialogue';
 import useDebounce from '../../../../hooks/useDebounce';
@@ -18,6 +18,8 @@ import { RenderTeamOffcanvas } from './renderTeamOffcanvas';
 import Tooltip from '@mui/material/Tooltip';
 import dynamic from 'next/dynamic';
 import RenderProjectOffcanvas from '../../..//protected/guest/dashboard/renderProjectOffcanvas';
+import { setPageHelpContext } from '../help/guides';
+import styles from './project.module.scss';
 
 const IS_DEV = process.env.NODE_ENV === 'development';
 const RenderDocumentOffcanvas = dynamic(() => import('./renderDocumentOffcanvas'), { ssr: false });
@@ -72,8 +74,14 @@ const Project = () => {
   const [showProjectOffcanvas, setShowProjectOffcanvas] = useState(false);
   const [project, setProject] = useState({});
   const [seeding, setSeeding] = useState(false);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const { data, error, loading, totalCount, handleDelete, handleFetch } = useProject(debouncedSearchQuery);
+  const { data, error, loading, totalCount, summary, handleDelete, handleFetch } = useProject(
+    debouncedSearchQuery,
+    dateFrom,
+    dateTo
+  );
   const { handleSave } = useProjectEdit();
 
   const handleSeed = async () => {
@@ -90,6 +98,7 @@ const Project = () => {
     setShow(false);
   };
   const handleShow = () => {
+    setPageHelpContext('documents');
     setShow(true);
   };
 
@@ -97,6 +106,7 @@ const Project = () => {
     setShowTeamOffcanvas(false);
   };
   const handleShowTeamOffcanvas = () => {
+    setPageHelpContext('engineer-booking');
     setShowTeamOffcanvas(true);
   };
   const handleCloseProjectOffcanvas = () => {
@@ -178,7 +188,8 @@ const Project = () => {
               <span className="p-0">
                 <DeleteConfirmation
                   onConfirm={async (id) => {
-                    handleDelete(id);
+                    const deleted = await handleDelete(id);
+                    if (deleted) await handleFetch({ pageIndex: 1, pageSize: 10 });
                   }}
                   onCancel={() => {}}
                   itemId={row.original._id}
@@ -193,7 +204,7 @@ const Project = () => {
                   size={30}
                   className="pointer ms-2"
                   onClick={() => {
-                    setProject((prev) => ({ ...prev, projectId: row.original._id }));
+                    setProject((prev) => ({ ...prev, original: row.original, projectId: row.original._id }));
                     handleShow();
                   }}
                 />
@@ -216,52 +227,87 @@ const Project = () => {
         )
       }
     ],
-    []
+    [handleDelete, handleFetch, router]
   );
 
   return (
     <>
-      <div className={`ms-5 me-5 mt-2 ${!loading ? 'overlay__block' : null}`}>
-        <div className="card-body">
-          <h3 className="card-title ms-2 mb-2">Projects</h3>
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <input
-              type="text"
-              className="form-control w-25"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <div className="d-flex gap-2">
-              {IS_DEV && (
-                <Button
-                  variant="outline-warning"
-                  size="sm"
-                  disabled={seeding}
-                  onClick={handleSeed}
-                  title="Seed 5 projects with future dates (dev only)"
-                >
-                  <GiPlantSeed className="me-1" />
-                  {seeding ? 'Seeding...' : 'Seed Projects'}
-                </Button>
-              )}
-              <Button
-                type="submit"
-                size="sm"
-                onClick={() => {
-                  router.push('/protected/integrator/project/create');
-                }}
+      <main className={styles.page}>
+        <header className={styles.hero}>
+          <div>
+            <span className={styles.eyebrow}>Project workspace</span>
+            <h1>Projects</h1>
+            <p>Manage project dates, priorities, documents and engineering teams.</p>
+          </div>
+          <div className={styles.heroActions}>
+            {IS_DEV && (
+              <button
+                type="button"
+                className={styles.seedButton}
+                disabled={seeding}
+                onClick={handleSeed}
+                title="Seed 5 projects with future dates (dev only)"
               >
-                + Add Project
-              </Button>
+                <GiPlantSeed /> {seeding ? 'Seeding…' : 'Seed projects'}
+              </button>
+            )}
+            <button
+              type="button"
+              className={styles.addButton}
+              onClick={() => router.push('/protected/integrator/project/create')}
+            >
+              + Add project
+            </button>
+          </div>
+        </header>
+
+        <section className={styles.summaryGrid} aria-label="Project summary">
+          <article><span>Total projects</span><strong>{totalCount || 0}</strong><small>Matching the current filters</small></article>
+          <article><span>Pending</span><strong>{summary?.Pending || 0}</strong><small>Waiting to begin</small></article>
+          <article><span>In progress</span><strong>{summary?.Progress || 0}</strong><small>Active delivery</small></article>
+          <article><span>Completed</span><strong>{summary?.Completed || 0}</strong><small>Finished projects</small></article>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.toolbar}>
+
+            <div className={styles.filters}>
+              <div className={styles.dateRange}>
+                <MdDateRange />
+                <label>From<input type="date" value={dateFrom} max={dateTo || undefined} onChange={(event) => setDateFrom(event.target.value)} /></label>
+                <span>to</span>
+                <label>To<input type="date" value={dateTo} min={dateFrom || undefined} onChange={(event) => setDateTo(event.target.value)} /></label>
+                {(dateFrom || dateTo) && (
+                  <button type="button" className={styles.clearDate} onClick={() => { setDateFrom(''); setDateTo(''); }} aria-label="Clear project date range"><MdClose /></button>
+                )}
+              </div>
+              <div className={styles.searchBox}>
+                <FaSearch />
+                <input
+                  type="search"
+                  placeholder="Search projects"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  aria-label="Search projects"
+                />
+              </div>
             </div>
           </div>
-          <Table data={data} columns={columns} pageCount={totalCount} loading={loading} fetchData={handleFetch} />
-        </div>
-      </div>
-      {!loading && <span className="overlay__block" />}
+          <div className={styles.tableWrap} aria-busy={loading}>
+            <Table
+              key={`${dateFrom}-${dateTo}`}
+              data={data || []}
+              columns={columns}
+              pageCount={totalCount}
+              loading={loading}
+              fetchData={handleFetch}
+              searchQuery={debouncedSearchQuery}
+            />
+          </div>
+        </section>
+      </main>
       {error && <ErrorDialogue showError={error} onClose={() => {}} />}
-      <RenderDocumentOffcanvas show={show} handleClose={handleClose} id={project.original?._id} />
+      <RenderDocumentOffcanvas show={show} handleClose={handleClose} id={project.projectId} />
       <RenderTeamOffcanvas
         project={project.original}
         show={showTeamOffcanvas}

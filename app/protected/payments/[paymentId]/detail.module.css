@@ -19,14 +19,14 @@
 }
 
 .backLink {
-  color: #3b82f6;
+  color: #4f46e5;
   text-decoration: none;
   font-size: 14px;
   transition: color 0.2s;
 }
 
 .backLink:hover {
-  color: #2563eb;
+  color: #4338ca;
 }
 
 .statusBadge {
@@ -147,7 +147,7 @@
   padding: 12px;
   background-color: #f9fafb;
   border-radius: 6px;
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid #4f46e5;
 }
 
 .partyLabel {
@@ -175,7 +175,7 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(to bottom, #3b82f6, #86efac);
+  background: linear-gradient(to bottom, #4f46e5, #86efac);
 }
 
 .timelineItem {
@@ -205,8 +205,8 @@
 }
 
 .completed .timelineDot {
-  background-color: #3b82f6;
-  border-color: #3b82f6;
+  background-color: #4f46e5;
+  border-color: #4f46e5;
   color: white;
 }
 
@@ -261,7 +261,7 @@
 
 .detailsButton {
   padding: 8px 16px;
-  background-color: #3b82f6;
+  background-color: #4f46e5;
   color: white;
   border-radius: 6px;
   text-decoration: none;
@@ -273,7 +273,7 @@
 }
 
 .detailsButton:hover {
-  background-color: #2563eb;
+  background-color: #4338ca;
 }
 
 .technicalGrid {

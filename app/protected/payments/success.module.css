@@ -80,12 +80,12 @@
 }
 
 .primaryBtn {
-  background-color: #3b82f6;
+  background-color: #4f46e5;
   color: white;
 }
 
 .primaryBtn:hover {
-  background-color: #2563eb;
+  background-color: #4338ca;
 }
 
 .secondaryBtn {

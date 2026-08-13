@@ -188,7 +188,7 @@ const RenderTeamOffcanvas = ({ show, project, handleClose, id }) => {
                               />
                             </span>
                           </Tooltip>
-                          <Tooltip title="Remove Engineer from Project" arrow>
+                          <Tooltip title="Delete Booking" arrow>
                             <span className="p-0">
                               <DeleteConfirmation
                                 onConfirm={async () => {

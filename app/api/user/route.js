@@ -14,6 +14,8 @@ import {
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
+import { ensureFirebaseAuthUser } from '../services/firebaseAuthService';
+import { userValidator as validateUser, userEditValidator as validateUserEdit } from '../validator/user';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -42,6 +44,17 @@ const errorResponse = (message, status = 500, error = null) => {
 // Success response helper
 const successResponse = (data, status = 200) => {
   return NextResponse.json({ success: true, data }, { status });
+};
+
+const canManageUsers = (user) => ['integrator', 'manager'].includes(user?.role);
+const MANAGED_USER_FIELDS = new Set(['first_name', 'last_name', 'email', 'mobile', 'role', 'visible', 'user_status', 'chat_status']);
+const pickManagedUserFields = (body) => Object.fromEntries(Object.entries(body || {}).filter(([key]) => MANAGED_USER_FIELDS.has(key)));
+const validateManagedValues = (body, { allowIntegrator = false } = {}) => {
+  const allowedRoles = allowIntegrator ? ['integrator', 'engineer', 'manager', 'guest'] : ['engineer', 'manager', 'guest'];
+  if (!allowedRoles.includes(body.role)) return 'Select a valid user role';
+  if (body.visible && !['private', 'public'].includes(body.visible)) return 'Select a valid visibility';
+  if (typeof body.user_status !== 'boolean' || typeof body.chat_status !== 'boolean') return 'User and chat status must be valid';
+  return null;
 };
 
 // Parse pagination parameters from URL
@@ -77,7 +90,7 @@ const uploadToCloudinary = async (file) => {
 };
 
 // Process mobile user update with file upload
-const processMobileUserUpdate = async (formData, userId) => {
+const processMobileUserUpdate = async (formData, userId, integratorId) => {
   const body = {
     first_name: formData.get('first_name'),
     last_name: formData.get('last_name'),
@@ -99,7 +112,7 @@ const processMobileUserUpdate = async (formData, userId) => {
     }
   }
 
-  return await updateUser(userId, body);
+  return await updateUser(integratorId, userId, body);
 };
 
 export const GET = async (req) => {
@@ -113,8 +126,26 @@ export const GET = async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
+    // User list used by the integrator chat picker.
+    if (action === 'integrator_user') {
+      if (!['integrator', 'manager'].includes(user?.role)) {
+        return errorResponse('You do not have permission to list chat users', 403);
+      }
+
+      const { data } = await getUsers({
+        suid: user.integrator,
+        page: 1,
+        limit: 100,
+        sortField: 'first_name',
+        sortOrder: 'asc',
+        searchQuery: ''
+      });
+      return successResponse(data || []);
+    }
+
     // Handle users action (paginated user list)
     if (action === 'users') {
+      if (!canManageUsers(user)) return errorResponse('You do not have permission to list users', 403);
       const { sortField, sortOrder, searchQuery, page, limit } = parsePaginationParams(url);
       
       const { data, success, totalCount } = await getUsers({
@@ -131,30 +162,39 @@ export const GET = async (req) => {
 
     // Handle oneUser action (single user by ID)
     if (action === 'oneUser') {
-      const results = await getUserById(user?.id);
+      const results = await getUserById(user?.id, user.integrator);
       return NextResponse.json({ data: results });
     }
 
     // Handle aggregate action (user statistics by role)
     if (action === 'aggregate') {
+      if (!canManageUsers(user)) return errorResponse('You do not have permission to view user totals', 403);
       const aggregated = await aggregateUserDataByRole(user?.integrator);
       return successResponse(aggregated);
     }
 
     // Handle search_user action (basic user search)
     if (action === 'search_user') {
+      if (!canManageUsers(user)) return errorResponse('You do not have permission to search users', 403);
       const searchQuery = url.searchParams.get('searchQuery');
-      const searchResults = await searchUsers(searchQuery);
+      const searchResults = await searchUsers(searchQuery, user.integrator);
       return successResponse(searchResults);
     }
 
     // Handle searchMultiple action (advanced multi-criteria search)
     if (action === 'searchMultiple') {
+      if (!['integrator', 'manager'].includes(user?.role)) {
+        return errorResponse('You do not have permission to search engineers', 403);
+      }
       const searchQuery = url.searchParams.get('searchQuery');
+      const scope = url.searchParams.get('scope') || 'mine';
+      if (!['mine', 'external', 'all'].includes(scope)) return errorResponse('Invalid engineer search scope', 400);
       const page = parseInt(url.searchParams.get('page') || '1', 10);
       const limit = parseInt(url.searchParams.get('limit') || '10', 10);
 
       const result = await searchUsersByMultipleCriteria({
+        suid: user.integrator,
+        scope,
         searchQuery,
         page,
         limit
@@ -169,7 +209,7 @@ export const GET = async (req) => {
       { status: 400 }
     );
   } catch (error) {
-    return errorResponse(error.message, 500, error);
+    return errorResponse(error.message, error.statusCode || 500, error);
   }
 };
 
@@ -180,14 +220,19 @@ export const DELETE = async (req) => {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
+    if (!canManageUsers(user)) return errorResponse('You do not have permission to delete users', 403);
 
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
+    if (String(id) === String(user.id)) return errorResponse('You cannot delete your own account', 409);
+    const target = await getUserById(id, user.integrator);
+    if (!target) return errorResponse('User not found', 404);
+    if (target.role === 'integrator') return errorResponse('The organisation owner cannot be deleted', 409);
 
     const deleted = await removeUser(user?.integrator, id);
     return successResponse(deleted);
   } catch (error) {
-    return errorResponse(error.message, 500, error);
+    return errorResponse(error.message, error.statusCode || 500, error);
   }
 };
 
@@ -205,15 +250,30 @@ export const PUT = async (req) => {
 
     // Handle standard user update
     if (action === 'update_user') {
-      const body = await req.json();
-      const updated = await updateUser(id, body);
+      if (!canManageUsers(user)) return errorResponse('You do not have permission to update users', 403);
+      const body = pickManagedUserFields(await req.json());
+      const validationErrors = validateUserEdit(body);
+      if (validationErrors.length) return errorResponse(validationErrors.map((item) => item.message).join(', '), 400);
+      const existing = await getUserById(id, user.integrator);
+      if (!existing) return errorResponse('User not found', 404);
+      if (existing.role === 'integrator' && user.role !== 'integrator') {
+        return errorResponse('Only the organisation owner can update the owner account', 403);
+      }
+      const invalidValue = validateManagedValues(body, { allowIntegrator: existing.role === 'integrator' });
+      if (invalidValue) return errorResponse(invalidValue, 400);
+      if (existing.role !== 'integrator' && body.role === 'integrator') return errorResponse('The organisation owner role cannot be assigned', 403);
+      if (body.chat_status && (!existing.chat_status || body.email !== existing.email)) {
+        await ensureFirebaseAuthUser(body.email, `${body.first_name || ''} ${body.last_name || ''}`.trim());
+      }
+      const updated = await updateUser(user.integrator, id, body);
       return successResponse(updated);
     }
 
     // Handle mobile user update with file upload
     if (action === 'update_mobile_user') {
+      if (String(id) !== String(user.id)) return errorResponse('You can only update your own profile', 403);
       const formData = await req.formData();
-      const updated = await processMobileUserUpdate(formData, id);
+      const updated = await processMobileUserUpdate(formData, id, user.integrator);
       return successResponse(updated);
     }
 
@@ -225,6 +285,9 @@ export const PUT = async (req) => {
     }
 
     if (action === 'updateAddress') {
+      if (!canManageUsers(user) && String(id) !== String(user.id)) {
+        return errorResponse('You can only update your own address', 403);
+      }
       const body = await req.json();
 
       const updatedUser = await updateEngineerAddress({
@@ -253,7 +316,7 @@ export const PUT = async (req) => {
     );
   } catch (error) {
     console.log("Error in PUT /api/user:", error);
-    return errorResponse(error.message, 500, error);
+    return errorResponse(error.message, error.statusCode || 500, error);
   }
 };
 
@@ -264,11 +327,17 @@ export const POST = async (req) => {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
+    if (!canManageUsers(user)) return errorResponse('You do not have permission to create users', 403);
 
-    const body = await req.json();
+    const body = pickManagedUserFields(await req.json());
+    const validationErrors = validateUser(body);
+    if (validationErrors.length) return errorResponse(validationErrors.map((item) => item.message).join(', '), 400);
+    const invalidValue = validateManagedValues(body);
+    if (invalidValue) return errorResponse(invalidValue, 400);
+    if (body.chat_status) await ensureFirebaseAuthUser(body.email, `${body.first_name || ''} ${body.last_name || ''}`.trim());
     const result = await createUser(user?.integrator, body);
     return successResponse(result);
   } catch (error) {
-    return errorResponse(error.message, 500, error);
+    return errorResponse(error.message, error.statusCode || 500, error);
   }
 };

@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 import { userValidator, userEditValidator } from '../validator/user';
 import User from '../models/user';
+import EngineerServiceRate from '../models/engineerServiceRate';
+import Invoice from '../models/invoice';
+import Project from '../models/project';
+import Scheduler from '../models/scheduler';
+import Task from '../models/task';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
 const { generatePassword } = require('../utils/helps');
@@ -72,21 +77,27 @@ async function getUsers({ suid, page = 1, limit = 10, sortField, sortOrder, sear
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
 
-  const skip = (page - 1) * limit;
+  const safePage = Math.max(1, Number(page) || 1);
+  const safeLimit = Math.min(100, Math.max(1, Number(limit) || 10));
+  const skip = (safePage - 1) * safeLimit;
 
   try {
-    const sortOptions = {};
-    if (sortField) {
+    const allowedSortFields = new Set(['first_name', 'last_name', 'mobile', 'email', 'role', 'visible', 'chat_status', 'user_status', 'createdAt']);
+    const sortOptions = { createdAt: -1 };
+    if (sortField && allowedSortFields.has(sortField)) {
+      delete sortOptions.createdAt;
       sortOptions[sortField] = sortOrder === 'desc' ? -1 : 1;
     }
 
-    const searchFilter = searchQuery
+    const escapedSearch = String(searchQuery || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const searchFilter = escapedSearch
       ? {
           $or: [
-            { first_name: { $regex: searchQuery, $options: 'i' } },
-            { last_name: { $regex: searchQuery, $options: 'i' } },
-            { email: { $regex: searchQuery, $options: 'i' } },
-            { role: { $regex: searchQuery, $options: 'i' } }
+            { first_name: { $regex: escapedSearch, $options: 'i' } },
+            { last_name: { $regex: escapedSearch, $options: 'i' } },
+            { email: { $regex: escapedSearch, $options: 'i' } },
+            { mobile: { $regex: escapedSearch, $options: 'i' } },
+            { role: { $regex: escapedSearch, $options: 'i' } }
           ]
         }
       : {};
@@ -97,8 +108,8 @@ async function getUsers({ suid, page = 1, limit = 10, sortField, sortOrder, sear
     };
 
     const [users, totalCount] = await Promise.all([
-      User.find(query).sort(sortOptions).skip(skip).select('-password').limit(limit).exec(),
-      User.countDocuments({ integrator: suid })
+      User.find(query).sort(sortOptions).skip(skip).select('-password').limit(safeLimit).lean().exec(),
+      User.countDocuments(query)
     ]);
 
     return {
@@ -107,18 +118,19 @@ async function getUsers({ suid, page = 1, limit = 10, sortField, sortOrder, sear
     };
   } catch (error) {
     logger.error(error);
+    if (error.statusCode) throw error;
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
 
-async function getUserById(id) {
+async function getUserById(id, integratorId = null) {
   if (!isValidObjectId(id)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
 
   try {
     try {
-      const results = await User.findOne({ _id: id }).exec();
+      const results = await User.findOne({ _id: id, ...(integratorId && { integrator: integratorId }) }).select('-password').lean().exec();
       return results;
     } catch (error) {
       throw error;
@@ -136,49 +148,61 @@ async function createUser(id, body) {
 
   const bodyErrors = userValidator(body);
   if (bodyErrors.length) {
-    throw new Error(bodyErrors.map((it) => it.message).join(','));
+    throw Object.assign(new Error(bodyErrors.map((it) => it.message).join(',')), { statusCode: 400 });
   }
 
   try {
+    const allowedFields = ['first_name', 'last_name', 'email', 'mobile', 'role', 'visible', 'user_status', 'chat_status'];
+    const safeBody = Object.fromEntries(allowedFields.filter((field) => Object.hasOwn(body, field)).map((field) => [field, body[field]]));
     const newUser = await User.create({
       integrator: id,
       password: await generatePassword('12345!'),
-      ...body
+      ...safeBody
     });
 
     if (!newUser) {
       throw new Error('create new user failed');
     }
 
-    return newUser;
+    return newUser.toObject({ transform: (_document, result) => { delete result.password; return result; } });
   } catch (error) {
     logger.error(error);
+    if (error.code === 11000) throw Object.assign(new Error('A user with this email already exists'), { statusCode: 409 });
     throw error;
   }
 }
 
-async function updateUser(id, body) {
+async function updateUser(suid, id, body) {
+  if (!isValidObjectId(suid)) {
+    throw Object.assign(new Error('Invalid integrator ID'), { statusCode: 400 });
+  }
   if (!isValidObjectId(id)) {
-    throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
+    throw Object.assign(new Error('Invalid user ID'), { statusCode: 400 });
   }
 
   const bodyErrors = userEditValidator(body);
   if (bodyErrors.length) {
-    throw new Error(bodyErrors.map((it) => it.message).join(','));
+    throw Object.assign(new Error(bodyErrors.map((it) => it.message).join(',')), { statusCode: 400 });
   }
 
   try {
-    const updatedUser = await User.findByIdAndUpdate(id, body, {
-      new: true
-    });
+    const allowedFields = ['first_name', 'last_name', 'email', 'mobile', 'role', 'visible', 'user_status', 'chat_status', 'secure_url', 'public_id'];
+    const safeBody = Object.fromEntries(allowedFields.filter((field) => Object.hasOwn(body, field)).map((field) => [field, body[field]]));
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: id, integrator: suid },
+      { $set: safeBody },
+      { new: true, runValidators: true }
+    ).select('-password').lean();
 
     if (!updatedUser) {
-      throw new Error('User not found or update failed');
+      throw Object.assign(new Error('User not found'), { statusCode: 404 });
     }
 
-    return true;
+    return updatedUser;
   } catch (error) {
     logger.error(error);
+    if (error.statusCode) throw error;
+    if (error.code === 11000) throw Object.assign(new Error('A user with this email already exists'), { statusCode: 409 });
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
@@ -186,6 +210,10 @@ async function updateUser(id, body) {
 async function changePassword(id, body) {
   if (!isValidObjectId(id)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
+  }
+
+  if (typeof body?.password !== 'string' || body.password.length < 8 || body.password.length > 72) {
+    throw Object.assign(new Error('Password must be between 8 and 72 characters'), { statusCode: 400 });
   }
 
   const newPassword = {
@@ -216,8 +244,6 @@ async function updateFcmToken(id, token) {
 }
 
 async function updateEngineerAddress({ userId, address, actor }) {
-  console.log('updateEngineerAddress called with userId:', userId, 'address:', address, 'actor:', actor);
-
   if (!userId) {
     throw Object.assign(new Error('userId is required'), { statusCode: 400 });
   }
@@ -234,11 +260,9 @@ async function updateEngineerAddress({ userId, address, actor }) {
 
   const updateSet = buildAddressUpdateSet(address);
 
-  console.log('Address update set:', updateSet);
-
   try {
     const updatedUser = await User.findOneAndUpdate(
-      { _id: userId },
+      { _id: userId, integrator: actor.integrator },
       { $set: updateSet },
       {
         new: true,
@@ -270,20 +294,36 @@ async function removeUser(suid, id) {
   }
 
   try {
-    await User.findOneAndDelete({ _id: id, integrator: suid });
-    return true;
+    if (!isValidObjectId(id)) throw Object.assign(new Error('Invalid user ID'), { statusCode: 400 });
+    const [scheduleCount, invoiceCount, projectCount, taskCount] = await Promise.all([
+      Scheduler.countDocuments({ engineer: id }),
+      Invoice.countDocuments({ user: id }),
+      Project.countDocuments({ 'assignedTo.id': id }),
+      Task.countDocuments({ $or: [{ 'assignedTo.id': id }, { 'comments.author': id }] })
+    ]);
+    if (scheduleCount || invoiceCount || projectCount || taskCount) {
+      throw Object.assign(new Error('This user has project, booking, task, or invoice history. Deactivate the user instead of deleting them.'), { statusCode: 409 });
+    }
+    const deleted = await User.findOneAndDelete({ _id: id, integrator: suid }).select('-password').lean();
+    if (!deleted) throw Object.assign(new Error('User not found'), { statusCode: 404 });
+    return deleted;
   } catch (error) {
     logger.error(error);
+    if (error.statusCode) throw error;
     throw new Error('An unexpected error occurred. Please try again.');
   }
 }
 
-async function searchUsers(searchTerm) {
+async function searchUsers(searchTerm, integratorId) {
+  if (!isValidObjectId(integratorId)) throw Object.assign(new Error('Invalid integrator ID'), { statusCode: 400 });
   try {
-    const regex = new RegExp(searchTerm, 'i');
+    const escapedSearch = String(searchTerm || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (!escapedSearch) return [];
+    const regex = new RegExp(escapedSearch, 'i');
     return User.find({
+      integrator: integratorId,
       $or: [{ first_name: regex }, { last_name: regex }, { email: regex }]
-    }).limit(10);
+    }).select('-password').limit(10).lean();
   } catch (error) {
     logger.error(error);
     throw new Error('An unexpected error occurred. Please try again.');
@@ -352,32 +392,31 @@ function buildUserSearchFilter(searchTerm) {
  * @param {number} options.limit - Results limit per page (default: 10)
  * @returns {Object} Search results with data and totalCount
  */
-async function searchUsersByMultipleCriteria({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
-  if (!searchQuery || searchQuery.trim().length === 0) {
-    throw new Error(JSON.stringify([{ field: 'searchQuery', message: 'Search term is required' }]));
-  }
+async function searchUsersByMultipleCriteria({ suid, scope = 'all', page = 1, limit = 10, sortField, sortOrder, searchQuery = '' }) {
 
   const skip = (page - 1) * limit;
 
   try {
-    const searchFilter = buildUserSearchFilter(searchQuery.trim());
+    const trimmedSearch = searchQuery.trim();
+    const searchFilter = trimmedSearch ? buildUserSearchFilter(trimmedSearch) : null;
 
     // Build base query with role filter for engineers only
-    let query = {
-      $and: [searchFilter, { role: 'engineer' }]
-    };
+    const conditions = [{ role: 'engineer' }];
+    if (searchFilter) conditions.push(searchFilter);
+    if (scope === 'mine' && suid) conditions.push({ integrator: suid });
+    if (scope === 'external' && suid) conditions.push({ integrator: { $ne: suid } });
+    const query = conditions.length === 1 ? conditions[0] : { $and: conditions };
 
-    // Add integrator filter if provided
-    if (suid) {
-      query = {
-        $and: [searchFilter, { role: 'engineer' }, { integrator: suid }]
-      };
-    }
+    const allowedSortFields = new Set(['first_name', 'last_name', 'createdAt']);
+    const sort = sortField && allowedSortFields.has(sortField)
+      ? { [sortField]: sortOrder === 'desc' ? -1 : 1 }
+      : { first_name: 1, last_name: 1 };
 
     // Execute query with pagination
     const [users, totalCount] = await Promise.all([
       User.find(query)
         .select('_id integrator first_name last_name address secure_url email role')
+        .sort(sort)
         .skip(skip)
         .limit(limit)
         .lean()
@@ -385,8 +424,23 @@ async function searchUsersByMultipleCriteria({ suid, page = 1, limit = 10, sortF
       User.countDocuments(query)
     ]);
 
+    const rates = await EngineerServiceRate.find({
+      engineer: { $in: users.map((engineer) => engineer._id) },
+      active: true
+    }).select('engineer serviceName rate rateType').sort({ rate: 1 }).lean();
+    const ratesByEngineer = rates.reduce((result, rate) => {
+      const key = rate.engineer.toString();
+      if (!result[key]) result[key] = [];
+      result[key].push(rate);
+      return result;
+    }, {});
+
     return {
-      data: users,
+      data: users.map((engineer) => ({
+        ...engineer,
+        isInternal: !!suid && engineer.integrator?.toString() === suid.toString(),
+        serviceRates: ratesByEngineer[engineer._id.toString()] || []
+      })),
       totalCount,
       page,
       limit,

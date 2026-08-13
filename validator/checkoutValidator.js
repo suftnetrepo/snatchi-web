@@ -33,25 +33,23 @@ const checkoutValidator = {
       { pattern: /.+/, message: 'email address is required' },
       {
         pattern: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,
-        message: 'Please enter a valid email address',
+        message: 'Please enter a valid email address'
       },
       {
         pattern: /^.{0,50}$/,
-        message: 'email address must be no more than 50 characters',
-      },
-    ],
+        message: 'email address must be no more than 50 characters'
+      }
+    ]
   },
   fields: {
     first_name: '',
     last_name: '',
-    name:'',
-    email:'',
-    mobile :'',
-    priceId:'',
-    stripeCustomerId: '',
-    subscriptionId: '',
-    terms : false
+    name: '',
+    email: '',
+    mobile: '',
+    priceId: '',
+    terms: false
   }
-}
+};
 
-export { checkoutValidator }
+export { checkoutValidator };

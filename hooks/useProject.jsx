@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import moment from 'moment';
 import { zat } from '../utils/api';
 import { VERBS } from '../config';
@@ -6,7 +6,8 @@ import { PROJECT } from '../utils/apiUrl';
 import { projectValidator } from '../app/protected/integrator/rules';
 import { customStyles } from '../utils/helpers';
 
-const useProject = (searchQuery) => {
+const useProject = (searchQuery, dateFrom = '', dateTo = '') => {
+  const latestRequest = useRef(0);
   const [state, setState] = useState({
     data: [],
     copyData: [],
@@ -14,6 +15,7 @@ const useProject = (searchQuery) => {
     loading: false,
     error: null,
     totalCount: 0,
+    summary: { Pending: 0, Progress: 0, Completed: 0, Canceled: 0 },
     search_term:''
   });
 
@@ -69,37 +71,45 @@ const useProject = (searchQuery) => {
     }));
   };
 
-  const handleFetch = useCallback(async ({ pageIndex = 1, pageSize = 10, sortBy = [], searchQuery = '' }) => {
+  const handleFetch = useCallback(async ({ pageIndex = 1, pageSize = 10, sortBy = [], searchQuery: requestedSearchQuery }) => {
+    const requestId = ++latestRequest.current;
     const sortField = sortBy.length > 0 ? sortBy[0].id : null;
     const sortOrder = sortBy.length > 0 ? (sortBy[0].desc ? 'desc' : 'asc') : 'null';
 
     try {
-      const { data, success, errorMessage, totalCount } = await zat(PROJECT.fetch, null, VERBS.GET, {
+      setState((previous) => ({ ...previous, loading: true }));
+      const { data, success, errorMessage, totalCount, summary } = await zat(PROJECT.fetch, null, VERBS.GET, {
         action: 'paginate',
         page: pageIndex === 0 ? 1 : pageIndex,
         limit: pageSize,
         ...(sortField && { sortField }),
         ...(sortOrder && { sortOrder }),
-        searchQuery
+        searchQuery: requestedSearchQuery ?? searchQuery,
+        ...(dateFrom && { dateFrom }),
+        ...(dateTo && { dateTo })
       });
 
       if (success) {
+        if (requestId !== latestRequest.current) return false;
         setState((pre) => ({
           ...pre,
           data: data,
           totalCount: totalCount,
+          summary: summary || { Pending: 0, Progress: 0, Completed: 0, Canceled: 0 },
           loading: false
         }));
         return true;
       } else {
+        if (requestId !== latestRequest.current) return false;
         handleError(errorMessage);
         return false;
       }
     } catch (error) {
+      if (requestId !== latestRequest.current) return false;
       handleError('An unexpected error occurred while fetching projects.');
       return false;
     }
-  }, []);
+  }, [dateFrom, dateTo, searchQuery]);
 
   async function handleFetchSingle(id) {
     setState((prev) => ({ ...prev, loading: true }));
@@ -185,7 +195,7 @@ const useProject = (searchQuery) => {
 
   useEffect(() => {
     handleFetch({ searchQuery });
-  }, [searchQuery, handleFetch]);
+  }, [searchQuery, dateFrom, dateTo, handleFetch]);
 
   return {
     handleFilterProjects,

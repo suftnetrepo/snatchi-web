@@ -154,6 +154,10 @@ const IntegratorSchema = new mongoose.Schema(
       trim: true,
       default: ''
     },
+    welcomeEmailSentAt: {
+      type: Date,
+      required: false
+    },
     fcm_token: {
       type: String,
       trim: true,

@@ -22,6 +22,16 @@ const schedulerSchema = new mongoose.Schema(
     integrator: { type: Schema.Types.ObjectId, ref: 'Integrator', required: true },
     engineer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     project: { type: Schema.Types.ObjectId, ref: 'Project', required: true }, 
+    bookingGroupId: {
+      type: String,
+      default: null,
+      index: true
+    },
+    bookingGroupSize: {
+      type: Number,
+      default: 1,
+      min: 1
+    },
     title: {
       type: String,
       required: true,
@@ -107,7 +117,7 @@ const schedulerSchema = new mongoose.Schema(
     // Payment status
     paymentStatus: {
       type: String,
-      enum: ['pending', 'succeeded', 'failed', 'cancelled', 'refunded'],
+      enum: ['pending', 'not_required', 'succeeded', 'failed', 'cancelled', 'refunded'],
       default: 'pending'
     },
     transferStatus: {
@@ -133,6 +143,10 @@ const schedulerSchema = new mongoose.Schema(
       required: false
     },
     acceptedAt: {
+      type: Date,
+      required: false
+    },
+    declinedAt: {
       type: Date,
       required: false
     },
@@ -163,6 +177,12 @@ const schedulerSchema = new mongoose.Schema(
     cancelledAt: {
       type: Date,
       required: false
+    },
+    cancellationReason: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: ''
     },
     approvedByIntegrator: {
       type: Schema.Types.ObjectId,

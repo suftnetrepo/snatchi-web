@@ -48,6 +48,12 @@ const RenderDocumentOffcanvas = ({ show, handleClose, id }) => {
 
     if (selectedFile) {
       setFile(selectedFile);
+      const inferredType = selectedFile.type.startsWith('image/')
+        ? 'Image'
+        : selectedFile.type === 'application/pdf'
+          ? 'Pdf'
+          : 'Word';
+      handleChange('document_type', inferredType);
     }
   };
 
@@ -113,25 +119,6 @@ const RenderDocumentOffcanvas = ({ show, handleClose, id }) => {
               </Form.Group>
             </div>
             <div className="col-md-12">
-              <Form.Group controlId="formLastName" className="mb-3">
-                <Form.Label className="text-dark">Type</Form.Label>
-                <Form.Select
-                  className="border-dark"
-                  aria-label="Select Status"
-                  value={fields?.document_type}
-                  onChange={(e) => handleChange('document_type', e.target.value)}
-                >
-                  <option>Select Document Type</option>
-                  <option value="Pdf">Pdf</option>
-                  <option value="Word">Word</option>
-                  <option value="Image">Image</option>
-                </Form.Select>
-                {errorMessages?.document_type?.message && (
-                  <span className="text-danger fs-13 ms-1">{errorMessages?.document_type?.message}</span>
-                )}
-              </Form.Group>
-            </div>
-            <div className="col-md-12">
               <div className="d-flex justify-content-start align-items-center mb-2">
                 <Tooltip title="Select document to upload" arrow>
                   <span className="p-0">
@@ -141,9 +128,12 @@ const RenderDocumentOffcanvas = ({ show, handleClose, id }) => {
                         type="file"
                         size="lg"
                         id="file-input"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,application/pdf,.doc,.docx"
                         onChange={handleFileChange}
                       />
+                      <Form.Text className="text-muted">
+                        Phone photos, JPEG, PNG, WebP, GIF, HEIC, PDF, DOC or DOCX. Maximum 15MB.
+                      </Form.Text>
                     </Form.Group>
                   </span>
                 </Tooltip>

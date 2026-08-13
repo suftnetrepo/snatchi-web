@@ -22,6 +22,16 @@ $prefix: ''; // Define the prefix variable if it's not already defined in variab
     overflow-y: auto;
     border-top-color: var(--sidebar-border-color) !important;
 
+    .integrator-sidebar-nav {
+      min-height: 100%;
+    }
+
+    .sidebar-help-nav {
+      flex: 0 0 auto;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--sidebar-border-color);
+    }
+
     .nav-title {
       font-size: 80%;
     }
@@ -36,10 +46,10 @@ $prefix: ''; // Define the prefix variable if it's not already defined in variab
       }
 
       &.active {
-        color: $sidebar-link-color-hover;
-        background: $sidebar-link-background-hover;  
+        color: #fff;
+        background: #4f46e5;
         font-weight: bold;                            
-        border-left: 4px solid var(--sidebar-highlight-color); 
+        border-left: 4px solid #818cf8;
         text-decoration: none;
 
         .nav-icon {

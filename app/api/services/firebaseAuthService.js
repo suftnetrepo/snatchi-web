@@ -214,7 +214,7 @@ const ensureFirebaseAuthUser = async (email, displayName = '') => {
         const userDocRef = db.collection('users').doc(user.uid);
         const userDocSnap = await userDocRef.get();
         
-        if (!userDocSnap.exists()) {
+        if (!userDocSnap.exists) {
           console.log('[FIREBASE AUTH SERVICE] Firestore user doc missing for existing Auth user, creating:', { email, uid: user.uid });
           await createFirestoreUserDoc(user.uid, email, displayName);
         } else {

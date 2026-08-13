@@ -25,6 +25,7 @@ const useProjectDashboard = () => {
   };
 
   const handleRecent = async () => {
+    setState((previous) => ({ ...previous, loading: true, error: null }));
     const { data, success, errorMessage } = await zat(PROJECT.recent, null, VERBS.GET);
 
     if (success) {
@@ -61,6 +62,7 @@ const useProjectDashboard = () => {
     }
 
   const handleAggregate = async () => {
+    setState((previous) => ({ ...previous, loading: true, error: null }));
     const { data, success, errorMessage } = await zat(PROJECT.aggregate, null, VERBS.GET);
   
     if (success) {
@@ -74,6 +76,7 @@ const useProjectDashboard = () => {
   };
 
   const handleChartAggregate = async () => {
+    setState((previous) => ({ ...previous, loading: true, error: null }));
     const { data, success, errorMessage } = await zat(PROJECT.chart, null, VERBS.GET);
 
     if (success) {

@@ -81,6 +81,8 @@ function SchedulerListContent() {
   const canPay = (schedule) =>
     session?.user?.role === 'integrator' &&
     isBookingIntegratorSchedule(schedule) &&
+    !isSelfPaymentSchedule(schedule) &&
+    hasVerifiedReceivingIntegrator(schedule) &&
     isSchedulerAwaitingPayment(schedule);
 
   const canApprove = (schedule) =>
@@ -91,7 +93,8 @@ function SchedulerListContent() {
   const canStartSchedule = (schedule) => {
     const normalizedStatus = normalizeSchedulerStatus(schedule.status);
     return (
-      normalizedStatus === SCHEDULER_STATUS.READY_TO_START &&
+      (normalizedStatus === SCHEDULER_STATUS.READY_TO_START ||
+        (normalizedStatus === SCHEDULER_STATUS.APPROVED && isSelfPaymentSchedule(schedule))) &&
       (isEngineerSchedule(schedule) ||
         (session?.user?.role === 'integrator' &&
           [isReceivingIntegratorSchedule(schedule), isPayingIntegratorSchedule(schedule)].some(Boolean)))
@@ -104,6 +107,12 @@ function SchedulerListContent() {
       (session?.user?.role === 'integrator' &&
         [isReceivingIntegratorSchedule(schedule), isPayingIntegratorSchedule(schedule)].some(Boolean)));
 
+  const canDeleteSchedule = (schedule) =>
+    session?.user?.role === 'integrator' &&
+    isBookingIntegratorSchedule(schedule) &&
+    ['Pending', 'Declined', 'Cancelled'].includes(normalizeSchedulerStatus(schedule.status)) &&
+    schedule.paymentStatus !== 'succeeded';
+
   const getStatusDisplay = (schedule) => {
     const normalizedStatus = normalizeSchedulerStatus(schedule.status);
 
@@ -115,11 +124,11 @@ function SchedulerListContent() {
       normalizedStatus === SCHEDULER_STATUS.APPROVED ||
       normalizedStatus === SCHEDULER_STATUS.AWAITING_PAYMENT
     ) {
-      return 'Approved - Awaiting Payment';
+      return isSelfPaymentSchedule(schedule) ? 'Approved - Ready to Start' : 'Approved - Awaiting Payment';
     }
 
     if (normalizedStatus === SCHEDULER_STATUS.READY_TO_START) {
-      return 'Paid - Ready to Start';
+      return isSelfPaymentSchedule(schedule) ? 'Ready to Start' : 'Paid - Ready to Start';
     }
 
     return getStatusLabel(normalizedStatus);
@@ -170,10 +179,10 @@ function SchedulerListContent() {
       {
         Header: 'Payment Status',
         accessor: 'paymentStatus',
-        Cell: ({ value }) => (
+        Cell: ({ value, row }) => (
           <small className="d-flex align-items-center">
-            <span className={`badge ${value === 'succeeded' ? 'bg-success' : value === 'pending' ? 'bg-warning' : 'bg-danger'}`}>
-              {value || 'pending'}
+            <span className={`badge ${value === 'succeeded' ? 'bg-success' : value === 'not_required' ? 'bg-secondary' : value === 'pending' || !value ? 'bg-warning' : 'bg-danger'}`}>
+              {isSelfPaymentSchedule(row.original) ? 'Not required' : value || 'pending'}
             </span>
           </small>
         )
@@ -270,7 +279,7 @@ function SchedulerListContent() {
             )}
 
             {/* Delete button — hidden for awaiting-payment schedules */}
-            {session?.user?.role === 'integrator' && isBookingIntegratorSchedule(row.original) && !isSchedulerAwaitingPayment(row.original) && (
+            {canDeleteSchedule(row.original) && (
               <Tooltip title="Delete Schedule" arrow>
                 <span className="p-0">
                   <DeleteConfirmation

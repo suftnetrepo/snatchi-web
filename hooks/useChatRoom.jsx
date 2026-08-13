@@ -306,7 +306,17 @@ const useChatRoom = (userId) => {
   };
 
   useEffect(() => {
-    userId && getUserRooms(userId);
+    if (!userId) {
+      handleReset();
+      return;
+    }
+
+    let unsubscribe;
+    getUserRooms(userId).then((stopListening) => {
+      unsubscribe = stopListening;
+    });
+
+    return () => unsubscribe?.();
   }, [userId]);
 
   return {
