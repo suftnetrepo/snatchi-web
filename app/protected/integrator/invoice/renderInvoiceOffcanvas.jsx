@@ -10,12 +10,18 @@ import styles from './invoice.module.scss';
 
 const RenderInvoiceOffcanvas = ({ show, success, loading, handleClose, invoice, handleEditInvoice }) => {
   const [status, setStatus] = useState(invoice?.status || 'Unpaid');
+  const [reviewNotes, setReviewNotes] = useState('');
 
   useEffect(() => setStatus(invoice?.status || 'Unpaid'), [invoice]);
 
   const saveStatus = async () => {
     if (status === invoice.status) return;
     await handleEditInvoice({ status }, invoice._id);
+  };
+
+  const review = async (nextStatus) => {
+    await handleEditInvoice({ status: nextStatus, reviewNotes }, invoice._id, 'review');
+    setStatus(nextStatus);
   };
 
   const engineerName = invoice.user
@@ -71,11 +77,25 @@ const RenderInvoiceOffcanvas = ({ show, success, loading, handleClose, invoice, 
 
         {invoice.notes && <section className={styles.detailSection}><span className={styles.sectionTitle}>Notes</span><p>{invoice.notes}</p></section>}
 
-        <section className={styles.statusEditor}>
-          <div><span className={styles.sectionTitle}>Invoice status</span><p>Keep the billing record aligned with its current outcome.</p></div>
-          <select value={status} onChange={(event) => setStatus(event.target.value)} disabled={loading} aria-label="Invoice status"><option value="Paid">Paid</option><option value="Unpaid">Unpaid</option><option value="Cancelled">Cancelled</option></select>
-          <button type="button" onClick={saveStatus} disabled={loading || status === invoice.status}>{loading ? 'Saving…' : 'Save status'}</button>
-        </section>
+        {['Submitted', 'Unpaid', 'Paid', 'Rejected', 'Approved', 'Cancelled'].includes(invoice.status) ? (
+          <section className={styles.statusEditor}>
+            <div><span className={styles.sectionTitle}>Update status</span><p>Record the outcome after reviewing the submission. Payments are handled outside Snatchi.</p></div>
+            <textarea value={reviewNotes} onChange={(event) => setReviewNotes(event.target.value)} maxLength={1000} placeholder="Review notes (required when rejecting)" aria-label="Review notes" />
+            {invoice.invoice_type === 'Quote' ? (
+              <select value={status} onChange={(event) => setStatus(event.target.value)} disabled={loading} aria-label="Quote status"><option value="Submitted">Submitted</option><option value="Approved">Approved</option><option value="Rejected">Rejected</option><option value="Cancelled">Cancelled</option></select>
+            ) : (
+              <select value={status} onChange={(event) => setStatus(event.target.value)} disabled={loading} aria-label="Invoice status"><option value="Submitted">Submitted</option><option value="Unpaid">Unpaid</option><option value="Paid">Paid</option><option value="Rejected">Rejected</option><option value="Cancelled">Cancelled</option></select>
+            )}
+            <button type="button" onClick={() => review(status)} disabled={loading || status === invoice.status || (status === 'Rejected' && !reviewNotes.trim())}>{loading ? 'Saving…' : 'Save status'}</button>
+            <button type="button" className={styles.rejectButton} onClick={() => review('Rejected')} disabled={loading || !reviewNotes.trim()}>Reject with notes</button>
+          </section>
+        ) : (
+          <section className={styles.statusEditor}>
+            <div><span className={styles.sectionTitle}>Legacy invoice status</span><p>Keep this existing billing record aligned with its current outcome.</p></div>
+            <select value={status} onChange={(event) => setStatus(event.target.value)} disabled={loading} aria-label="Invoice status"><option value="Unpaid">Unpaid</option><option value="Paid">Paid</option><option value="Cancelled">Cancelled</option></select>
+            <button type="button" onClick={saveStatus} disabled={loading || status === invoice.status}>{loading ? 'Saving…' : 'Save status'}</button>
+          </section>
+        )}
 
         <OkDialogue show={success} message="Invoice status updated successfully." onConfirm={handleClose} />
       </Offcanvas.Body>

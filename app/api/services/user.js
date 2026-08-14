@@ -5,7 +5,6 @@ import EngineerServiceRate from '../models/engineerServiceRate';
 import Invoice from '../models/invoice';
 import Project from '../models/project';
 import Scheduler from '../models/scheduler';
-import Task from '../models/task';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
 const { generatePassword } = require('../utils/helps');
@@ -295,14 +294,13 @@ async function removeUser(suid, id) {
 
   try {
     if (!isValidObjectId(id)) throw Object.assign(new Error('Invalid user ID'), { statusCode: 400 });
-    const [scheduleCount, invoiceCount, projectCount, taskCount] = await Promise.all([
+    const [scheduleCount, invoiceCount, projectCount] = await Promise.all([
       Scheduler.countDocuments({ engineer: id }),
       Invoice.countDocuments({ user: id }),
-      Project.countDocuments({ 'assignedTo.id': id }),
-      Task.countDocuments({ $or: [{ 'assignedTo.id': id }, { 'comments.author': id }] })
+      Project.countDocuments({ 'assignedTo.id': id })
     ]);
-    if (scheduleCount || invoiceCount || projectCount || taskCount) {
-      throw Object.assign(new Error('This user has project, booking, task, or invoice history. Deactivate the user instead of deleting them.'), { statusCode: 409 });
+    if (scheduleCount || invoiceCount || projectCount) {
+      throw Object.assign(new Error('This user has project, booking, or invoice history. Deactivate the user instead of deleting them.'), { statusCode: 409 });
     }
     const deleted = await User.findOneAndDelete({ _id: id, integrator: suid }).select('-password').lean();
     if (!deleted) throw Object.assign(new Error('User not found'), { statusCode: 404 });

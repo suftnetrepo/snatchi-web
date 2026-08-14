@@ -38,12 +38,6 @@ export const INVOICE = {
   searchInvoices: `${HOST}invoice?action=searchInvoices`
 };
 
-export const TASK_COMMENTS = {
-  addOne: `${HOST}task_comment`,
-  fetch: `${HOST}task_comment/`,
-  removeOne: `${HOST}task_comment/`
-};
-
 export const INTEGRATOR = {
   fetchIntegrators: `${HOST}admin`,
   searchIntegrators: `${HOST}integrator`,
@@ -91,30 +85,10 @@ export const DOCUMENT = {
   removeOne: `${HOST}project_document/`
 };
 
-export const TASK_DOCUMENT = {
-  uploadOne: `${HOST}task_document`,
-  fetch: `${HOST}task_document/`,
-  removeOne: `${HOST}task_document/`
-};
-
-export const TASK_TEAM = {
-  addOne: `${HOST}task_team`,
-  fetch: `${HOST}task_team/`,
-  removeOne: `${HOST}task_team/`
-};
-
 export const TEAM = {
   addOne: `${HOST}project_team`,
   fetch: `${HOST}project_team/`,
   removeOne: `${HOST}project_team/`
-};
-
-export const TASK = {
-  createOne: `${HOST}task`,
-  updateOne: `${HOST}task`,
-  fetchOne: `${HOST}task/`,
-  fetch: `${HOST}task/`,
-  removeOne: `${HOST}task/`
 };
 
 export const USER_DOCUMENTS = {

@@ -15,10 +15,8 @@ import {
 import { Card, Container, Row, Col, Badge, Table, ListGroup, Tab, Tabs } from 'react-bootstrap';
 import { getStatusBadgeVariant, getPriorityBadgeVariant, getIcon, getIconColor, getPriorityStatusColorCode, getStatusColorCode } from '@/utils/helpers';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useAppContext } from '@/Store/AppContext';
 
 const RenderProjectOffcanvas = ({ show, handleClose, project }) => {
-  const { showTaskOffCanvas } = useAppContext();
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);

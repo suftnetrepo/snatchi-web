@@ -13,6 +13,18 @@ const invoiceSchema = new mongoose.Schema(
       ref: 'User',
       required: true
     },
+    scheduler: {
+      type: Schema.Types.ObjectId,
+      ref: 'Scheduler',
+      required: false,
+      index: true
+    },
+    project: {
+      type: Schema.Types.ObjectId,
+      ref: 'Project',
+      required: false,
+      index: true
+    },
     issueDate: {
       type: Date,
       required: true,
@@ -25,18 +37,19 @@ const invoiceSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Paid', 'Unpaid', 'Cancelled'],
+      enum: ['Draft', 'Submitted', 'Verified', 'Rejected', 'PaymentPending', 'Paid', 'Unpaid', 'Cancelled', 'Approved', 'Converted'],
       required: true
     },
     invoice_type: {
       type: String,
-      enum: ['Quote', 'Save', 'Draft'],
+      enum: ['Quote', 'Invoice', 'Save', 'Draft'],
       required: true
     },
     invoice_description: {
       type: String,
       required: false,
-      trim: true
+      trim: true,
+      maxlength: 500
     },
     items: [
       {
@@ -90,6 +103,20 @@ const invoiceSchema = new mongoose.Schema(
     notes: {
       type: String,
       trim: true
+    },
+    submittedAt: Date,
+    verifiedAt: Date,
+    rejectedAt: Date,
+    reviewedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: false
+    },
+    reviewNotes: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+      default: ''
     },
     createdAt: {
       type: Date,

@@ -89,9 +89,12 @@ const useInvoice = ( searchQuery) => {
     }
   }, []);
 
-  async function handleEditInvoice(body, invoice_id) {
+  async function handleEditInvoice(body, invoice_id, action = '') {
     setState((prev) => ({ ...prev, loading: true, error: null }));
-    const { data: updatedInvoice, success, errorMessage } = await zat(INVOICE.updateOne, body, VERBS.PUT, { id: invoice_id });
+    const { data: updatedInvoice, success, errorMessage } = await zat(INVOICE.updateOne, body, VERBS.PUT, {
+      id: invoice_id,
+      ...(action && { action })
+    });
 
     if (success) {
       setState((prevState) => ({

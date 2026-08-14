@@ -14,7 +14,8 @@ import {
   markSchedulesAsRead,
   getUnreadSchedulesByEngineer,
   getSchedule,
-  getSchedulesByEngineer
+  getSchedulesByEngineer,
+  removeAll
 } from '../services/scheduler';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
@@ -116,6 +117,8 @@ export const GET = async (req) => {
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
+
+    // await removeAll()
 
     // Handle getEngineerSchedules action — date + status filtering
     if (action === 'getEngineerSchedules') {

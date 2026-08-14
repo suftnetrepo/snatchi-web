@@ -7,6 +7,9 @@ import {
   createInvoice,
   getInvoices,
   aggregateInvoiceDataByStatus
+  ,updateEngineerInvoice
+  ,reviewInvoice
+  ,removeEngineerInvoice
 } from '../services/invoice';
 import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
@@ -82,11 +85,14 @@ export const DELETE = async (req) => {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (!canManageInvoices(user)) return errorResponse('You do not have permission to delete invoices', 403);
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
-
-    const deleted = await removeInvoice(user?.integrator, id);
+    const deleted = user.role === 'engineer'
+      ? await removeEngineerInvoice(user.id, id)
+      : canManageInvoices(user)
+        ? await removeInvoice(user.integrator, id)
+        : null;
+    if (!deleted) return errorResponse('You do not have permission to delete invoices', 403);
     return NextResponse.json({ success: true, data: deleted });
   } catch (error) {
     logger.error(error);
@@ -98,17 +104,24 @@ export const PUT = async (req) => {
   try {
     const user = await getUserSession(req);
     if (!user) return errorResponse('Unauthorized', 401);
-    if (!canManageInvoices(user)) return errorResponse('You do not have permission to update invoices', 403);
-
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     const body = await req.json();
-    const allowedStatuses = new Set(['Paid', 'Unpaid', 'Cancelled']);
-    if (!allowedStatuses.has(body?.status) || Object.keys(body || {}).some((key) => key !== 'status')) {
-      return errorResponse('Only a valid invoice status can be updated', 400);
+    const action = url.searchParams.get('action');
+    let updated;
+    if (user.role === 'engineer') {
+      updated = await updateEngineerInvoice(user.id, id, body);
+    } else if (canManageInvoices(user) && action === 'review') {
+      updated = await reviewInvoice(user.integrator, user.id, id, body.status, body.reviewNotes);
+    } else if (canManageInvoices(user)) {
+      const allowedStatuses = new Set(['Paid', 'Unpaid', 'Cancelled']);
+      if (!allowedStatuses.has(body?.status) || Object.keys(body || {}).some((key) => key !== 'status')) {
+        return errorResponse('Only a valid payment status can be updated', 400);
+      }
+      updated = await updateInvoice(user.integrator, id, { status: body.status });
+    } else {
+      return errorResponse('You do not have permission to update invoices', 403);
     }
-
-    const updated = await updateInvoice(user.integrator, id, { status: body.status });
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     logger.error(error);
@@ -123,10 +136,10 @@ export const POST = async (req) => {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (!canManageInvoices(user)) return errorResponse('You do not have permission to create invoices', 403);
+    if (user.role !== 'engineer') return errorResponse('Only engineers can submit invoices and quotes', 403);
     const body = await req.json();
   
-    const result = await createInvoice(user?.integrator, user?.id, body);
+    const result = await createInvoice(user, body);
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     logger.error(error);

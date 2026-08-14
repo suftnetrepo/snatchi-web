@@ -321,6 +321,7 @@ export async function POST(req) {
       ? await Payment.findByIdAndUpdate(existingPayment._id, paymentPayload, { new: true, runValidators: true })
       : await Payment.create(paymentPayload);
 
+
     // Update scheduler with payment tracking
     const updatedScheduler = await Scheduler.findByIdAndUpdate(
       schedulerId,

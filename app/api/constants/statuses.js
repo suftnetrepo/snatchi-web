@@ -1,5 +1,5 @@
 /**
- * Centralized status constants for projects, tasks, and schedulers
+ * Centralized status constants for projects and schedulers
  * Used across the application to ensure consistency and avoid hardcoded strings
  * 
  * Source: Model enums in /app/api/models/
@@ -8,14 +8,6 @@
 
 // Project statuses - used in project.js model
 export const PROJECT_STATUS = {
-  PENDING: 'Pending',
-  PROGRESS: 'Progress',      // Currently showing status in progress
-  COMPLETED: 'Completed',
-  CANCELED: 'Canceled'
-};
-
-// Task statuses - used in task.js model
-export const TASK_STATUS = {
   PENDING: 'Pending',
   PROGRESS: 'Progress',      // Currently showing status in progress
   COMPLETED: 'Completed',
@@ -128,13 +120,12 @@ export const isSchedulerAwaitingPayment = (schedule) => {
 /**
  * Validate a status against allowed values
  * @param {string} status - Status to validate
- * @param {string} type - Status type: 'project', 'task', 'scheduler', 'webhook'
+ * @param {string} type - Status type: 'project', 'scheduler', or 'webhook'
  * @returns {boolean} True if status is valid
  */
 export const isValidStatus = (status, type = 'project') => {
   const statusMap = {
     project: Object.values(PROJECT_STATUS),
-    task: Object.values(TASK_STATUS),
     scheduler: Object.values(SCHEDULER_STATUS),
     webhook: Object.values(WEBHOOK_STATUS)
   };

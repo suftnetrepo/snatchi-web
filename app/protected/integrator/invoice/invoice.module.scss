@@ -47,6 +47,11 @@
 .status { display: inline-flex; align-items: center; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 850; letter-spacing: .25px; text-transform: uppercase; }
 .statusPaid { color: #08735f; background: #dff5ed; }
 .statusUnpaid { color: #9a6600; background: #fff1c7; }
+.statusDraft { color: #52606d; background: #eef2f6; }
+.statusSubmitted { color: #3730a3; background: #e0e7ff; }
+.statusVerified, .statusApproved { color: #075985; background: #e0f2fe; }
+.statusPaymentPending { color: #9a6600; background: #fff1c7; }
+.statusRejected, .statusCancelled { color: #b42318; background: #fee4e2; }
 .statusCancelled { color: #a33a45; background: #fde5e7; }
 .statusDefault { color: #526579; background: #e8edf2; }
 .viewButton { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid #dce5ec; border-radius: 9px; color: #526579; background: #fff; }
@@ -101,9 +106,11 @@
 .statusEditor { display: grid; align-items: end; gap: 12px; grid-template-columns: minmax(0, 1fr) 150px; }
 .statusEditor > div { grid-column: 1 / -1; }
 .statusEditor p { margin: 3px 0 0; color: #8492a4; font-size: 10px; }
-.statusEditor select, .statusEditor button { width: 100%; height: 44px; border-radius: 10px; }
+.statusEditor select, .statusEditor button, .statusEditor a { width: 100%; height: 44px; border-radius: 10px; }
 .statusEditor select { border: 1px solid #dbe4eb; padding: 0 9px; color: #28465e; background: #fff; }
-.statusEditor button { border: 0; color: #fff; background: #4f46e5; font-size: 12px; font-weight: 800; }
+.statusEditor textarea { grid-column: 1 / -1; min-height: 84px; border: 1px solid #dbe4eb; border-radius: 10px; padding: 10px 12px; color: #28465e; background: #fff; resize: vertical; }
+.statusEditor button, .statusEditor a { display: inline-flex; align-items: center; justify-content: center; border: 0; color: #fff; background: #4f46e5; font-size: 12px; font-weight: 800; text-decoration: none; }
+.statusEditor .rejectButton { color: #b42318; background: #fff; border: 1px solid #f0b8b3; }
 .statusEditor button:hover:not(:disabled) { background: #4338ca; }
 .statusEditor button:disabled { cursor: not-allowed; opacity: .5; }
 @keyframes spin { to { transform: rotate(360deg); } }

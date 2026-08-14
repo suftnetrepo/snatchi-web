@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useProject } from '@/hooks/useProject';
 import { Container, Row, Col, Card, Image } from 'react-bootstrap';
 import { FaClock } from 'react-icons/fa';
-import ProgressBar from '../../../../src/components/common/ProgressBar';
 import {
   getStatusColorCode,
   getRandomColor,
@@ -69,28 +68,12 @@ const Page = () => {
                     </div>
                   </div>
 
-                  <h5 className="">
-                    <span className="text-dark fw-normal fs-18"> {project.name}</span>
-                    <div className="flex-fill">
-                      <span className="text-muted d-block fs-14">
-                        Total{' '}
-                        <strong className="text-default">
-                          {project.completedTasks}/{project.totalTasks}
-                        </strong>{' '}
-                        tasks completed
-                      </span>
-                    </div>
-                  </h5>
+                  <h5 className="text-dark fw-normal fs-18">{project.name}</h5>
                   <div className="d-flex align-items-center justify-content-start">
                     <span className={`badge ${getStatusColorCode(project.status)}`}>{project.status}</span>
                   </div>
 
                   <p className="small text-muted mb-2 mt-2">{project.completeAddress}</p>
-
-                  <span className="text-dark me-2">Status</span>
-                  <div className="d-flex row align-items-center">
-                    <ProgressBar value={project.progress} max={100} />
-                  </div>
 
                   <div className="d-flex justify-content-between align-items-center">
                     <div className={`d-flex align-items-center ${getDaysLeftColor(daysleft)}`}>

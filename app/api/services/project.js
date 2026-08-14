@@ -1,14 +1,15 @@
 const mongoose = require('mongoose');
 import { projectValidator } from '../validator/user';
 import Project from '../models/project';
-import Task from '../models/task';
+// Register the model referenced by Project.assignedTo before using populate().
+import '../models/user';
 import Scheduler from '../models/scheduler';
 import Fence from '../models/fence';
 import Payment from '../models/payment';
 import Notification from '../models/notification';
 import { isValidObjectId } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
-import { PROJECT_STATUS, TASK_STATUS } from '../constants/statuses';
+import { PROJECT_STATUS } from '../constants/statuses';
 const { logger } = require('../utils/logger');
 
 mongoConnect();
@@ -94,149 +95,19 @@ const getMyProjects = async (userId) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       throw new Error('Invalid user ID');
     }
+    const engineerId = new mongoose.Types.ObjectId(userId);
+    const scheduledProjectIds = await Scheduler.distinct('project', { engineer: engineerId });
+    const projects = await Project.find({
+      $or: [
+        { 'assignedTo.id': engineerId },
+        { _id: { $in: scheduledProjectIds } }
+      ]
+    })
+      .populate('assignedTo.id', 'first_name last_name public_id secure_url')
+      .sort({ startDate: 1 })
+      .lean();
 
-    // Always return all projects — no status filtering
-    const matchStage = {
-      'assignedTo.id': new mongoose.Types.ObjectId(userId)
-    };
-
-    const projects = await Project.aggregate([
-      { $match: matchStage },
-
-      // Lookup tasks
-      {
-        $lookup: {
-          from: 'tasks',
-          localField: '_id',
-          foreignField: 'project',
-          as: 'tasks'
-        }
-      },
-
-      // Lookup assigned user details
-      {
-        $lookup: {
-          from: 'users',
-          let: { assignedIds: '$assignedTo.id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: { $in: ['$_id', '$$assignedIds'] }
-              }
-            },
-            {
-              $project: {
-                _id: 1,
-                public_id: 1,
-                secure_url: 1,
-                name: {
-                  $concat: [
-                    { $ifNull: ['$first_name', ''] },
-                    ' ',
-                    { $ifNull: ['$last_name', ''] }
-                  ]
-                }
-              }
-            }
-          ],
-          as: 'assignedUsers'
-        }
-      },
-
-      // Merge assigned users into assignedTo[]
-      {
-        $addFields: {
-          assignedTo: {
-            $map: {
-              input: '$assignedTo',
-              as: 'assignee',
-              in: {
-                $mergeObjects: [
-                  '$$assignee',
-                  {
-                    $arrayElemAt: [
-                      {
-                        $filter: {
-                          input: '$assignedUsers',
-                          as: 'user',
-                          cond: { $eq: ['$$user._id', '$$assignee.id'] }
-                        }
-                      },
-                      0
-                    ]
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-
-      // Cleanup
-      {
-        $project: {
-          __v: 0,
-          'tasks.__v': 0,
-          assignedUsers: 0
-        }
-      }
-    ]);
-
-    const today = new Date();
-
-    // Enhance tasks with defaults
-    const result = projects.map(project => {
-      const activeTasks = project.tasks; // keep all tasks
-
-      const totalTasks = activeTasks.length;
-      const completedTasks = activeTasks.filter(t => t.status === TASK_STATUS.COMPLETED).length;
-
-      const progress = totalTasks > 0
-        ? Math.round((completedTasks / totalTasks) * 10000) / 100
-        : 0;
-
-      const enhancedTasks = activeTasks.map(task => {
-        const dueDate = task.dueDate ? new Date(task.dueDate) : null;
-
-        let dueInDays = null;
-        let overdue = false;
-        let statusLabel = task.status;
-
-        if (dueDate) {
-          const diffMs = dueDate - today;
-          dueInDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-          overdue = dueInDays < 0;
-        }
-
-        if (task.status === TASK_STATUS.COMPLETED) {
-          statusLabel = 'Completed';
-        } else if (overdue) {
-          statusLabel = 'Delayed';
-        } else {
-          statusLabel = 'On Track';
-        }
-
-        return {
-          ...task,
-          dueInDays,
-          overdue,
-          statusLabel,
-          totalTasks,
-          completedTasks,
-          progress
-        };
-      });
-
-      return {
-        ...project,
-        tasks: enhancedTasks,
-        totalTasks,
-        completedTasks,
-        progress
-      };
-    });
-
-    return { data: result };
+    return { data: projects };
 
   } catch (error) {
     logger.error(error);
@@ -250,146 +121,21 @@ const getUserProjects = async (userId, excludeProjectStatuses = [PROJECT_STATUS.
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       throw new Error('Invalid user ID');
     }
-
-    const matchStage = {
-      'assignedTo.id': new mongoose.Types.ObjectId(userId)
+    const engineerId = new mongoose.Types.ObjectId(userId);
+    const scheduledProjectIds = await Scheduler.distinct('project', { engineer: engineerId });
+    const query = {
+      $or: [
+        { 'assignedTo.id': engineerId },
+        { _id: { $in: scheduledProjectIds } }
+      ],
+      ...(excludeProjectStatuses.length > 0 && { status: { $nin: excludeProjectStatuses } })
     };
+    const projects = await Project.find(query)
+      .populate('assignedTo.id', 'first_name last_name public_id secure_url')
+      .sort({ startDate: 1 })
+      .lean();
 
-    if (excludeProjectStatuses.length > 0) {
-      matchStage.status = { $nin: excludeProjectStatuses };
-    }
-
-    const projects = await Project.aggregate([
-      {
-        $match: matchStage
-      },
-      {
-        $lookup: {
-          from: 'tasks',
-          localField: '_id',
-          foreignField: 'project',
-          as: 'tasks'
-        }
-      },
-      {
-        $lookup: {
-          from: 'users',
-          let: { assignedIds: '$assignedTo.id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: { $in: ['$_id', '$$assignedIds'] }
-              }
-            },
-            {
-              $project: {
-                _id: 1,
-                public_id: 1,
-                secure_url: 1,
-                name: {
-                  $concat: [
-                    { $ifNull: ['$first_name', ''] },
-                    ' ',
-                    { $ifNull: ['$last_name', ''] }
-                  ]
-                }
-              }
-            }
-          ],
-          as: 'assignedUsers'
-        }
-      },
-      // Merge assigned user details into each assignedTo entry
-      {
-        $addFields: {
-          assignedTo: {
-            $map: {
-              input: '$assignedTo',
-              as: 'assignee',
-              in: {
-                $mergeObjects: [
-                  '$$assignee',
-                  {
-                    $arrayElemAt: [
-                      {
-                        $filter: {
-                          input: '$assignedUsers',
-                          as: 'user',
-                          cond: { $eq: ['$$user._id', '$$assignee.id'] }
-                        }
-                      },
-                      0
-                    ]
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      {
-        $project: {
-          __v: 0,
-          'tasks.__v': 0,
-          assignedUsers: 0
-        }
-      }
-    ]);
-
-    const today = new Date();
-
-    const result = projects.map(project => {
-      const activeTasks = project.tasks.filter(
-        t => ![PROJECT_STATUS.CANCELED, 'Archived'].includes(t.status)
-      );
-
-      const totalTasks = activeTasks.length;
-      const completedTasks = activeTasks.filter(t => t.status === TASK_STATUS.COMPLETED).length;
-      const progress = totalTasks > 0
-        ? Math.round((completedTasks / totalTasks) * 10000) / 100
-        : 0;
-
-      const enhancedTasks = activeTasks.map(task => {
-        const dueDate = task.dueDate ? new Date(task.dueDate) : null;
-        let dueInDays = null;
-        let overdue = false;
-        let statusLabel = task.status;
-
-        if (dueDate) {
-          const diffMs = dueDate - today;
-          dueInDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-          overdue = dueInDays < 0;
-        }
-
-        if (task.status === TASK_STATUS.COMPLETED) {
-          statusLabel = 'Completed';
-        } else if (overdue) {
-          statusLabel = 'Delayed';
-        } else {
-          statusLabel = 'On Track';
-        }
-
-        return {
-          ...task,
-          dueInDays,
-          overdue,
-          statusLabel,
-          totalTasks,
-          completedTasks,
-          progress
-        };
-      });
-
-      return {
-        ...project,
-        tasks: enhancedTasks,
-        totalTasks,
-        completedTasks,
-        progress
-      };
-    });
-
-    return { data: result };
+    return { data: projects };
   } catch (error) {
     logger.error(error);
     throw new Error(`Error fetching project summary by assigned user: ${error.message}`);
@@ -398,145 +144,22 @@ const getUserProjects = async (userId, excludeProjectStatuses = [PROJECT_STATUS.
 
 const getUserProjectById = async (projectId, userId) => {
   try {
-   
-    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    if (!mongoose.Types.ObjectId.isValid(projectId) || !mongoose.Types.ObjectId.isValid(userId)) {
       throw new Error('Invalid project ID');
     }
+    const engineerId = new mongoose.Types.ObjectId(userId);
+    const hasSchedule = await Scheduler.exists({ project: projectId, engineer: engineerId });
+    const project = await Project.findOne({
+      _id: projectId,
+      ...(hasSchedule ? {} : { 'assignedTo.id': engineerId })
+    })
+      .populate('assignedTo.id', 'first_name last_name public_id secure_url')
+      .lean();
 
-    const matchStage = {
-      _id: new mongoose.Types.ObjectId(projectId),
-      'assignedTo.id': new mongoose.Types.ObjectId(userId)
-    };
-
-    const projectResult = await Project.aggregate([
-      { $match: matchStage },
-      {
-        $lookup: {
-          from: 'tasks',
-          localField: '_id',
-          foreignField: 'project',
-          as: 'tasks',
-        },
-      },
-      {
-        $lookup: {
-          from: 'users',
-          let: { assignedIds: '$assignedTo.id' },
-          pipeline: [
-            { $match: { $expr: { $in: ['$_id', '$$assignedIds'] } } },
-            {
-              $project: {
-                _id: 1,
-                public_id: 1,
-                secure_url: 1,
-                name: {
-                  $concat: [
-                    { $ifNull: ['$first_name', ''] },
-                    ' ',
-                    { $ifNull: ['$last_name', ''] },
-                  ],
-                },
-              },
-            },
-          ],
-          as: 'assignedUsers',
-        },
-      },
-      {
-        $addFields: {
-          assignedTo: {
-            $map: {
-              input: '$assignedTo',
-              as: 'assignee',
-              in: {
-                $mergeObjects: [
-                  '$$assignee',
-                  {
-                    $arrayElemAt: [
-                      {
-                        $filter: {
-                          input: '$assignedUsers',
-                          as: 'user',
-                          cond: { $eq: ['$$user._id', '$$assignee.id'] },
-                        },
-                      },
-                      0,
-                    ],
-                  },
-                ],
-              },
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          __v: 0,
-          'tasks.__v': 0,
-          assignedUsers: 0,
-        },
-      },
-    ]);
-
-    if (projectResult.length === 0) {
+    if (!project) {
       throw new Error('Project not found');
     }
-
-    const today = new Date();
-    const project = projectResult[0];
-    const activeTasks = project.tasks.filter(
-      (t) => ![PROJECT_STATUS.CANCELED, 'Archived'].includes(t.status)
-    );
-
-    const totalTasks = activeTasks.length;
-    const completedTasks = activeTasks.filter(
-      (t) => t.status === TASK_STATUS.COMPLETED
-    ).length;
-    const progress =
-      totalTasks > 0
-        ? Math.round((completedTasks / totalTasks) * 10000) / 100
-        : 0;
-
-    const enhancedTasks = activeTasks.map((task) => {
-      const dueDate = task.dueDate ? new Date(task.dueDate) : null;
-      let dueInDays = null;
-      let overdue = false;
-      let statusLabel = task.status;
-
-      if (dueDate) {
-        const diffMs = dueDate - today;
-        dueInDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-        overdue = dueInDays < 0;
-      }
-
-      if (task.status === TASK_STATUS.COMPLETED) {
-        statusLabel = 'Completed';
-      } else if (overdue) {
-        statusLabel = 'Delayed';
-      } else {
-        statusLabel = 'On Track';
-      }
-
-      return {
-        ...task,
-        dueInDays,
-        overdue,
-        statusLabel,
-        totalTasks,
-        completedTasks,
-        progress,
-      };
-    });
-
-    return {
-      data: {
-        ...project,
-        tasks: enhancedTasks,
-        totalTasks,
-        completedTasks,
-        progress,
-      },
-    };
+    return { data: project };
   } catch (error) {
     logger.error(error);
     throw new Error(`Error fetching project by ID: ${error.message}`);
@@ -705,15 +328,14 @@ async function removeProject(suid, id) {
       throw error;
     }
 
-    const [taskCount, scheduleCount, fenceCount, paymentCount, notificationCount] = await Promise.all([
-      Task.countDocuments({ project: id }),
+    const [scheduleCount, fenceCount, paymentCount, notificationCount] = await Promise.all([
       Scheduler.countDocuments({ project: id }),
       Fence.countDocuments({ project: id }),
       Payment.countDocuments({ project: id }),
       Notification.countDocuments({ 'relatedTo.project': id })
     ]);
 
-    if (taskCount || scheduleCount || fenceCount || paymentCount || notificationCount) {
+    if (scheduleCount || fenceCount || paymentCount || notificationCount) {
       const error = new Error(
         'This project has related work records and cannot be permanently deleted. Mark it as Canceled instead.'
       );
@@ -853,7 +475,7 @@ const getProjectWeeklySummary = async (integratorId) => {
 
     if (projects.length === 0) {
       const emptyDays = getLast7Days().map(formatDateLabel);
-      return { projects: [], tasks: [], days: emptyDays };
+      return { projects: [], days: emptyDays };
     }
 
     const projectIds = projects.map((project) => project._id);
@@ -865,24 +487,6 @@ const getProjectWeeklySummary = async (integratorId) => {
     sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 6); // 7 days = today + 6 previous days
     const tomorrow = new Date(today);
     tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-
-    // Get last 7 days of trends (rolling window)
-    // Using UTC timezone in MongoDB to match our UTC date calculations in Node.js
-    const tasksByDay = await Task.aggregate([
-      {
-        $match: {
-          project: { $in: projectIds },
-          createdAt: { $gte: sevenDaysAgo, $lt: tomorrow }
-        }
-      },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'UTC' } },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { '_id': 1 } }
-    ]);
 
     const projectsByDay = await Project.aggregate([
       {
@@ -905,7 +509,6 @@ const getProjectWeeklySummary = async (integratorId) => {
     
     // Initialize result arrays with 0 for all 7 days
     const formattedProjects = Array(7).fill(0);
-    const formattedTasks = Array(7).fill(0);
 
     // Fill in actual data from aggregation
     projectsByDay.forEach((item) => {
@@ -917,19 +520,10 @@ const getProjectWeeklySummary = async (integratorId) => {
       }
     });
 
-    tasksByDay.forEach((item) => {
-      const index = last7Days.findIndex(
-        (d) => dateToUTCString(d) === item._id
-      );
-      if (index !== -1) {
-        formattedTasks[index] = item.count;
-      }
-    });
-
     // Format day labels as "Mon 20" for display
     const dayLabels = last7Days.map(formatDateLabel);
 
-    return { projects: formattedProjects, tasks: formattedTasks, days: dayLabels };
+    return { projects: formattedProjects, days: dayLabels };
   } catch (error) {
     logger.error('Error fetching project analysis data:', error);
     throw new Error('Error fetching project analysis data');

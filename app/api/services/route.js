@@ -4,7 +4,6 @@ const bcrypt = require('bcrypt');
 const Integrator = require('../models/integrator');
 const User = require('../models/user');
 const Project = require('../models/project');
-const Task = require('../models/task');
 import { NextResponse } from 'next/server';
 
 const { mongoConnect } = require('../../../utils/connectDb');
@@ -33,7 +32,6 @@ const clearSeeds = async () => {
     // await Integrator.deleteMany({});
     // await User.deleteMany({});
     // await Project.deleteMany({});
-    // await Task.deleteMany({});
     console.log('Existing seeds cleared');
   } catch (error) {
     console.error('Error clearing seeds:', error);

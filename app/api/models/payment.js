@@ -228,7 +228,6 @@ const PaymentSchema = new mongoose.Schema(
 PaymentSchema.index({ payingIntegrator: 1, createdAt: -1 });
 PaymentSchema.index({ receivingIntegrator: 1, createdAt: -1 });
 PaymentSchema.index({ engineer: 1, createdAt: -1 });
-PaymentSchema.index({ scheduler: 1 });
 PaymentSchema.index({ paymentStatus: 1, createdAt: -1 });
 PaymentSchema.index({ transferStatus: 1, createdAt: -1 });
 PaymentSchema.index({ paymentIntentId: 1 });

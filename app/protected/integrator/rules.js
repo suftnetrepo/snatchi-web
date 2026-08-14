@@ -65,51 +65,6 @@ const projectValidator = {
   }
 };
 
-const taskValidator = {
-  rules: {
-    name: [
-      { pattern: /^.+$/, message: 'Name is required' },
-      { pattern: /^.{0,250}$/, message: 'Name must not exceed 250 characters' }
-    ],
-    description: [
-      { pattern: /^.+$/, message: 'Scope of Work is required' },
-      { pattern: /^.{0,5000}$/, message: 'Scope of Work must not exceed 5000 characters' }
-    ],
-    status: [{ pattern: /^.+$/, message: 'Status is required' }],
-    priority: [{ pattern: /^.+$/, message: 'Priority is required' }],
-    startDate: [
-      { pattern: /^.+$/, message: 'Start date is required' },
-      {
-        validate: (value, fields) => {
-          if (fields?.endDate && new Date(value) > new Date(fields?.endDate)) {
-            return 'Start date cannot be after end date';
-          }
-          return undefined;
-        }
-      }
-    ],
-    endDate: [
-      { pattern: /^.+$/, message: 'End date is required' },
-      {
-        validate: (value, fields) => {
-          if (fields.startDate && new Date(value) < new Date(fields.startDate)) {
-            return 'End date cannot be before start date';
-          }
-          return undefined;
-        }
-      }
-    ]
-  },
-  fields: {
-    name: '',
-    status: '',
-    priority: '',
-    description: null,
-    startDate: '',
-    endDate: ''
-  }
-};
-
 const fileValidator = {
   rules: {
     document_name: [
@@ -241,18 +196,6 @@ const integratorValidator = {
   }
 };
 
-const taskCommentValidator = {
-  rules: {
-    text: [
-      { pattern: /^.+$/, message: 'Comment is required' },
-      { pattern: /^.{0,250}$/, message: 'Comment must not exceed 250 characters' }
-    ]
-  },
-  fields: {
-    text: ''
-  }
-};
-
 const schedulerValidator = {
   rules: {
     title: [
@@ -365,9 +308,7 @@ const schedulerSearchValidator = {
 };
 
 export {
-  taskCommentValidator,
   integratorValidator,
-  taskValidator,
   projectValidator,
   fileValidator,
   userValidator,

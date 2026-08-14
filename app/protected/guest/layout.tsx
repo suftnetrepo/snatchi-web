@@ -9,13 +9,12 @@ import Footer from '../../../src/components/layouts/Footer/Footer';
 import { config } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import RenderUserUserOffcanvas from './user/renderUserOffcanvas'
-import RenderTaskOffcanvas from './dashboard/renderTaskOffcanvas'
 import { useAppContext } from '@/Store/AppContext';
 
 config.autoAddCss = false;
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { showUserOffCanvas, taskOffCanvas, currentTask } = useAppContext();
+  const { showUserOffCanvas } = useAppContext();
 
   return (
     <>
@@ -34,7 +33,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <SidebarOverlay />
       </SidebarProvider>
       { showUserOffCanvas && <RenderUserUserOffcanvas show={showUserOffCanvas} /> }
-      { taskOffCanvas && <RenderTaskOffcanvas show={taskOffCanvas} task={currentTask} /> }
       
     </>
   );

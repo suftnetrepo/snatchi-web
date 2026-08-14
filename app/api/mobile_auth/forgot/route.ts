@@ -6,9 +6,11 @@ import { emailTemplates } from '../../../email';
 import { compileEmailTemplate } from '../../templates/compile-email-template';
 import { NextResponse } from 'next/server';
 
+ await mongoConnect();
+
 export async function POST(req: Request) {
   try {
-    await mongoConnect();
+   
 
     const body = await req.json();
 

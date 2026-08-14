@@ -1,10 +1,7 @@
 import { createContext, useState, useContext, ReactNode } from 'react';
 
-interface Task {}
-
 interface State {
   showUserOffCanvas: boolean;
-  taskOffCanvas: boolean;
   startDate: Date;
   endDate: Date;
   user_id: string;
@@ -12,19 +9,16 @@ interface State {
 
 interface Action {
   showOffCanvas: (show: boolean) => void;
-  showTaskOffCanvas: (show: boolean, currentTask: Task) => void;
   updateSelectedDate: (startDate: Date, endDate: Date, user_id: string) => void;
 }
 
 type AppContextType = State & Action;
 const defaultContextValue: AppContextType = {
   showUserOffCanvas: false,
-  taskOffCanvas: false,
   startDate: new Date(),
   endDate: new Date(),
   user_id: '',
   showOffCanvas: () => {},
-  showTaskOffCanvas: () => {},
   updateSelectedDate: () => {}
 };
 
@@ -42,7 +36,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const initialState: State = {
     // @ts-ignore
     showUserOffCanvas: false,
-    taskOffCanvas: false,
     startDate: new Date(),
     endDate: new Date(),
     user_id: ''
@@ -55,15 +48,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       setState((prevState) => ({
         ...prevState,
         showUserOffCanvas: show
-      }));
-    },
-
-    showTaskOffCanvas: (show, currentTask) => {
-      setState((prevState) => ({
-        ...prevState,
-        taskOffCanvas: show,
-        showUserOffCanvas: false,
-        currentTask
       }));
     },
 

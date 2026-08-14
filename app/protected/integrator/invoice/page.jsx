@@ -42,7 +42,7 @@ const Invoice = () => {
 
   const pageSummary = useMemo(() => ({
     paid: data.filter((item) => item.status === 'Paid').length,
-    outstanding: data.filter((item) => item.status === 'Unpaid').length,
+    outstanding: data.filter((item) => ['Submitted', 'Verified', 'PaymentPending', 'Unpaid'].includes(item.status)).length,
     value: data.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0)
   }), [data]);
 

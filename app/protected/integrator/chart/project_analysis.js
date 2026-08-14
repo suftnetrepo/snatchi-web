@@ -57,7 +57,7 @@ const ProjectAnalysis = ({ integratorId }) => {
                     borderRadius: 3,
                 },
             },
-            colors: ['rgb(132, 90, 223)', '#ededed'], // Colors for Projects and Tasks
+            colors: ['rgb(132, 90, 223)'],
         },
     });
 
@@ -66,13 +66,12 @@ const ProjectAnalysis = ({ integratorId }) => {
         const fetchData = async () => {
             try {
                 const response = await axios.get(`/api/project-analysis/${integratorId}`);
-                const { projects, tasks, days } = response.data;
+                const { projects, days } = response.data;
 
                 setChartData((prevData) => ({
                     ...prevData,
                     series: [
                         { name: 'Projects', type: 'column', data: projects },
-                        { name: 'Tasks', type: 'column', data: tasks },
                     ],
                     options: {
                         ...prevData.options,
