@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    // Reduce peak webpack heap usage on memory-constrained CI/build workers.
+    webpackMemoryOptimizations: true
+  },
   serverExternalPackages: ['mjml', 'uglify-js', 'bunyan'],
   eslint: {
     ignoreDuringBuilds: true
@@ -46,11 +50,19 @@ const nextConfig = {
 // Conditionally add Sentry if installed
 try {
   const { withSentryConfig } = require('@sentry/nextjs');
+  const isMemoryConstrainedBuild =
+    process.env.RENDER === 'true' || process.env.SENTRY_DISABLE_SOURCEMAPS === 'true';
+
   module.exports = withSentryConfig(nextConfig, {
     org: 'suftnetcom',
     project: 'snatchi',
     silent: !process.env.CI,
-    widenClientFileUpload: true,
+    // Widened uploads generate source maps for many more chunks and can push
+    // constrained Render builders past their heap limit.
+    widenClientFileUpload: false,
+    sourcemaps: {
+      disable: isMemoryConstrainedBuild
+    },
     disableLogger: true,
     automaticVercelMonitors: true
   });
