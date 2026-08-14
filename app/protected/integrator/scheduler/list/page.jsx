@@ -90,23 +90,6 @@ function SchedulerListContent() {
     normalizeSchedulerStatus(schedule.status) === SCHEDULER_STATUS.ACCEPTED &&
     isReceivingIntegratorSchedule(schedule);
 
-  const canStartSchedule = (schedule) => {
-    const normalizedStatus = normalizeSchedulerStatus(schedule.status);
-    return (
-      (normalizedStatus === SCHEDULER_STATUS.READY_TO_START ||
-        (normalizedStatus === SCHEDULER_STATUS.APPROVED && isSelfPaymentSchedule(schedule))) &&
-      (isEngineerSchedule(schedule) ||
-        (session?.user?.role === 'integrator' &&
-          [isReceivingIntegratorSchedule(schedule), isPayingIntegratorSchedule(schedule)].some(Boolean)))
-    );
-  };
-
-  const canCompleteSchedule = (schedule) =>
-    isSchedulerInProgress(schedule.status) &&
-    (isEngineerSchedule(schedule) ||
-      (session?.user?.role === 'integrator' &&
-        [isReceivingIntegratorSchedule(schedule), isPayingIntegratorSchedule(schedule)].some(Boolean)));
-
   const canDeleteSchedule = (schedule) =>
     session?.user?.role === 'integrator' &&
     isBookingIntegratorSchedule(schedule) &&
@@ -240,28 +223,6 @@ function SchedulerListContent() {
                   </span>
                 </Tooltip>
               )}
-
-            {canStartSchedule(row.original) && (
-              <Button
-                size="sm"
-                variant="outline-success"
-                data-testid="scheduler-status-action"
-                onClick={() => handleStatusChange(row.original._id, SCHEDULER_STATUS.IN_PROGRESS)}
-              >
-                Start Job
-              </Button>
-            )}
-
-            {canCompleteSchedule(row.original) && (
-              <Button
-                size="sm"
-                variant="outline-secondary"
-                data-testid="scheduler-status-action"
-                onClick={() => handleStatusChange(row.original._id, SCHEDULER_STATUS.COMPLETED)}
-              >
-                Mark Completed
-              </Button>
-            )}
 
             {/* Open Conversation button - show when chat_id exists */}
             {row.original.chat_id && (

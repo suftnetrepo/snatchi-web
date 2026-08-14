@@ -140,13 +140,18 @@ export const DELETE = async (req) => {
 
 export const POST = async (req) => {
   try {
+    const user = await getUserSession(req);
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await req.json();
-    console.log('Fence body....................', JSON.stringify(body));
-    const result = await bulkInsert(body?.location);
-    console.log('Fence body....................result', JSON.stringify(result));
+    const result = await bulkInsert(body?.location, user);
     return NextResponse.json({ success: true, data: result }, { status: 200 });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    logger.error(error);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: error.statusCode || 500 }
+    );
   }
 };

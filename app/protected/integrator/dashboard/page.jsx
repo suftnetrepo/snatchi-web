@@ -136,6 +136,7 @@ const Dashboard = () => {
     }, []);
 
     const hasProjectActivity = Array.isArray(chartData?.projects) && chartData.projects.some((count) => count > 0);
+    const hasProjects = (data?.totalProjects || 0) > 0;
 
     if (!resolved) {
       return (
@@ -157,7 +158,8 @@ const Dashboard = () => {
     return (
       <div className="card-body">
         <h5 className="card-title mb-2">Project activity</h5>
-        {hasProjectActivity ? (
+        <p className="text-muted mb-3">Projects created in the last 7 days</p>
+        {hasProjectActivity || hasProjects ? (
           <ProjectAnalysis data={chartData} />
         ) : (
           <div className="d-flex min-vh-25 flex-column align-items-center justify-content-center py-5 text-center">

@@ -118,7 +118,7 @@ export const GET = async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
-    // await removeAll()
+     // await removeAll()
 
     // Handle getEngineerSchedules action — date + status filtering
     if (action === 'getEngineerSchedules') {
@@ -338,6 +338,22 @@ export const POST = async (req) => {
       const result = await addMany({ ...body, integrator: user?.integrator });
       const fullSchedule = result.bookings?.[0];
       const engineerFirebaseUid = await provisionEngineerChatUser(fullSchedule);
+      if (fullSchedule) {
+        await sendPendingNotification(fullSchedule._id, body, {
+          scheduleId: fullSchedule._id,
+          bookingGroupId: result.bookingGroupId,
+          bookingGroupSize: result.bookings.length,
+          engineerId: fullSchedule.engineer?._id,
+          projectId: fullSchedule.project?._id,
+          projectName: fullSchedule.project?.name || '',
+          startDate: fullSchedule.startDate,
+          endDate: result.bookings[result.bookings.length - 1]?.endDate,
+          startTime: fullSchedule.startTime,
+          endTime: fullSchedule.endTime,
+          status: fullSchedule.status,
+          engineerFirebaseUid
+        });
+      }
       return successResponse(
         {
           ...result,

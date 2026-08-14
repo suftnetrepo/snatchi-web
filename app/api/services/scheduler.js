@@ -477,14 +477,10 @@ async function updateByStatus(id, body, actor = {}) {
     };
     const bookingIntegratorTransitions = {
       [SCHEDULER_STATUS.PENDING]: [SCHEDULER_STATUS.CANCELLED],
-      [SCHEDULER_STATUS.ACCEPTED]: [SCHEDULER_STATUS.CANCELLED],
-      [SCHEDULER_STATUS.READY_TO_START]: [SCHEDULER_STATUS.IN_PROGRESS],
-      [SCHEDULER_STATUS.IN_PROGRESS]: [SCHEDULER_STATUS.COMPLETED]
+      [SCHEDULER_STATUS.ACCEPTED]: [SCHEDULER_STATUS.CANCELLED]
     };
     const receivingIntegratorTransitions = {
-      [SCHEDULER_STATUS.ACCEPTED]: [SCHEDULER_STATUS.APPROVED, SCHEDULER_STATUS.CANCELLED],
-      [SCHEDULER_STATUS.READY_TO_START]: [SCHEDULER_STATUS.IN_PROGRESS],
-      [SCHEDULER_STATUS.IN_PROGRESS]: [SCHEDULER_STATUS.COMPLETED]
+      [SCHEDULER_STATUS.ACCEPTED]: [SCHEDULER_STATUS.APPROVED, SCHEDULER_STATUS.CANCELLED]
     };
 
     const allowed = (
@@ -493,10 +489,6 @@ async function updateByStatus(id, body, actor = {}) {
       isIntegratorActor && isBookingIntegrator && bookingIntegratorTransitions[currentStatus]?.includes(requestedStatus)
     ) || (
       isIntegratorActor && isReceivingIntegrator && receivingIntegratorTransitions[currentStatus]?.includes(requestedStatus)
-    ) || (
-      // Compatibility for internal bookings approved before payment bypass was introduced.
-      isIntegratorActor && isBookingIntegrator && isInternalBooking &&
-      currentStatus === SCHEDULER_STATUS.APPROVED && requestedStatus === SCHEDULER_STATUS.IN_PROGRESS
     );
     if (!allowed) {
       throw serviceError(`Booking cannot move from ${currentStatus} to ${requestedStatus} for this user`, 409);
@@ -508,8 +500,6 @@ async function updateByStatus(id, body, actor = {}) {
 
     const now = new Date();
     const isInternalApproval = requestedStatus === SCHEDULER_STATUS.APPROVED && isInternalBooking;
-    const isLegacyInternalStart = currentStatus === SCHEDULER_STATUS.APPROVED &&
-      requestedStatus === SCHEDULER_STATUS.IN_PROGRESS && isInternalBooking;
     const nextStatus = isInternalApproval ? SCHEDULER_STATUS.READY_TO_START : requestedStatus;
     const timestampFields = {
       [SCHEDULER_STATUS.ACCEPTED]: { acceptedAt: now },
@@ -530,12 +520,6 @@ async function updateByStatus(id, body, actor = {}) {
         status: nextStatus,
         ...(timestampFields[requestedStatus] || {}),
         ...(isInternalApproval
-          ? {
-              paymentStatus: 'not_required',
-              readyToStartAt: schedule.readyToStartAt || now
-            }
-          : {}),
-        ...(isLegacyInternalStart
           ? {
               paymentStatus: 'not_required',
               readyToStartAt: schedule.readyToStartAt || now
@@ -674,6 +658,12 @@ async function getAllSchedules(integratorId) {
  */
 const expandStatusAlias = (status) => {
   const normalized = normalizeSchedulerStatus(status);
+  if (normalized === SCHEDULER_STATUS.IN_PROGRESS) {
+    return [...new Set([status, SCHEDULER_STATUS.IN_PROGRESS, SCHEDULER_STATUS.PROGRESS])];
+  }
+  if (normalized === SCHEDULER_STATUS.READY_TO_START) {
+    return [...new Set([status, SCHEDULER_STATUS.READY_TO_START, SCHEDULER_STATUS.READY])];
+  }
   return normalized !== status ? [status, normalized] : [normalized];
 };
 
@@ -808,7 +798,7 @@ async function getEngineerSchedulesByStatus({ engineerId, status }) {
   try {
     const schedules = await Scheduler.find({
       engineer: toObjectId(engineerId),
-      status: normalizedStatus
+      status: { $in: expandStatusAlias(normalizedStatus) }
     }).sort({ startDate: 1, startTime: 1 });
 
     return { data: schedules };
@@ -828,7 +818,7 @@ async function getSchedulesByEngineerAndStatus({ engineerId, status }) {
   try {
     const schedules = await Scheduler.find({
       engineer: toObjectId(engineerId),
-      status: normalizedStatus
+      status: { $in: expandStatusAlias(normalizedStatus) }
     }).sort({ startDate: 1, startTime: 1 });
 
     return { data: schedules };

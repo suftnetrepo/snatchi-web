@@ -22,6 +22,12 @@ const fenceSchema = new mongoose.Schema(
       ref: 'Project',
       required: true
     },
+    schedule: {
+      type: Schema.Types.ObjectId,
+      ref: 'Scheduler',
+      required: true,
+      index: true
+    },
     date: {
       type: Date,
       required: true,

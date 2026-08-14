@@ -42,9 +42,6 @@ function Render() {
           </div>
         </DropdownToggle>
         <DropdownMenu className="pt-4">
-          <DropdownItem onClick={() => showOffCanvas(true)}>
-            <ItemWithIcon icon={faUser}>Manage Your Profile</ItemWithIcon>
-          </DropdownItem>
           <DropdownItem onClick={handleSignOut}>
             <ItemWithIcon icon={faPowerOff}>logout</ItemWithIcon>
           </DropdownItem>

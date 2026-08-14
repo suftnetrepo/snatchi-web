@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 import { fenceValidator } from '../validator/user';
 import Fence from '../models/fence';
+import Scheduler from '../models/scheduler';
 import { isValidObjectId, getTimeOnly } from '../utils/helps';
 import { mongoConnect } from '@/utils/connectDb';
 import { logger } from '../utils/logger';
@@ -124,7 +125,7 @@ async function resetFenceCollection() {
   console.log('✅ Fence collection reset and indexes synced');
 }
 
-async function bulkInsert(location) {
+async function bulkInsert(location, actor) {
   try {
 
     // resetFenceCollection();
@@ -135,7 +136,8 @@ async function bulkInsert(location) {
     }
 
     const geofenceEntries = location.filter(
-      entry => entry?.geofence?.extras && entry?.uuid
+      entry => entry?.geofence?.extras && entry?.uuid &&
+        mongoose.Types.ObjectId.isValid(entry.geofence.extras.scheduleId || entry.geofence.extras.id)
     );
 
     // 2️⃣ Early exit (CRITICAL)
@@ -143,8 +145,35 @@ async function bulkInsert(location) {
       return { inserted: 0, skipped: 0, total: 0 };
     }
 
+    if (!actor?.id || !mongoose.Types.ObjectId.isValid(actor.id)) {
+      throw Object.assign(new Error('Unauthorized'), { statusCode: 401 });
+    }
+
+    const scheduleIds = [...new Set(geofenceEntries.map(
+      entry => String(entry.geofence.extras.scheduleId || entry.geofence.extras.id)
+    ))];
+    const schedules = await Scheduler.find({
+      _id: { $in: scheduleIds.map(id => new mongoose.Types.ObjectId(id)) },
+      engineer: new mongoose.Types.ObjectId(actor.id),
+      status: { $in: ['InProgress', 'Completed'] }
+    }).populate('project', 'name completeAddress location integrator');
+    const scheduleById = new Map(schedules.map(schedule => [String(schedule._id), schedule]));
+
+    const authorizedEntries = geofenceEntries.filter(entry => {
+      const extras = entry.geofence.extras;
+      const schedule = scheduleById.get(String(extras.scheduleId || extras.id));
+      if (!schedule?.startedAt) return false;
+      const timestamp = new Date(entry.timestamp);
+      if (Number.isNaN(timestamp.getTime()) || timestamp < schedule.startedAt) return false;
+      return !schedule.completedAt || timestamp <= schedule.completedAt;
+    });
+
+    if (authorizedEntries.length === 0) {
+      return { inserted: 0, skipped: geofenceEntries.length, total: geofenceEntries.length };
+    }
+
     // 3️⃣ Always an array now
-    const incomingUuids = geofenceEntries.map(entry => entry.uuid);
+    const incomingUuids = authorizedEntries.map(entry => entry.uuid);
 
     // 4️⃣ Only query if we have UUIDs
     const existingFences = await Fence.find({
@@ -154,7 +183,7 @@ async function bulkInsert(location) {
     const existingUuids = new Set(existingFences.map(f => f.uuid));
 
     // 5️⃣ Filter new entries
-    const newEntries = geofenceEntries.filter(
+    const newEntries = authorizedEntries.filter(
       entry => !existingUuids.has(entry.uuid)
     );
 
@@ -162,20 +191,23 @@ async function bulkInsert(location) {
     const bulkData = newEntries.map(entry => {
       const { geofence, timestamp, uuid } = entry;
       const extras = geofence.extras;
+      const schedule = scheduleById.get(String(extras.scheduleId || extras.id));
+      const project = schedule.project;
 
       return {
         uuid,
-        integrator: new mongoose.Types.ObjectId(extras.integrator),
-        user: new mongoose.Types.ObjectId(extras.userId),
-        project: new mongoose.Types.ObjectId(extras.projectId),
+        integrator: schedule.integrator,
+        user: schedule.engineer,
+        project: project._id,
+        schedule: schedule._id,
         date: new Date(timestamp),
-        siteName: extras.siteName,
-        radius: extras.radius,
-        first_name: extras.firstName,
-        last_name: extras.lastName,
+        siteName: project.name || extras.siteName || schedule.title,
+        radius: Number(extras.radius) || 200,
+        first_name: extras.firstName || 'Engineer',
+        last_name: extras.lastName || 'User',
         time: getTimeOnly(timestamp),
         status: geofence.action === 'ENTER' ? 'Enter' : 'Exit',
-        completeAddress: extras.completeAddress,
+        completeAddress: project.completeAddress || extras.completeAddress,
         latitude: String(extras.latitude),
         longitude: String(extras.longitude),
       };
@@ -188,7 +220,7 @@ async function bulkInsert(location) {
 
     return {
       inserted: insertedDocs.length,
-      skipped: existingUuids.size,
+      skipped: geofenceEntries.length - insertedDocs.length,
       total: geofenceEntries.length,
     };
   } catch (error) {

@@ -86,10 +86,8 @@ const CheckOut = () => {
     }
 
     if (paymentIntent?.status === 'succeeded') {
-      handleSignUp({
-        email: fields.email,
-        password: CHAT_USER_PASSWORD
-      }).catch((error) => {
+      
+      handleSignUp(fields.email, CHAT_USER_PASSWORD).catch((error) => {
         console.error('Error signing up user:', error);
       });
 

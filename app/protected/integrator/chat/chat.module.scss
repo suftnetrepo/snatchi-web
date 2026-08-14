@@ -66,7 +66,8 @@
 .chatContent > div { width: 100%; min-width: 0; }
 .chatContent :global(.chat-panel__body) { display: flex; width: 100% !important; height: 100%; min-width: 0; min-height: 0; flex: 1 1 auto !important; flex-direction: column; }
 .chatContent :global(.messages-scroll-container) { width: 100%; min-height: 0; flex: 1 1 auto; }
-.chatContent :global(.messages-scroll-container) { padding-right: 38px; }
+.chatContent :global(.messages-scroll-container) { padding-right: 38px; padding-left: 38px; }
+.chatContent :global(.chat-message:not(.is-same-origin)) { padding-left: 4px; }
 .chatContent :global(.chat-panel__footer) { width: 100%; margin-top: 0 !important; padding-right: 34px; flex: 0 0 auto; }
 .emptyConversation { display: flex; max-width: 440px; align-items: center; justify-content: center; margin: auto; padding: 30px; flex-direction: column; text-align: center; }
 .emptyIcon { display: grid; width: 72px; height: 72px; place-items: center; margin-bottom: 20px; border: 1px solid #d9dfe7; border-radius: 10px; color: var(--brand); background: #fff; font-size: 30px; }
@@ -118,4 +119,6 @@
   .chatHeader { align-items: flex-start; flex-direction: column; }
   .headerActions { width: 100%; }
   .headerActions button { flex: 1; justify-content: center; }
+  .chatContent :global(.messages-scroll-container) { padding-right: 16px; padding-left: 16px; }
+  .chatContent :global(.chat-message:not(.is-same-origin)) { padding-left: 0; }
 }
