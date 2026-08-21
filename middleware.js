@@ -3,6 +3,16 @@ import { AuthService } from './lib/AuthService';
 import { getToken } from 'next-auth/jwt';
 
 const isApiRoute = (pathname) => pathname.startsWith('/api');
+const isAdminRoute = (pathname) =>
+  pathname.startsWith('/protected/admin') || pathname.startsWith('/api/admin');
+
+const denyAdminAccess = (req) => {
+  if (isApiRoute(req.nextUrl.pathname)) {
+    return NextResponse.json({ error: 'Forbidden', message: 'Administrator access required' }, { status: 403 });
+  }
+
+  return NextResponse.redirect(new URL('/login?error=admin_access_required', req.url));
+};
 
 export async function middleware(req) {
   try {
@@ -20,10 +30,11 @@ export async function middleware(req) {
     const nextToken = await getToken({
       req,
       secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: false,
+      secureCookie: req.nextUrl.protocol === 'https:',
     });
 
     if (nextToken) {
+      if (isAdminRoute(pathname) && nextToken.role !== 'admin') return denyAdminAccess(req);
       return NextResponse.next();
     }
 
@@ -34,6 +45,7 @@ export async function middleware(req) {
       const bearerToken = authHeader.split(' ')[1];
       try {
         const decoded = await AuthService.verifyAccessToken(bearerToken);
+        if (isAdminRoute(pathname) && decoded?.role !== 'admin') return denyAdminAccess(req);
         return NextResponse.next();
       } catch (e) {
         console.warn('❌ Invalid bearer token');
@@ -43,16 +55,13 @@ export async function middleware(req) {
     // -------------------------------------------
     // 5. Block non-API routes
     // -------------------------------------------
-    if (!isApiRoute(pathname)) {
+    if (isApiRoute(pathname)) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
       );
     }
 
-    // -------------------------------------------
-    // 6. Redirect API requests to login
-    // -------------------------------------------
     const returnUrl = encodeURIComponent(req.nextUrl.pathname);
     return NextResponse.redirect(new URL(`/login?returnUrl=${returnUrl}`, req.url));
   } catch (error) {

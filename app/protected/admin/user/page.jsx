@@ -2,7 +2,6 @@
 
 import React, { useMemo, useState } from 'react';
 import { Table } from '@/components/elements/table/table';
-import { Button } from 'react-bootstrap';
 import { useUser } from '../../../../hooks/useUser';
 import Badge from 'react-bootstrap/Badge';
 import { MdDelete } from 'react-icons/md';
@@ -37,10 +36,7 @@ const User = () => {
     handleReset();
     setShow(false);
   };
-  const handleShow = () => {
-    handleReset();
-    setShow(true);
-  };
+  const handleShow = () => setShow(true);
 
   const columns = useMemo(
     () => [
@@ -98,32 +94,28 @@ const User = () => {
 
   return (
     <>
-      <div className={`ms-5 me-5 mt-2 ${!loading ? 'overlay__block' : null}`}>
+      <div className="card border-0 shadow-sm rounded-4 p-3 p-md-4">
         <div className="card-body">
-          <h5 className="card-title ms-2 mb-2">Users</h5>
+          <div className="mb-4">
+            <div className="text-uppercase small fw-bold text-primary mb-1">Platform directory</div>
+            <h1 className="h3 mb-1">Users</h1>
+            <p className="text-muted mb-0">Review and maintain user access across Snatchi organisations.</p>
+          </div>
           <div className="d-flex justify-content-between align-items-center mb-3">
-            {/* Search Box */}
             <input
               type="text"
-              className="form-control w-25"
-              placeholder="Search..."
+              className="form-control"
+              style={{ maxWidth: 420 }}
+              aria-label="Search users"
+              placeholder="Search by name, email, mobile or role"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <Button
-              type="submit"
-              size="sm"
-              onClick={() => {
-                handleShow();
-              }}
-            >
-             + Add User
-            </Button>
           </div>
           <Table data={data} columns={columns} pageCount={totalCount} loading={loading} fetchData={handleFetchUsers} />
         </div>
       </div>
-      {!loading && <span className="overlay__block" />}
+      {loading && <span className="overlay__block" aria-label="Loading users" />}
       {error && <ErrorDialogue showError={error} onClose={() => {}} />}
       <RenderUserOffcanvas
         handleClose={handleClose}

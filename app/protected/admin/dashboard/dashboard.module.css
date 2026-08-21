@@ -1,0 +1,25 @@
+.dashboard { display: grid; gap: 24px; }
+.pageHeader { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 8px 0 4px; }
+.pageHeader h1 { margin: 3px 0 7px; font-size: clamp(1.8rem, 3vw, 2.45rem); letter-spacing: -.035em; color: #111827; }
+.pageHeader p { margin: 0; color: #667085; }
+.eyebrow, .panelLabel { color: #6750d8 !important; font-size: .76rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
+.headerActions { display: flex; gap: 10px; flex-wrap: wrap; }
+.primaryAction, .secondaryAction { display: inline-flex; align-items: center; gap: 7px; min-height: 42px; padding: 0 16px; border-radius: 10px; font-size: .9rem; font-weight: 700; text-decoration: none; }
+.primaryAction { color: #fff; background: #2d226d; box-shadow: 0 8px 20px rgba(45,34,109,.2); }
+.secondaryAction { color: #344054; background: #fff; border: 1px solid #dfe3eb; }
+.statsGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.statCard { display: flex; gap: 14px; min-height: 148px; padding: 20px; border: 1px solid #e5e8ef; border-radius: 16px; background: #fff; box-shadow: 0 8px 28px rgba(16,24,40,.045); }
+.statCard > div:last-child { display: flex; min-width: 0; flex-direction: column; }
+.statCard span { color: #667085; font-size: .86rem; font-weight: 650; }
+.statCard strong { margin: 7px 0 5px; color: #101828; font-size: 2rem; line-height: 1; }
+.statCard small { color: #98a2b3; line-height: 1.4; }
+.statIcon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 12px; font-size: 1.15rem; }
+.green { color: #087a55; background: #e7f8f1; }.slate { color: #475467; background: #f0f2f5; }.amber { color: #b54708; background: #fff3df; }.red { color: #b42318; background: #feeceb; }
+.analyticsGrid { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(280px, .7fr); gap: 16px; }
+.panel { min-width: 0; padding: 22px; overflow: hidden; border: 1px solid #e5e8ef; border-radius: 16px; background: #fff; box-shadow: 0 8px 28px rgba(16,24,40,.04); }
+.panelHeader { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.panelHeader h2 { margin: 3px 0 0; color: #1d2939; font-size: 1.08rem; }.panelHeader a { font-size: .86rem; font-weight: 700; }
+.chart { min-height: 260px; }.polarChart { display: grid; min-height: 260px; place-items: center; color: #98a2b3; }
+.errorBanner { padding: 13px 16px; border: 1px solid #fecdca; border-radius: 10px; color: #912018; background: #fef3f2; }
+@media (max-width: 1100px) { .statsGrid { grid-template-columns: repeat(2, 1fr); }.analyticsGrid { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .pageHeader { align-items: stretch; flex-direction: column; }.headerActions { display: grid; }.primaryAction,.secondaryAction { justify-content: center; }.statsGrid { grid-template-columns: 1fr; }.panel { padding: 17px; } }

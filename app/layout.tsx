@@ -1,7 +1,5 @@
-'use client';
-import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
-import ThemeProvider from '@/theme/ThemeProvider';
+import type { Metadata } from 'next';
+import Providers from './providers';
 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 // Bootstrap and custom scss
@@ -20,37 +18,31 @@ import 'plyr-react/plyr.css';
 import 'glightbox/dist/css/glightbox.css';
 // custom scrollcue css
 import '@/plugins/scrollcue/scrollCue.css';
-import { AppProvider } from '../Store/AppContext';
-import { SessionProvider } from 'next-auth/react';
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://snatchi.com'),
+  title: {
+    default: 'Snatchi — AV Project, Engineer and Booking Management',
+    template: '%s | Snatchi'
+  },
+  description: 'Plan AV projects, schedule engineers, share documents and manage team communication from one workspace.',
+  applicationName: 'Snatchi',
+  openGraph: {
+    type: 'website',
+    siteName: 'Snatchi',
+    title: 'Snatchi — AV Project, Engineer and Booking Management',
+    description: 'Run AV projects, engineers and bookings from one workspace.'
+  },
+  robots: { index: true, follow: true }
+};
 
 function RootLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      require('bootstrap');
-    }
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      const scrollCue = (await import('@/plugins/scrollcue')).default;
-      scrollCue.init({ interval: -400, duration: 700, percentage: 0.8 });
-      scrollCue.update();
-    })();
-  }, [pathname]);
-
   return (
     <html lang="en">
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
       </head>
       <body>
-        <SessionProvider>
-          <ThemeProvider>
-          <AppProvider>{children}</AppProvider>
-          </ThemeProvider>
-        </SessionProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

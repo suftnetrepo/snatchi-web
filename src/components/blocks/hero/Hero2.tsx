@@ -1,15 +1,12 @@
 import { FC } from 'react';
-import { slideInDownAnimate, zoomInAnimate } from '@/utils/animation';
 import NextLink from '@/components/reuseable/links/NextLink';
-import AppBtn from '@/components/common/AppBtn';
 
 
 const Hero2: FC = () => {
   return (
     <div className="row gx-lg-0 gx-xl-8 gy-10 gy-md-13 gy-lg-0 mb-7 mb-md-10 mb-lg-16 align-items-center">
       <div
-        className="col-md-8 offset-md-2 col-lg-6 offset-lg-1 position-relative order-lg-2"
-        style={zoomInAnimate('0ms')}
+        className="col-md-8 offset-md-2 col-lg-6 offset-lg-1 position-relative order-2 order-lg-2 mt-8 mt-lg-0"
       >
         <div className="shape bg-dot primary rellax w-17 h-19" style={{ top: '-1.7rem', left: '-1.5rem' }} />
         <div
@@ -22,22 +19,21 @@ const Hero2: FC = () => {
         </figure>
       </div>
 
-      <div className="col-lg-5 mt-lg-n10 text-center text-lg-start">
-        <h1 className="display-1 mb-5" style={slideInDownAnimate('600ms')}>
-          The Complete Platform for AV Work Management
+      <div className="col-lg-5 order-1 mt-lg-n10 text-center text-lg-start">
+        <h1 className="display-1 mb-5">
+          Run AV projects, engineers and bookings from one workspace
         </h1>
 
-        <p className="lead fs-25 lh-sm mb-7 px-md-10 px-lg-0" style={slideInDownAnimate('900ms')}>
-          Simplify workflows and manage every aspect of your AV projects in one place.
+        <p className="lead fs-25 lh-sm mb-7 px-md-10 px-lg-0">
+          Plan projects, schedule engineers, share documents and keep your team informed without juggling disconnected tools.
         </p>
 
         <div className="d-flex justify-content-center justify-content-lg-start">
-          <span style={slideInDownAnimate('1200ms')}>
-            <NextLink title="Get Started" href="#plans" className="btn btn-lg btn-primary rounded-pill me-2" />
+          <span>
+            <NextLink title="View Plans" href="#plans" className="btn btn-lg btn-primary rounded-pill me-2" />
           </span>
-
-          <span style={slideInDownAnimate('1500ms')}>
-            <AppBtn></AppBtn>
+          <span>
+            <NextLink title="Explore Features" href="/features" className="btn btn-lg btn-outline-primary rounded-pill" />
           </span>
         </div>
       </div>

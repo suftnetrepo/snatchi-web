@@ -1,16 +1,16 @@
 // import Stripe from 'stripe';
 import { logger } from '../../utils/logger';
 import Stripe from 'stripe';
-import { pricingList } from '../../../../src/data/pricing';
 import { rateLimitMiddleware, recordFailedCheckout, clearRateLimit } from '../../middleware/rate-limiter';
 import Integrator from '../../models/integrator';
 import { mongoConnect } from '../../../../utils/connectDb';
 import jwt from 'jsonwebtoken';
+import { getPlanByPriceId } from '../../constants/plans';
 const { NextResponse } = require('next/server');
 
 // Validate price ID against known pricing
 function isValidPriceId(priceId) {
-  return pricingList.some(plan => plan.priceId === priceId || plan.live_priceId === priceId);
+  return Boolean(getPlanByPriceId(priceId));
 }
 
 const createCheckoutToken = ({ customerId, email, integratorId }) => jwt.sign(
@@ -21,14 +21,30 @@ const createCheckoutToken = ({ customerId, email, integratorId }) => jwt.sign(
 
 // POST handler for creating a subscription
 export async function POST(req) {
+  let parsedBody = null;
   try {
     // Parse the request body
     const body = await req.json();
-    const { priceId, contact, integratorId } = body;
+    parsedBody = body;
+    const { priceId, contact, integratorId, onboardingToken } = body;
     const email = String(body.email || '').trim().toLowerCase();
 
     if (!isValidPriceId(priceId)) {
       return NextResponse.json({ error: 'Invalid plan selected' }, { status: 400 });
+    }
+    let onboarding;
+    try {
+      onboarding = jwt.verify(onboardingToken, process.env.NEXTAUTH_SECRET);
+    } catch {
+      return NextResponse.json({ error: 'Your checkout session has expired. Please start again.' }, { status: 401 });
+    }
+    if (
+      onboarding.purpose !== 'subscription-onboarding' ||
+      onboarding.integratorId !== String(integratorId) ||
+      onboarding.email !== email ||
+      onboarding.priceId !== priceId
+    ) {
+      return NextResponse.json({ error: 'Invalid checkout session' }, { status: 401 });
     }
 
     await mongoConnect();
@@ -146,8 +162,7 @@ export async function POST(req) {
   } catch (error) {
     // Parse customer ID from body if available for rate limit recording
     try {
-      const body = await req.json().catch(() => ({}));
-      const customerId = body.customerId;
+      const customerId = parsedBody?.customerId;
       if (customerId) {
         recordFailedCheckout(customerId, error.message);
       }

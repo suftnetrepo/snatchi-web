@@ -16,6 +16,7 @@ import { logger } from '../utils/logger';
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
 import { v2 as cloudinary } from 'cloudinary';
+import { getOrganisationEntitlements, isActiveProjectStatus, releaseEntitlement, reserveEntitlement } from '../services/entitlements';
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUD_NAME,
@@ -55,7 +56,7 @@ const authenticateUser = async (req) => {
 // Error response helper
 const errorResponse = (message, status = 500, error = null) => {
   logger.error(error || message);
-  return NextResponse.json({ success: false, error: message }, { status });
+  return NextResponse.json({ success: false, error: message, code: error?.code, details: error?.details }, { status });
 };
 
 // Success response helper
@@ -101,7 +102,7 @@ export const GET = async (req) => {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
-    // TODO: Re-enable subscription enforcement after billing rollout is complete.
+    await getOrganisationEntitlements(user.integrator);
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
@@ -208,6 +209,7 @@ export const DELETE = async (req) => {
     const id = url.searchParams.get('id');
 
     const deleted = await removeProject(user?.integrator, id);
+    if (isActiveProjectStatus(deleted.status)) await releaseEntitlement(user.integrator, 'activeProjects');
     const cleanupResults = await Promise.allSettled(
       (deleted.attachments || []).map(deleteProjectAttachment)
     );
@@ -234,8 +236,24 @@ export const PUT = async (req) => {
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     const body = sanitizeProjectBody(await req.json());
-
-    const result = await updateProject(user.integrator, id, body);
+    await getOrganisationEntitlements(user.integrator);
+    const existing = await getProjectById(id, user.integrator);
+    if (!existing?.data) return errorResponse('Project not found', 404);
+    const wasActive = isActiveProjectStatus(existing.data.status);
+    const willBeActive = isActiveProjectStatus(body.status ?? existing.data.status);
+    let reserved = false;
+    if (!wasActive && willBeActive) {
+      await reserveEntitlement(user.integrator, 'activeProjects');
+      reserved = true;
+    }
+    let result;
+    try {
+      result = await updateProject(user.integrator, id, body);
+    } catch (updateError) {
+      if (reserved) await releaseEntitlement(user.integrator, 'activeProjects');
+      throw updateError;
+    }
+    if (wasActive && !willBeActive) await releaseEntitlement(user.integrator, 'activeProjects');
 
     return successResponse(result);
   } catch (error) {
@@ -253,7 +271,15 @@ export const POST = async (req) => {
     if (!canManageProjects(user)) return forbiddenResponse();
 
     const body = sanitizeProjectBody(await req.json());
-    const result = await createProject(user?.integrator, body);
+    const countsAsActive = isActiveProjectStatus(body.status);
+    if (countsAsActive) await reserveEntitlement(user.integrator, 'activeProjects');
+    let result;
+    try {
+      result = await createProject(user?.integrator, body);
+    } catch (createError) {
+      if (countsAsActive) await releaseEntitlement(user.integrator, 'activeProjects');
+      throw createError;
+    }
     return successResponse(result);
   } catch (error) {
     return errorResponse(error.message, error.statusCode || 500, error);

@@ -8,7 +8,8 @@ import {
   faMoneyCheck,
   faStickyNote, faHome,
   faCalendar,
-  faQuestionCircle
+  faQuestionCircle,
+  faTriangleExclamation
 } from '@fortawesome/free-solid-svg-icons';
 import {} from 'react-icons/ti';
 import React from 'react';
@@ -24,7 +25,10 @@ export default function SidebarNav() {
         Users
       </SidebarNavItem>
       <SidebarNavItem icon={faBuildingUser} href="/protected/admin/integrator">
-        Integrators
+        Organisations
+      </SidebarNavItem>
+      <SidebarNavItem icon={faTriangleExclamation} href="/protected/admin/payments/failures">
+        Payment issues
       </SidebarNavItem>
       <SidebarNavItem icon={faCogs} href="/protected/admin/settings">
         Settings

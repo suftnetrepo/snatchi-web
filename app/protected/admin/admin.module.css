@@ -1,0 +1,19 @@
+.shell {
+  background: #f5f7fb;
+  color: #172033;
+}
+
+.main {
+  padding: 0 24px 32px;
+}
+
+.content {
+  width: min(1480px, 100%);
+  margin: 0 auto;
+}
+
+@media (max-width: 767px) {
+  .main {
+    padding: 0 16px 24px;
+  }
+}

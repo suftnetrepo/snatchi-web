@@ -4,7 +4,7 @@ import { FaRegCheckCircle, FaEraser } from 'react-icons/fa';
 import { useUser } from '../../../hooks/useUser';
 
 const RenderIntegratorUserOffcanvas = ({ show, handleClose, data, handleUpdateUser }) => {
-  const { handleEditUser } = useUser();
+  const { handleEditUser } = useUser('', false);
 
   const onSubmit = async (user, status) => {
     const body = {

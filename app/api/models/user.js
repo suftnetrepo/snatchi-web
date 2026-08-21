@@ -5,7 +5,13 @@ const { Schema } = mongoose;
 
 const userSchema = new Schema(
   {
-    integrator: { type: Schema.Types.ObjectId, ref: 'Integrator', required: true },
+    integrator: {
+      type: Schema.Types.ObjectId,
+      ref: 'Integrator',
+      required: function () {
+        return this.role !== 'admin';
+      }
+    },
     first_name: {
       type: String,
       trim: true,

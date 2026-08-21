@@ -7,7 +7,7 @@ import { logger } from '../../utils/logger';
 
 export async function POST(req) {
   try {
-    const user = await getUserSession(req);
+    const user = await getUserSession(req, { allowInactiveSubscription: true });
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (!['integrator', 'manager'].includes(user.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 

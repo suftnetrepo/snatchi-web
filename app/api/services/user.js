@@ -71,8 +71,8 @@ const buildAddressUpdateSet = (address) => {
   return updateSet;
 };
 
-async function getUsers({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
-  if (!isValidObjectId(suid)) {
+async function getUsers({ suid, page = 1, limit = 10, sortField, sortOrder, searchQuery, allOrganizations = false }) {
+  if (!allOrganizations && !isValidObjectId(suid)) {
     throw new Error(JSON.stringify([{ field: 'id', message: 'Invalid MongoDB ObjectId' }]));
   }
 
@@ -102,7 +102,7 @@ async function getUsers({ suid, page = 1, limit = 10, sortField, sortOrder, sear
       : {};
 
     const query = {
-      integrator: suid,
+      ...(!allOrganizations && { integrator: suid }),
       ...searchFilter
     };
 

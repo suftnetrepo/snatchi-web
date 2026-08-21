@@ -10,6 +10,7 @@ import ContactTiles from '@/components/elements/tiles/Contact-Tiles';
 import Topbar from '@/components/elements/Topbar';
 import Navbar from '@/components/blocks/navbar/Navbar';
 import Link from 'next/link';
+import { siteIdentity } from '@/data/site';
 
 const ContactTwo: NextPage = () => {
   return (
@@ -37,7 +38,7 @@ const ContactTwo: NextPage = () => {
               <ContactTiles />
 
               <div className="col-lg-5">
-                <h2 className="display-4 mb-8">Got any questions? Don't hesitate to get in touch.</h2>
+                <h1 className="display-4 mb-8">Talk to the Snatchi team</h1>
                 <div className="d-flex flex-row">
                   <div>
                     <div className="icon text-primary fs-28 me-6 mt-n1">
@@ -48,8 +49,7 @@ const ContactTwo: NextPage = () => {
                   <div>
                     <h5 className="mb-1">Address</h5>
                     <address>
-                      113 -115 Fonthill Road, Finsbury Park, London, N4 3HH <br className="d-none d-md-block" />
-                      London, United Kingdom
+                      {siteIdentity.address}
                     </address>
                   </div>
                 </div>
@@ -63,7 +63,7 @@ const ContactTwo: NextPage = () => {
 
                   <div>
                     <h5 className="mb-1">Phone</h5>
-                    <p>+44 7404 522 280 </p>
+                    <p><a href={siteIdentity.phoneHref}>{siteIdentity.phoneDisplay}</a></p>
                   </div>
                 </div>
 
@@ -77,8 +77,8 @@ const ContactTwo: NextPage = () => {
                   <div>
                     <h5 className="mb-1">E-mail</h5>
                     <p className="mb-0">
-                      <a href="mailto:info@snatchi.com" className="link-body">
-                        info@snatchi.com
+                      <a href={`mailto:${siteIdentity.email}`} className="link-body">
+                        {siteIdentity.email}
                       </a>
                     </p>
                   </div>
@@ -91,7 +91,7 @@ const ContactTwo: NextPage = () => {
               <div className="col-lg-10 offset-lg-1 col-xl-8 offset-xl-2">
                 <h2 className="display-4 mb-3 text-center">Drop Us a Line</h2>
                 <p className="lead text-center mb-10">
-                  Reach out to us from our contact form and we will get back to you shortly.
+                  Choose the right department and we’ll respond during business hours.
                 </p>
 
                 <ContactForm />

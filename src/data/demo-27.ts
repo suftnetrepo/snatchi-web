@@ -22,43 +22,43 @@ const serviceList = [
 		id: 2,
 		Icon: Shield,
 		color: color.yellow,
-		title: "Centralized Management",
-		description: `Track and manage projects and their associated tasks in one unified dashboard, ensuring clarity and efficiency.`,
+		title: "Project Management",
+		description: `Create, prioritise and track AV projects from a shared organisation workspace.`,
 	},
 	{
 		id: 3,
 		color: color.orange,
 		Icon: CloudComputingTwo,
-		title: "Cloud Storage Integration",
-		description: `Securely store and share files with cloud-based solutions for AV project assets.`,
+		title: "Project Documents",
+		description: `Attach supported documents to projects and team profiles with plan-based upload controls.`,
 	},
 	{
 		id: 4,
 		Icon: Analytics,
 		color: color.pink,
-		title: "Analytics and Reporting",
-		description: `Gain insights into project performance with detailed analytics and customizable reporting tools.`,
+		title: "Engineer Scheduling",
+		description: `Plan bookings, review availability and keep project schedules visible to the right people.`,
 	},
 	{
 		id: 5,
 		Icon: ChatTwo,
 		color: color.green,
-		title: "Real Time Chat Integration",
-		description: `Enhance communication with real time chat features for team members, integrators, and clients.`,
+		title: "Team Communication",
+		description: `Keep integrators, managers and engineers connected through organisation chat.`,
 	},
 	{
 		id: 6,
 		Icon: SmartphoneTwo,
 		color: color.purple,
-		title: "Mobile Compatibility",
-		description: `Manage your AV projects on the go with a fully optimized mobile interface.`,
+		title: "Engineer Management",
+		description: `Manage organisation members and find engineers for upcoming AV work.`,
 	},
 	{
 		id: 1,
 		Icon: Telephone,
 		color: color.blue,
-		title: "24/7 Support",
-		description: `Round-the-clock assistance to ensure your Projects stay on track without disruptions.`,
+		title: "Invoices and Payments",
+		description: `Create invoices, review payment activity and manage billing through secure Stripe workflows.`,
 	},
 ];
 
@@ -66,7 +66,7 @@ const processList = [
 	{
 		id: 1,
 		Icon: Browser,
-		title: " Choose a Plan",
+		title: "Choose a Plan",
 		description:
 			"Select a pricing plan that fits your team size, project needs, and budget.",
 	},
@@ -82,14 +82,14 @@ const processList = [
 		Icon: ChatTwo,
 		title: "Account Activation",
 		description:
-			"Receive a confirmation email with login details for immediate access.",
+			"Complete payment and receive confirmation when your subscription becomes active.",
 	},
 	{
 		id: 4,
 		Icon: Settings,
 		title: "Setup Your Workspace",
 		description:
-			"Log in, personalize your workspace, invite team members, and configure tools.",
+			"Log in, create your first project, add organisation members and begin scheduling work.",
 	},
 ];
 

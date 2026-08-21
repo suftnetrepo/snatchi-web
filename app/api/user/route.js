@@ -16,6 +16,7 @@ import { NextResponse } from 'next/server';
 import { getUserSession } from '@/utils/generateToken';
 import { ensureFirebaseAuthUser } from '../services/firebaseAuthService';
 import { userValidator as validateUser, userEditValidator as validateUserEdit } from '../validator/user';
+import { getOrganisationEntitlements, isBillableMember, releaseEntitlement, reserveEntitlement } from '../services/entitlements';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -38,7 +39,7 @@ const authenticateUser = async (req) => {
 // Error response helper
 const errorResponse = (message, status = 500, error = null) => {
   logger.error(error || message);
-  return NextResponse.json({ success: false, error: message }, { status });
+  return NextResponse.json({ success: false, error: message, code: error?.code, details: error?.details }, { status });
 };
 
 // Success response helper
@@ -46,7 +47,7 @@ const successResponse = (data, status = 200) => {
   return NextResponse.json({ success: true, data }, { status });
 };
 
-const canManageUsers = (user) => ['integrator', 'manager'].includes(user?.role);
+const canManageUsers = (user) => ['admin', 'integrator', 'manager'].includes(user?.role);
 const MANAGED_USER_FIELDS = new Set(['first_name', 'last_name', 'email', 'mobile', 'role', 'visible', 'user_status', 'chat_status']);
 const pickManagedUserFields = (body) => Object.fromEntries(Object.entries(body || {}).filter(([key]) => MANAGED_USER_FIELDS.has(key)));
 const validateManagedValues = (body, { allowIntegrator = false } = {}) => {
@@ -128,12 +129,15 @@ export const GET = async (req) => {
 
     // User list used by the integrator chat picker.
     if (action === 'integrator_user') {
-      if (!['integrator', 'manager'].includes(user?.role)) {
+      if (!canManageUsers(user)) {
         return errorResponse('You do not have permission to list chat users', 403);
       }
 
+      const requestedIntegrator = url.searchParams.get('integratorId');
+      const integratorId = user.role === 'admin' && requestedIntegrator ? requestedIntegrator : user.integrator;
+
       const { data } = await getUsers({
-        suid: user.integrator,
+        suid: integratorId,
         page: 1,
         limit: 100,
         sortField: 'first_name',
@@ -150,6 +154,7 @@ export const GET = async (req) => {
       
       const { data, success, totalCount } = await getUsers({
         suid: user?.integrator,
+        allOrganizations: user.role === 'admin',
         page,
         limit,
         sortField,
@@ -221,15 +226,19 @@ export const DELETE = async (req) => {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     if (!canManageUsers(user)) return errorResponse('You do not have permission to delete users', 403);
+    if (user.role === 'admin') return errorResponse('Platform administrators cannot permanently delete customer users', 403);
+    await getOrganisationEntitlements(user.integrator);
 
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
     if (String(id) === String(user.id)) return errorResponse('You cannot delete your own account', 409);
-    const target = await getUserById(id, user.integrator);
+    const target = await getUserById(id, user.role === 'admin' ? null : user.integrator);
     if (!target) return errorResponse('User not found', 404);
     if (target.role === 'integrator') return errorResponse('The organisation owner cannot be deleted', 409);
 
-    const deleted = await removeUser(user?.integrator, id);
+    const targetIntegrator = target.integrator || user.integrator;
+    const deleted = await removeUser(targetIntegrator, id);
+    if (isBillableMember(deleted)) await releaseEntitlement(targetIntegrator, 'activeMembers');
     return successResponse(deleted);
   } catch (error) {
     return errorResponse(error.message, error.statusCode || 500, error);
@@ -251,12 +260,15 @@ export const PUT = async (req) => {
     // Handle standard user update
     if (action === 'update_user') {
       if (!canManageUsers(user)) return errorResponse('You do not have permission to update users', 403);
+      if (user.role === 'admin') {
+        return errorResponse('Platform administrators have read-only user access until audited support controls are enabled', 403);
+      }
       const body = pickManagedUserFields(await req.json());
       const validationErrors = validateUserEdit(body);
       if (validationErrors.length) return errorResponse(validationErrors.map((item) => item.message).join(', '), 400);
-      const existing = await getUserById(id, user.integrator);
+      const existing = await getUserById(id, user.role === 'admin' ? null : user.integrator);
       if (!existing) return errorResponse('User not found', 404);
-      if (existing.role === 'integrator' && user.role !== 'integrator') {
+      if (existing.role === 'integrator' && !['integrator', 'admin'].includes(user.role)) {
         return errorResponse('Only the organisation owner can update the owner account', 403);
       }
       const invalidValue = validateManagedValues(body, { allowIntegrator: existing.role === 'integrator' });
@@ -265,7 +277,24 @@ export const PUT = async (req) => {
       if (body.chat_status && (!existing.chat_status || body.email !== existing.email)) {
         await ensureFirebaseAuthUser(body.email, `${body.first_name || ''} ${body.last_name || ''}`.trim());
       }
-      const updated = await updateUser(user.integrator, id, body);
+      const targetIntegrator = existing.integrator || user.integrator;
+      await getOrganisationEntitlements(targetIntegrator);
+      const wasBillable = isBillableMember(existing);
+      const futureUser = { ...existing, ...body };
+      const willBeBillable = isBillableMember(futureUser);
+      let reserved = false;
+      if (!wasBillable && willBeBillable) {
+        await reserveEntitlement(targetIntegrator, 'activeMembers');
+        reserved = true;
+      }
+      let updated;
+      try {
+        updated = await updateUser(targetIntegrator, id, body);
+      } catch (updateError) {
+        if (reserved) await releaseEntitlement(targetIntegrator, 'activeMembers');
+        throw updateError;
+      }
+      if (wasBillable && !willBeBillable) await releaseEntitlement(targetIntegrator, 'activeMembers');
       return successResponse(updated);
     }
 
@@ -327,6 +356,9 @@ export const POST = async (req) => {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
+    if (user.role === 'admin') {
+      return errorResponse('Create organisation users from the organisation workspace', 403);
+    }
     if (!canManageUsers(user)) return errorResponse('You do not have permission to create users', 403);
 
     const body = pickManagedUserFields(await req.json());
@@ -334,8 +366,16 @@ export const POST = async (req) => {
     if (validationErrors.length) return errorResponse(validationErrors.map((item) => item.message).join(', '), 400);
     const invalidValue = validateManagedValues(body);
     if (invalidValue) return errorResponse(invalidValue, 400);
-    if (body.chat_status) await ensureFirebaseAuthUser(body.email, `${body.first_name || ''} ${body.last_name || ''}`.trim());
-    const result = await createUser(user?.integrator, body);
+    const countsAsMember = isBillableMember(body);
+    if (countsAsMember) await reserveEntitlement(user.integrator, 'activeMembers');
+    let result;
+    try {
+      if (body.chat_status) await ensureFirebaseAuthUser(body.email, `${body.first_name || ''} ${body.last_name || ''}`.trim());
+      result = await createUser(user?.integrator, body);
+    } catch (createError) {
+      if (countsAsMember) await releaseEntitlement(user.integrator, 'activeMembers');
+      throw createError;
+    }
     return successResponse(result);
   } catch (error) {
     return errorResponse(error.message, error.statusCode || 500, error);

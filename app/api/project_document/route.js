@@ -3,6 +3,7 @@ import { logger } from '../utils/logger';
 import { createDocument, getDocuments, removeDocument } from '../services/projectDocument';
 const { NextResponse } = require('next/server');
 import { getUserSession } from '@/utils/generateToken';
+import { assertDocumentFileSize, releaseEntitlement, reserveEntitlement } from '../services/entitlements';
 
 export const config = {
   api: { bodyParser: false }
@@ -14,7 +15,6 @@ cloudinary.config({
   api_secret: process.env.NEXT_PUBLIC_CLOUD_SECRETE
 });
 
-const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = new Map([
   ['image/jpeg', 'Image'],
   ['image/png', 'Image'],
@@ -46,6 +46,7 @@ const deleteCloudinaryAsset = async (document) => {
 };
 
 export const POST = async (req) => {
+  let uploadReserved = false;
   try {
     const user = await getUserSession(req);
 
@@ -70,9 +71,7 @@ export const POST = async (req) => {
         { status: 400 }
       );
     }
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'Files must be 15MB or smaller' }, { status: 400 });
-    }
+    await assertDocumentFileSize(user.integrator, file.size);
     if (!documentName?.trim()) {
       return NextResponse.json({ error: 'Document name is required' }, { status: 400 });
     }
@@ -94,6 +93,8 @@ export const POST = async (req) => {
       });
     };
 
+    await reserveEntitlement(user.integrator, 'monthlyDocumentUploads');
+    uploadReserved = true;
     const result = await uploadToCloudinary();
 
     let data;
@@ -114,8 +115,12 @@ export const POST = async (req) => {
 
     return NextResponse.json({ data }, { status: 200 });
   } catch (error) {
+    if (uploadReserved) {
+      const user = await getUserSession(req).catch(() => null);
+      if (user?.integrator) await releaseEntitlement(user.integrator, 'monthlyDocumentUploads').catch(() => {});
+    }
     console.error(error);
-    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong', code: error.code, details: error.details }, { status: error.statusCode || 500 });
   }
 };
 

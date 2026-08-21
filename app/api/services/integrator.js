@@ -28,7 +28,12 @@ const aggregateInspectorStatus = async () => {
 
 const recentInspectors = async (limit = 10) => {
   try {
-    const recentInspectors = await Integrator.find({}).sort({ createdAt: -1 }).limit(limit);
+    const safeLimit = Math.min(25, Math.max(1, Number(limit) || 10));
+    const recentInspectors = await Integrator.find({})
+      .select('name mobile email secure_url status plan createdAt')
+      .sort({ createdAt: -1 })
+      .limit(safeLimit)
+      .lean();
 
     return recentInspectors;
   } catch (error) {
@@ -38,21 +43,25 @@ const recentInspectors = async (limit = 10) => {
 };
 
 async function getIntegrators({ page = 1, limit = 10, sortField, sortOrder, searchQuery }) {
-  const skip = (page - 1) * limit;
+  const safePage = Math.max(1, Number(page) || 1);
+  const safeLimit = Math.min(100, Math.max(1, Number(limit) || 10));
+  const skip = (safePage - 1) * safeLimit;
 
   try {
     const sortOptions = {};
-    if (sortField) {
+    const allowedSortFields = new Set(['name', 'email', 'mobile', 'plan', 'status', 'createdAt', 'startDate']);
+    if (sortField && allowedSortFields.has(sortField)) {
       sortOptions[sortField] = sortOrder === 'desc' ? -1 : 1;
     }
 
-    const searchFilter = searchQuery
+    const escapedSearch = String(searchQuery || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const searchFilter = escapedSearch
       ? {
           $or: [
-            { name: { $regex: searchQuery, $options: 'i' } },
-            { mobile: { $regex: searchQuery, $options: 'i' } },
-            { email: { $regex: searchQuery, $options: 'i' } },
-            { plan: { $regex: searchQuery, $options: 'i' } }
+            { name: { $regex: escapedSearch, $options: 'i' } },
+            { mobile: { $regex: escapedSearch, $options: 'i' } },
+            { email: { $regex: escapedSearch, $options: 'i' } },
+            { plan: { $regex: escapedSearch, $options: 'i' } }
           ]
         }
       : {};
@@ -62,13 +71,20 @@ async function getIntegrators({ page = 1, limit = 10, sortField, sortOrder, sear
     };
 
     const [integrators, totalCount] = await Promise.all([
-      Integrator.find(query).sort(sortOptions).skip(skip).limit(limit).exec(),
-      Integrator.countDocuments({})
+      Integrator.find(query)
+        .select('name mobile email description secure_url logo_url status plan startDate endDate trial_start trial_end createdAt adminSuspension')
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(safeLimit)
+        .lean()
+        .exec(),
+      Integrator.countDocuments(query)
     ]);
 
     return {
       data: integrators,
-      totalCount
+      totalCount,
+      success: true
     };
   } catch (error) {
     logger.error(error);

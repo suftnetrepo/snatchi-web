@@ -1,109 +1,94 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 'use client';
-import React, { useEffect } from 'react';
-import { Card, CardBody } from 'react-bootstrap';
 
-import UserChart from '../UserChart';
-import IncomeChart from '../IncomeChart';
-import ConversionChart from '../ConversionChart';
-import SessionChart from '../SessionChart';
-import { useAppContext } from '../../../../Store/AppContext';
+import React, { useEffect } from 'react';
+import Link from 'next/link';
+import { FiAlertTriangle, FiArrowUpRight, FiCheckCircle, FiClock, FiUsers } from 'react-icons/fi';
 import { useDashboard } from '../../../../hooks/useDashboard';
 import { getAdminAggregate } from '../../../../utils/helpers';
 import RecentUsers from '../recentUsers';
 import UserSignOnChart from '../userSignOnChart';
 import UserPolarChart from '../userPolarChart';
+import styles from './dashboard.module.css';
 
-const Dashboard = () => {
-  const { currentUser } = useAppContext();
-  const { handleAggregate, data } = useDashboard();
+const statusCards = [
+  { key: 'active', label: 'Active organisations', detail: 'Subscriptions in good standing', icon: FiCheckCircle, tone: 'green' },
+  { key: 'inactive', label: 'Inactive organisations', detail: 'Accounts requiring review', icon: FiClock, tone: 'slate' },
+  { key: 'unpaid', label: 'Payment attention', detail: 'Unpaid subscriptions', icon: FiAlertTriangle, tone: 'amber' },
+  { key: 'canceled', label: 'Cancelled', detail: 'Ended subscriptions', icon: FiUsers, tone: 'red' }
+];
+
+export default function Dashboard() {
+  const { handleAggregate, data, loading, error } = useDashboard();
 
   useEffect(() => {
     handleAggregate();
   }, []);
 
   return (
-    <>
-      <div className="row">
-        <div className="col-sm-6 col-lg-3">
-          <Card bg="primary" text="white" className="mb-4 ps-3 pt-2">
-            <CardBody className="pb-0 d-flex justify-content-between align-items-start">
-              <div>
-                <div className="fs-24 fw-semibold">{getAdminAggregate(data, 'active')}</div>
-                <div>Active</div>
-              </div>
-            </CardBody>
-            <div className="mt-3 mx-3" style={{ height: '70px' }}>
-              <UserChart />
-            </div>
-          </Card>
+    <div className={styles.dashboard}>
+      <header className={styles.pageHeader}>
+        <div>
+          <p className={styles.eyebrow}>Platform operations</p>
+          <h1>Admin overview</h1>
+          <p>Monitor organisations, subscriptions and operational health across Snatchi.</p>
         </div>
+        <div className={styles.headerActions}>
+          <Link href="/protected/admin/payments/failures" className={styles.secondaryAction}>
+            Review payment issues
+          </Link>
+          <Link href="/protected/admin/integrator" className={styles.primaryAction}>
+            View organisations <FiArrowUpRight aria-hidden="true" />
+          </Link>
+        </div>
+      </header>
 
-        <div className="col-sm-6 col-lg-3">
-          <Card bg="info" text="white" className="mb-4 ps-3 pt-2">
-            <CardBody className="pb-0 d-flex justify-content-between align-items-start">
-              <div>
-                <div className="fs-24 fw-semibold">{getAdminAggregate(data, 'inactive')}</div>
-                <div>In Active</div>
-              </div>
-            </CardBody>
-            <div className="mt-3 mx-3" style={{ height: '70px' }}>
-              <IncomeChart />
-            </div>
-          </Card>
-        </div>
+      {error && <div className={styles.errorBanner} role="alert">Dashboard data could not be loaded. {error}</div>}
 
-        <div className="col-sm-6 col-lg-3">
-          <Card bg="warning" text="white" className="mb-4 ps-3 pt-2">
-            <CardBody className="pb-0 d-flex justify-content-between align-items-start">
-              <div>
-                <div className="fs-24 fw-semibold">{getAdminAggregate(data, 'unpaid')}</div>
-                <div>Unpaid</div>
-              </div>
-            </CardBody>
-            <div className="mt-3 mx-3" style={{ height: '70px' }}>
-              <ConversionChart />
+      <section className={styles.statsGrid} aria-label="Subscription status summary">
+        {statusCards.map(({ key, label, detail, icon: Icon, tone }) => (
+          <article className={styles.statCard} key={key}>
+            <div className={`${styles.statIcon} ${styles[tone]}`}><Icon aria-hidden="true" /></div>
+            <div>
+              <span>{label}</span>
+              <strong>{loading && !data ? '—' : getAdminAggregate(data, key)}</strong>
+              <small>{detail}</small>
             </div>
-          </Card>
-        </div>
+          </article>
+        ))}
+      </section>
 
-        <div className="col-sm-6 col-lg-3">
-          <Card bg="danger" text="white" className="mb-4 ps-3 pt-2">
-            <CardBody className="pb-0 d-flex justify-content-between align-items-start">
-              <div>
-                <div className="fs-24 fw-semibold">{getAdminAggregate(data, 'canceled')}</div>
-                <div>Canceled</div>
-              </div>
-            </CardBody>
-            <div className="mt-3 mx-3" style={{ height: '70px' }}>
-              <SessionChart />
-            </div>
-          </Card>
-        </div>
-      </div>
-      <div className="row ms-1 me-1 d-flex justify-content-between align-items-center">
-        <div className="col-sm-6 col-lg-8  me-2 card p-4">
-          <Card.Header className="ps-4 mb-2">Weekly SignOn Users</Card.Header>
-          <div className="card-body">
-            <div style={{ maxWidth: '100%' }}>
-              <UserSignOnChart />
+      <section className={styles.analyticsGrid}>
+        <article className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <div>
+              <span className={styles.panelLabel}>Growth</span>
+              <h2>Weekly organisation sign-ups</h2>
             </div>
           </div>
-        </div>
-        <div className="col-sm-6 col-lg-3 d-flex justify-content-center align-items-center ">
-          <div className="card-body">
-            <div style={{ maxWidth: '100%' }}>{data?.length > 0 && <UserPolarChart data={data} />}</div>
+          <div className={styles.chart}><UserSignOnChart /></div>
+        </article>
+
+        <article className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <div>
+              <span className={styles.panelLabel}>Portfolio</span>
+              <h2>Status distribution</h2>
+            </div>
           </div>
+          <div className={styles.polarChart}>{data?.length > 0 ? <UserPolarChart data={data} /> : <p>No status data yet.</p>}</div>
+        </article>
+      </section>
+
+      <section className={styles.panel}>
+        <div className={styles.panelHeader}>
+          <div>
+            <span className={styles.panelLabel}>Latest activity</span>
+            <h2>Recent organisations</h2>
+          </div>
+          <Link href="/protected/admin/integrator">View all</Link>
         </div>
-      </div>
-      <div className="row ms-1 me-1 card mt-4">
-        <Card.Header className="ps-4">Recent Subscribers</Card.Header>
-        <div className="card-body">
-          <RecentUsers />
-        </div>
-      </div>
-    </>
+        <RecentUsers />
+      </section>
+    </div>
   );
-};
-
-export default Dashboard;
+}

@@ -33,10 +33,10 @@ export default function Sidebar({ children }) {
 	)} id="sidebar">
 		<div className="sidebar-brand d-none d-md-flex align-items-center justify-content-center py-8">
 			<div className="sidebar-brand-full">
-				<img src="/img/logo__.png" alt="" className="img-fluid" />
+				<img src="/img/logo__.png" alt="Snatchi" className="img-fluid" />
 			</div>
 			<div className="sidebar-brand-narrow d-none">
-				<img src="/img/logosmall.png" alt="" height={20} className="img-fluids" />
+				<img src="/img/logosmall.png" alt="Snatchi" height={20} className="img-fluids" />
 			</div>
 		</div>
 

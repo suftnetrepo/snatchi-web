@@ -4,6 +4,8 @@ import { createUser } from '../services/user';
 import { createIntegrator } from '../services/subscriber';
 import Integrator from '../models/integrator';
 import User from '../models/user';
+import { getPlanByPriceId } from '../constants/plans';
+import jwt from 'jsonwebtoken';
 const { NextResponse } = require('next/server');
 
 mongoConnect();
@@ -11,6 +13,9 @@ mongoConnect();
 export async function POST(req) {
   try {
     const body = await req.json();
+    if (!getPlanByPriceId(body.priceId)) {
+      return NextResponse.json({ error: 'Invalid plan selected' }, { status: 400 });
+    }
     const email = String(body.email || '')
       .trim()
       .toLowerCase();
@@ -63,7 +68,12 @@ export async function POST(req) {
       role: user.role,
       secure_url: user.secure_url,
       public_id: user.public_id,
-      integrator_id: integrator._id
+      integrator_id: integrator._id,
+      onboardingToken: jwt.sign(
+        { purpose: 'subscription-onboarding', integratorId: String(integrator._id), email, priceId: body.priceId },
+        process.env.NEXTAUTH_SECRET,
+        { expiresIn: '30m' }
+      )
     };
 
     const response = NextResponse.json({ data: payload }, { status: 200 });

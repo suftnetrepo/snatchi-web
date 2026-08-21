@@ -135,7 +135,7 @@ export default function SubscriptionManagementPage() {
                 <p className="text-gray-600 mt-2">{currentPlan?.features[0] || 'Premium plan'}</p>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold text-gray-900">{subscription.priceId?.includes('basic') ? '£50' : '£250'}</p>
+                <p className="text-3xl font-bold text-gray-900">{currentPlan?.price || 'N/A'}</p>
                 <p className="text-gray-600">{currentPlan?.billingCycle || 'Monthly'}</p>
               </div>
             </div>
@@ -204,6 +204,24 @@ export default function SubscriptionManagementPage() {
         </div>
 
         {/* Features List */}
+        {subscription.entitlements && (
+          <div className="bg-white rounded-lg shadow mb-6">
+            <div className="px-6 py-8">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Plan usage</h3>
+              {[
+                ['Active projects', 'activeProjects'],
+                ['Organisation members', 'activeMembers'],
+                ['Document uploads this billing period', 'monthlyDocumentUploads']
+              ].map(([label, key]) => (
+                <div key={key} className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-700">{label}</span>
+                  <strong>{subscription.entitlements.usage[key]} / {subscription.entitlements.limits[key]}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {currentPlan && (
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-8">

@@ -5,26 +5,26 @@ const accordions = [
   {
     no: '1',
     expand: true,
-    heading: 'Comprehensive Features',
-    body: 'From Project setup to Task scheduling, Snatchi offers all the tools you need to manage AV projects efficiently.'
+    heading: 'Focused AV workflows',
+    body: 'Bring projects, engineer bookings, documents and team communication into one organisation workspace.'
   },
   {
     no: '2',
     expand: false,
     heading: 'Enhanced Collaboration',
-    body: 'Real-time updates and integrated communication tools keep your team, clients, and stakeholders on the same page.'
+    body: 'Shared schedules and communication tools help integrators, managers and engineers work from the same information.'
   },
   {
     no: '3',
     expand: false,
     heading: 'User-Friendly Design',
-    body: 'Intuitive interfaces and customizable dashboards make Snatchi easy to use, saving time and boosting productivity.'
+    body: 'Clear project, scheduling and member workflows help teams get started without complex configuration.'
   },
   {
     no: '4',
     expand: false,
-    heading: 'Exceptional Customer Support',
-    body: 'Our dedicated support team is always ready to assist you. Whether you need technical guidance, troubleshooting, or personalized training, Snatchi ensures you never face challenges alone.'
+    heading: 'Business-hours support',
+    body: 'Contact the Snatchi team by email for account, billing and product assistance during business hours.'
   }
 ];
 

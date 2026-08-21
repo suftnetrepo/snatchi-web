@@ -33,7 +33,7 @@ const Feature: NextPage = () => {
               <div className="col-sm-9 col-md-7 col-lg-7 mx-auto">
                 <h1 className="display-1 mb-3">Features</h1>
                 <p className="lead mb-0 px-xl-10 px-xxl-13">
-                  Your needs drive our purpose – tailored solutions just for you.
+                  Coordinate projects, people, bookings, documents and payments from one workspace.
                 </p>
               </div>
             </div>

@@ -134,6 +134,13 @@ const IntegratorSchema = new mongoose.Schema(
       trim: true,
       default: ''
     },  
+    adminSuspension: {
+      suspended: { type: Boolean, default: false },
+      reason: { type: String, default: '', max: 500 },
+      previousStatus: { type: String, default: '' },
+      suspendedAt: { type: Date, required: false },
+      suspendedBy: { type: Schema.Types.ObjectId, ref: 'User', required: false }
+    },
     subscriptionId: {
       type: String,
       trim: true,

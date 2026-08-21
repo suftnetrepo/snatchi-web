@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
 import { logger } from '../../utils/logger';
 import Integrator from '../../models/integrator';
-import { connectDb } from '../../../../utils/connectDb';
+import { mongoConnect } from '../../../../utils/connectDb';
+import { getEntitlementUsage } from '../../services/entitlements';
 
 export async function GET(req) {
   try {
@@ -17,7 +18,7 @@ export async function GET(req) {
     }
 
     // Connect to database
-    await connectDb();
+    await mongoConnect();
 
     // Get integrator by user ID (assuming user.id is the integrator ID)
     const integrator = await Integrator.findById(session.user.id);
@@ -30,6 +31,7 @@ export async function GET(req) {
     }
 
     // Return subscription details
+    const entitlementUsage = await getEntitlementUsage(integrator._id).catch(() => null);
     const data = {
       subscriptionId: integrator.subscriptionId,
       status: integrator.status,
@@ -41,7 +43,8 @@ export async function GET(req) {
       trial_end: integrator.trial_end,
       stripeCustomerId: integrator.stripeCustomerId,
       email: integrator.email,
-      name: integrator.name
+      name: integrator.name,
+      entitlements: entitlementUsage
     };
 
     return NextResponse.json(

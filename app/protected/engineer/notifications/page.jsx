@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Container, Row, Col, Form, Spinner, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheckCircle, faExclamationCircle, faTrash, faArchiveBox } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle, faExclamationCircle, faTrash, faBoxArchive } from '@fortawesome/free-solid-svg-icons';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useNotificationCount } from '@/hooks/useNotificationCount';
 import {
@@ -262,7 +262,7 @@ function NotificationCenterItem({ notification, onClick, onArchive, onDelete }) 
           title="Archive notification"
           aria-label="Archive notification"
         >
-          <FontAwesomeIcon icon={faArchiveBox} />
+          <FontAwesomeIcon icon={faBoxArchive} />
         </button>
 
         <button

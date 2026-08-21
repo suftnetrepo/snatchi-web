@@ -1,110 +1,49 @@
-'use client';
+import { siteIdentity } from '@/data/site';
 
-import { Container, Card } from 'react-bootstrap';
+export const metadata = { title: 'Privacy Policy', description: 'How Snatchi collects, uses and protects personal information.' };
 
-const PrivacyPolicy = () => (
-  <Container>
-    <Card className="p-10 m-10">
-      <Card.Body>
-        <Card.Title>Privacy Policy</Card.Title>
-        <Card.Text>
-          At <strong>Snatchi</strong>, we are committed to protecting your privacy and ensuring that your personal
-          information is handled responsibly and securely. This Privacy Policy explains how we collect, use, and protect
-          your information when you use our mobile application.
-        </Card.Text>
+export default function PrivacyPolicy() {
+  return (
+    <main className="container my-6 my-md-10">
+      <article className="card"><div className="card-body p-6 p-md-10">
+        <h1>Privacy Policy</h1>
+        <p><strong>Last updated: 21 August 2026</strong></p>
+        <p>Snatchi is owned and operated by {siteIdentity.ownerName} and developed by {siteIdentity.developerName}. This policy explains how information is handled across the Snatchi website, web platform and mobile application.</p>
 
-        <h5>1. Information We Collect</h5>
-        <p>When you use Snatchi, we collect the following types of information to provide essential app functionality:</p>
-
+        <h2 className="h4 mt-6">1. Information we collect</h2>
         <ul>
-          <li>
-            <strong>User Profile Information:</strong> Your first name, last name, email address, mobile number, and
-            account details needed to identify you within your assigned projects.
-          </li>
-
-          <li>
-            <strong>Location Data (Foreground & Background):</strong>  
-            Snatchi uses your device’s location to detect when you <strong>enter or exit assigned geofenced project sites</strong>.
-            This enables automated attendance tracking, safety confirmation, and project monitoring.  
-            <br /><br />
-            Location data is collected even when the app is closed or not in active use. A permanent foreground
-            notification ("Geofencing Active") appears while geofencing is enabled, as required by Android.
-          </li>
-
-          <li>
-            <strong>Device Information:</strong> Device model, operating system version, unique device identifiers, and
-            performance diagnostics to improve app stability.
-          </li>
-
-          <li>
-            <strong>Notifications & Messaging Data:</strong> We receive certain metadata from push notifications, such as
-            message IDs and the action that triggered the notification (e.g., opening a project update).
-          </li>
+          <li><strong>Account and organisation information:</strong> names, email addresses, telephone numbers, roles, organisation details and authentication information.</li>
+          <li><strong>Project and operational information:</strong> projects, bookings, schedules, team assignments, messages, invoices and documents submitted by users.</li>
+          <li><strong>Billing information:</strong> subscription, invoice and payment-status information. Card details are processed by Stripe and are not stored directly by Snatchi.</li>
+          <li><strong>Device and usage information:</strong> device type, browser, operating system, identifiers, logs and diagnostics used for security and reliability.</li>
+          <li><strong>Location information:</strong> where enabled in the mobile app, foreground or background location may be used for assigned site and geofence workflows. Permission can be controlled through device settings.</li>
+          <li><strong>Contact enquiries:</strong> information submitted through contact forms or support communications.</li>
         </ul>
 
-        <h5>2. How We Use Your Information</h5>
-        <p>Your information is used only for the operation of the Snatchi platform, including:</p>
+        <h2 className="h4 mt-6">2. How we use information</h2>
         <ul>
-          <li>Detecting geofence entry/exit events for work attendance and job tracking.</li>
-          <li>Sending job-related updates, push notifications, reminders, and project assignments.</li>
-          <li>Improving app performance, accuracy, and reliability.</li>
-          <li>Ensuring compliance with workplace requirements and safety checks.</li>
+          <li>Provide and secure accounts, projects, bookings, communication and document workflows.</li>
+          <li>Process subscriptions, invoices and payment-related events.</li>
+          <li>Send operational notifications and respond to support requests.</li>
+          <li>Detect abuse, investigate failures and improve performance and reliability.</li>
+          <li>Meet legal, regulatory and contractual obligations.</li>
         </ul>
 
-        <h5>3. How We Share Your Information</h5>
-        <p>Your information is shared only when necessary to support project workflow:</p>
-        <ul>
-          <li>
-            <strong>Integrators / Project Managers:</strong> Can view job progress, assigned user details, and
-            geofence entry/exit events for scheduling and project coordination.
-          </li>
-          <li>
-            <strong>Service Providers:</strong> Third-party tools such as Google Firebase Cloud Messaging (FCM)
-            are used to deliver push notifications and secure communication.
-          </li>
-        </ul>
-        <p>We do not sell your personal information to third parties.</p>
+        <h2 className="h4 mt-6">3. Sharing and service providers</h2>
+        <p>Information may be visible to authorised members of your organisation according to their role. We also use service providers that support platform operation, including Stripe for payments, Cloudinary for managed uploads, Firebase for messaging and notifications, and email-delivery providers. They process information only for the services they provide. We do not sell personal information.</p>
 
-        <h5>4. Data Security</h5>
-        <p>
-          We use industry-standard safeguards to protect your data, including encryption in transit (TLS), secure
-          authentication, access control, and strict backend security practices. Only authorized personnel can access
-          your data as required for operational purposes.
-        </p>
+        <h2 className="h4 mt-6">4. Retention and security</h2>
+        <p>We retain information for as long as needed to operate accounts, meet legal obligations and resolve disputes. We use access controls, tenant scoping, secure authentication and encryption in transit. No online service can guarantee absolute security.</p>
 
-        <h5>5. Your Rights</h5>
-        <p>You have the right to:</p>
-        <ul>
-          <li>Access your information</li>
-          <li>Correct inaccurate information</li>
-          <li>Request deletion of your account or personal data</li>
-          <li>Withdraw consent where applicable</li>
-        </ul>
-        <p>
-          To exercise these rights, contact us at{" "}
-          <a href="mailto:support@snatchi.com">support@snatchi.com</a>.
-        </p>
+        <h2 className="h4 mt-6">5. Your choices and rights</h2>
+        <p>Depending on applicable law, you may request access, correction, deletion, restriction, portability or objection to certain processing. You may withdraw optional location permission through device settings. Some information may be retained where legally required.</p>
 
-        <h5>6. Background Location Disclosure</h5>
-        <p>
-          Snatchi requires background location access <strong>solely to detect geofence entry and exit events for assigned
-          work sites</strong>. Without this permission, essential app features such as automated attendance, job tracking,
-          and safety confirmation will not function.
-        </p>
+        <h2 className="h4 mt-6">6. International processing and children</h2>
+        <p>Service providers may process information in other countries subject to appropriate safeguards. Snatchi is intended for business users and is not directed to children.</p>
 
-        <h5>7. Changes to This Policy</h5>
-        <p>
-          We may update this Privacy Policy periodically. If significant changes are made, you will be notified
-          through the app or via email.
-        </p>
-
-        <p>
-          For any privacy-related concerns or questions, please contact us at{" "}
-          <a href="mailto:support@snatchi.com">support@snatchi.com</a>.
-        </p>
-      </Card.Body>
-    </Card>
-  </Container>
-);
-
-export default PrivacyPolicy;
+        <h2 className="h4 mt-6">7. Changes and contact</h2>
+        <p>We may update this policy and will publish the revised date. Privacy questions and rights requests can be sent to <a href={`mailto:${siteIdentity.supportEmail}`}>{siteIdentity.supportEmail}</a>.</p>
+      </div></article>
+    </main>
+  );
+}

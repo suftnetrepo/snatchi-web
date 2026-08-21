@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { logger } from '../../../utils/logger';
-import { pricingList } from '../../../../../src/data/pricing';
+import { getUserSession } from '@/utils/generateToken';
+import { mongoConnect } from '@/utils/connectDb';
+import Integrator from '../../../models/integrator';
+import { getPlanByPriceId } from '../../../constants/plans';
 
 // Validate price ID
 function isValidPriceId(priceId) {
-  return pricingList.some(plan => plan.priceId === priceId || plan.live_priceId === priceId);
+  return Boolean(getPlanByPriceId(priceId));
 }
 
 export async function POST(req) {
   try {
+    const user = await getUserSession(req, { allowInactiveSubscription: true });
+    if (!user || !['integrator', 'manager'].includes(user.role)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const { customerId, subscriptionId, newPriceId, newPlanName } = body;
 
@@ -21,6 +26,9 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+    await mongoConnect();
+    const organisation = await Integrator.findOne({ _id: user.integrator, stripeCustomerId: customerId, subscriptionId }).lean();
+    if (!organisation) return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
 
     // Validate price ID
     if (!isValidPriceId(newPriceId)) {

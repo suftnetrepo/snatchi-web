@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { logger } from '../../../utils/logger';
+import { getUserSession } from '@/utils/generateToken';
+import { mongoConnect } from '@/utils/connectDb';
+import Integrator from '../../../models/integrator';
 
 export async function POST(req) {
   try {
+    const user = await getUserSession(req, { allowInactiveSubscription: true });
+    if (!user || !['integrator', 'manager'].includes(user.role)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const { subscriptionId } = body;
 
@@ -15,6 +20,9 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+    await mongoConnect();
+    const organisation = await Integrator.findOne({ _id: user.integrator, subscriptionId }).lean();
+    if (!organisation) return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
 
     // Initialize Stripe
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {

@@ -3,8 +3,8 @@
 import { FC, Fragment, ReactElement, useRef } from 'react';
 import useSticky from '@/hooks/useSticky';
 import NextLink from '@/components/reuseable/links/NextLink';
-import SocialLinks from '@/components/reuseable/SocialLinks';
 import Social from './partials/Social';
+import { siteIdentity } from '@/data/site';
 
 type NavbarProps = {
   info?: boolean;
@@ -66,11 +66,9 @@ const Navbar: FC<NavbarProps> = (props) => {
 
           <div className="offcanvas-footer d-lg-none">
             <div>
-              <NextLink title="info@snatchi.com" className="link-inverse" href="mailto:info@snatchi.com" />
+              <NextLink title={siteIdentity.email} className="link-inverse" href={`mailto:${siteIdentity.email}`} />
               <br />
-              <NextLink href="tel:+449404522280" title="+44 9404 522 280" />
-              <br />
-              <SocialLinks />
+              <NextLink href={siteIdentity.phoneHref} title={siteIdentity.phoneDisplay} />
             </div>
           </div>
         </div>

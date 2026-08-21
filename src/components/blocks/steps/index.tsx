@@ -24,8 +24,8 @@ const Steps: FC = () => {
         <div className="row gx-0">
           <div className="col-lg-6 ms-auto">
             <div className="pt-13 pb-15 pb-md-17 py-lg-16 ps-lg-15 pe-xxl-16">
-              <h2 className="fs-15 text-uppercase text-muted mb-3">How It Works?</h2>
-              <h3 className="display-3 ls-sm mb-7">Here are the 4 Steps from buying a plan to onboarding.</h3>
+              <h2 className="fs-15 text-uppercase text-muted mb-3">How it works</h2>
+              <h3 className="display-3 ls-sm mb-7">Set up your Snatchi workspace in four straightforward steps.</h3>
 
               {data.processList.map(({ id, Icon, title, description }) => (
                 <div className="d-flex flex-row mb-5" key={id}>

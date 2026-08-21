@@ -1,6 +1,3 @@
-import { logger } from '../utils/logger';
-import { pricingList } from '../../../src/data/pricing';
-
 /**
  * Trial period configuration
  * Define trial days for each plan
@@ -16,7 +13,7 @@ const TRIAL_CONFIG = {
     autoTransitionToPaid: true,
     sendReminderDaysBefore: 3
   },
-  'Enterprise': {
+  'Premium Plus': {
     trialDays: 30,          // 30-day trial
     autoTransitionToPaid: true,
     sendReminderDaysBefore: 5

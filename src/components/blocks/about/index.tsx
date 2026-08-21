@@ -15,20 +15,16 @@ const AboutUs: NextPage = () => {
                 </div>
 
                 <div className="col-lg-6">
-                  <h2 className="display-5 mb-3">About Us</h2>
+                  <h1 className="display-5 mb-3">About Snatchi</h1>
                   <p className="lead">
-                    Snatchi is an innovative AV project management solution designed to transform the way audiovisual
-                    professionals manage their projects. Built with the latest technology and a deep understanding of
-                    the AV industry's unique challenges, Snatchi streamlines workflows, enhances collaboration, and
-                    ensures that every project is executed with precision and efficiency.
+                    Snatchi is a work-management platform for audiovisual organisations coordinating projects,
+                    engineers and bookings. It brings everyday operational information into one shared workspace so
+                    teams can spend less time switching between disconnected tools.
                   </p>
                   <p></p>
                   <p className="mb-1 lead">
-                    At its core, Snatchi empowers users to take control of their AV projects from inception to
-                    completion. With intuitive tools for task scheduling, resource allocation, budget tracking, and
-                    progress monitoring, our platform provides a comprehensive suite of features tailored to meet the
-                    needs of AV professionals. Whether you’re managing a small installation or a large-scale deployment,
-                    Snatchi equips you with the tools to stay organized, meet deadlines, and exceed client expectations
+                    Teams can manage projects, organise members, schedule engineers, share documents, communicate and
+                    review invoices and payments. Snatchi is owned and operated by PlasmaPro Ltd and developed by Suftnet.
                   </p>
                 </div>
               </div>

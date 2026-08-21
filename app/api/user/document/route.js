@@ -4,6 +4,7 @@ import { getUserSession } from '@/utils/generateToken';
 import { createDocument, getDocuments, removeDocument, restoreDocument } from '../../services/userDocument';
 import { isValidObjectId } from '../../utils/helps';
 import { logger } from '../../utils/logger';
+import { assertDocumentFileSize, releaseEntitlement, reserveEntitlement } from '../../services/entitlements';
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUD_NAME,
@@ -11,7 +12,6 @@ cloudinary.config({
   api_secret: process.env.NEXT_PUBLIC_CLOUD_SECRETE
 });
 
-const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = new Map([
   ['image/jpeg', 'Image'],
   ['image/png', 'Image'],
@@ -64,8 +64,10 @@ const deleteCloudinaryAsset = async (document) => {
 
 export const POST = async (req) => {
   let uploadedAsset = null;
+  let uploadReserved = false;
+  let actor = null;
   try {
-    const actor = await getUserSession(req);
+    actor = await getUserSession(req);
     if (!actor) return errorResponse('Unauthorized', 401);
 
     const formData = await req.formData();
@@ -80,7 +82,7 @@ export const POST = async (req) => {
     if (name.length > 100) return errorResponse('Document name must not exceed 100 characters', 400);
     if (description.length > 500) return errorResponse('Description must not exceed 500 characters', 400);
     if (!file || typeof file.arrayBuffer !== 'function' || file.size === 0) return errorResponse('No file provided', 400);
-    if (file.size > MAX_FILE_SIZE) return errorResponse('Files must be 15MB or smaller', 400);
+    await assertDocumentFileSize(actor.integrator, file.size);
 
     const documentType = ALLOWED_FILE_TYPES.get(file.type);
     if (!documentType) {
@@ -92,6 +94,8 @@ export const POST = async (req) => {
     const fileBuffer = await file.arrayBuffer();
     if (!hasExpectedSignature(file.type, fileBuffer)) return errorResponse('The selected file content does not match its file type', 400);
     const fileUri = `data:${file.type};base64,${Buffer.from(fileBuffer).toString('base64')}`;
+    await reserveEntitlement(actor.integrator, 'monthlyDocumentUploads');
+    uploadReserved = true;
     uploadedAsset = await cloudinary.uploader.upload(fileUri, {
       folder: 'snatchi_user_documents',
       resource_type: 'auto',
@@ -116,8 +120,9 @@ export const POST = async (req) => {
       throw databaseError;
     }
   } catch (error) {
+    if (uploadReserved && actor?.integrator) await releaseEntitlement(actor.integrator, 'monthlyDocumentUploads').catch(() => {});
     logger.error(error);
-    return errorResponse(error.message || 'Unable to upload document', error.statusCode || 500);
+    return NextResponse.json({ success: false, error: error.message || 'Unable to upload document', code: error.code, details: error.details }, { status: error.statusCode || 500 });
   }
 };
 

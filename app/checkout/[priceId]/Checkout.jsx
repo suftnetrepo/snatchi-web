@@ -123,7 +123,8 @@ const CheckOut = () => {
       priceId,
       contact: `${fields.first_name} ${fields.last_name}`,
       email: fields.email,
-      integratorId: pendingAccount.integrator_id
+      integratorId: pendingAccount.integrator_id,
+      onboardingToken: pendingAccount.onboardingToken
     }).then(async (subscriptionResult) => {
       if (subscriptionResult) {
         const fullFields = {
@@ -153,7 +154,7 @@ const CheckOut = () => {
             <div className="col-lg-6">
               <div className={styles.benefits}>
                 <p className={styles.eyebrow}>Snatchi subscription</p>
-                <h1 className={styles.title}>Start your {pricing?.planName || 'selected'} plan</h1>
+                <h1 className={styles.title}>Start with {pricing?.planName || 'your selected plan'}</h1>
                 <p className="mb-0 text-dark">Everything you need to organise projects and engineering teams.</p>
 
                 <div className={styles.featureCard}>
@@ -315,6 +316,9 @@ const CheckOut = () => {
                       .
                     </label>
                   </div>
+                  <p className="text-muted fs-13 mb-3">
+                    You will be charged {pricing?.currency}{pricing?.raw_price} today and again {pricing?.billingCycle === 'Monthly' ? 'monthly' : pricing?.billingCycle === 'Every 6 months' ? 'every six months' : 'yearly'} until cancelled. Manage or cancel your subscription through Stripe billing settings.
+                  </p>
                   <div className={styles.actions}>
                     <Button
                       className={styles.payButton}
@@ -330,8 +334,8 @@ const CheckOut = () => {
                         ? 'Processing secure payment…'
                         : `Pay securely ${pricing?.currency || ''}${pricing?.raw_price || ''}`}
                     </Button>
-                    <Button className={styles.closeButton} type="button" onClick={() => handleClose()}>
-                      Close
+                    <Button className={styles.closeButton} type="button" onClick={() => router.push('/pricing')}>
+                      Back to pricing
                     </Button>
                   </div>
                   <p className={styles.security}>

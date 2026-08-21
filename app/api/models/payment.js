@@ -154,6 +154,11 @@ const PaymentSchema = new mongoose.Schema(
       default: '',
       max: 500
     },
+    transferRetryCount: { type: Number, default: 0, min: 0 },
+    lastTransferRetryAt: { type: Date, required: false },
+    lastRetryInitiatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
+    transferRetryLockedAt: { type: Date, required: false },
+    transferRetryReason: { type: String, required: false, max: 500 },
 
     // Refund Tracking (Phase 2)
     refundId: {

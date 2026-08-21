@@ -1,5 +1,6 @@
 import { FC, Fragment, useState } from 'react';
-import Swiper, { FreeMode, Navigation, Thumbs } from 'swiper';
+import type Swiper from 'swiper';
+import { FreeMode, Navigation, Thumbs } from 'swiper/modules';
 import { Swiper as SwiperCarousel, SwiperSlide } from 'swiper/react';
 
 const Carousel2: FC = () => {

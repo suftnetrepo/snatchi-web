@@ -98,23 +98,19 @@ export const usePaymentInvestigation = (
   };
 
   const handleRetryTransfer = async () => {
-    if (!confirm('Retry transfer for this payment?')) {
-      return;
-    }
+    const reason = prompt('Enter the operational reason for retrying this transfer (minimum 8 characters):');
+    if (!reason || reason.trim().length < 8) return;
 
     try {
       setRetrying(true);
       const res = await fetch('/api/admin/payments/retry-transfer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentId })
+        body: JSON.stringify({ paymentId, reason: reason.trim() })
       });
 
-      if (!res.ok) {
-        throw new Error('Retry failed');
-      }
-
-      const data: { transferId?: string } = await res.json();
+      const data: { transferId?: string; error?: string; details?: string } = await res.json();
+      if (!res.ok) throw new Error(data.details || data.error || 'Retry failed');
       alert(`Transfer retry initiated: ${data.transferId}`);
       await fetchInvestigation();
     } catch (err) {

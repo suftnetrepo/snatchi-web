@@ -1,7 +1,7 @@
 'use client'; // Mark this as a Client Component
 
 import { FC, ReactElement, useState } from 'react';
-import { Autoplay, Navigation, Pagination } from 'swiper';
+import { Autoplay, Navigation, Pagination } from 'swiper/modules';
 import { Swiper, SwiperProps, SwiperSlide } from 'swiper/react';
 
 // ==================================================================

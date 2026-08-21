@@ -4,7 +4,7 @@ import { useDashboard } from '../../../hooks/useDashboard';
 import { dateFormatted } from '../../../utils/helpers';
 
 const RecentUsers = () => {
-	const { handleRecent, data } = useDashboard();
+		const { handleRecent, data, loading, error } = useDashboard();
 
 	useEffect(() => {
 		handleRecent();
@@ -23,10 +23,11 @@ const RecentUsers = () => {
 
 	return (
 		<div className="table-responsive mt-4">
-			<Table className="table  table-striped">
+			{error && <div className="alert alert-light border" role="alert">Recent organisations could not be loaded.</div>}
+			<Table className="table align-middle mb-0">
 				<thead>
 					<tr>
-						<th>Integrator</th>
+						<th>Organisation</th>
 						<th>Date</th>
 						<th>Mobile</th>
 						<th>Email</th>
@@ -36,12 +37,14 @@ const RecentUsers = () => {
 					</tr>
 				</thead>
 				<tbody>
+					{loading && <tr><td colSpan="6" className="text-center text-muted py-4">Loading recent organisations…</td></tr>}
+					{!loading && !data?.length && <tr><td colSpan="6" className="text-center text-muted py-4">No organisations have been created yet.</td></tr>}
 					{data?.map((item) => (
 						<tr key={item._id}>
 							<td>
 								<div className="d-flex align-items-center">
 									<img
-										src={item.logo_url}
+									src={item.secure_url || '/img/blank.png'}
 										alt={item.name}
 										className="rounded-circle me-2"
 										width="40"

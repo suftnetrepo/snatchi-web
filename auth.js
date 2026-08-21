@@ -30,7 +30,7 @@ export const authOptions = {
             id: user._id.toString(),
             email: user.email,
             role: user.role,
-            integrator: user.integrator.toString(),
+            integrator: user.integrator?.toString() || null,
             first_name: user.first_name,
             last_name: user.last_name
           };
@@ -43,7 +43,7 @@ export const authOptions = {
   ],
   session: { strategy: 'jwt' },
   secret: process.env.NEXTAUTH_SECRET?.trim(),
-  useSecureCookies: false,
+  useSecureCookies: process.env.NODE_ENV === 'production',
   trustHost: true,
   callbacks: {
     async jwt({ token, user }) {

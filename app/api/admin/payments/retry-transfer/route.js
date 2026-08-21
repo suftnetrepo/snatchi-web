@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/auth';
-import { connectDb } from '@/utils/connectDb';
 import Stripe from 'stripe';
 import { logger } from '../../../utils/logger';
+import { recordAdminAudit, requireAdmin, validateAdminReason } from '../../../utils/admin';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2024-04-10'
@@ -24,30 +22,19 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 export async function POST(req) {
   try {
     // 1. AUTHENTICATION & AUTHORIZATION
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      logger.warn('Unauthorized retry attempt - no session');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireAdmin();
+    if (auth.response) return auth.response;
+    const { session } = auth;
 
-    // Check admin role
-    if (session.user?.role !== 'admin') {
-      logger.warn('Unauthorized retry attempt - not admin', {
-        userId: session.user?.id,
-        role: session.user?.role
-      });
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
-
-    await connectDb();
-
-    const { paymentId } = await req.json();
+    const { paymentId, reason } = await req.json();
     if (!paymentId) {
       return NextResponse.json(
         { error: 'Payment ID required' },
         { status: 400 }
       );
     }
+    const safeReason = validateAdminReason(reason);
+    if (!safeReason) return NextResponse.json({ error: 'A reason between 8 and 500 characters is required' }, { status: 400 });
 
     // 2. FETCH PAYMENT
     const Payment = require('../../../models/payment');
@@ -114,6 +101,20 @@ export async function POST(req) {
       );
     }
 
+    const lockCutoff = new Date(Date.now() - 5 * 60 * 1000);
+    const locked = await Payment.findOneAndUpdate(
+      {
+        _id: paymentId,
+        transferId: { $in: [null, ''] },
+        $or: [{ transferRetryLockedAt: { $exists: false } }, { transferRetryLockedAt: { $lt: lockCutoff } }]
+      },
+      { $set: { transferRetryLockedAt: new Date(), transferRetryReason: safeReason } },
+      { new: true }
+    );
+    if (!locked) {
+      return NextResponse.json({ error: 'A transfer exists or another retry is already in progress' }, { status: 409 });
+    }
+
     // 4. ATTEMPT TRANSFER
     let transfer;
     try {
@@ -137,7 +138,7 @@ export async function POST(req) {
           retryInitiatedBy: session.user?.id,
           retryTimestamp: new Date().toISOString()
         }
-      });
+      }, { idempotencyKey: `admin-transfer-retry-${payment._id}-${payment.transferRetryCount || 0}` });
 
       logger.info('Transfer retry succeeded', {
         paymentId,
@@ -167,6 +168,12 @@ export async function POST(req) {
         });
       }
 
+      await Payment.updateOne({ _id: paymentId }, { $unset: { transferRetryLockedAt: 1 } });
+      await recordAdminAudit({ req, session,
+        action: 'payment.transfer_retry', targetType: 'payment', targetId: paymentId,
+        reason: safeReason, result: 'failure', metadata: { error: stripeError.message, code: stripeError.code }
+      });
+
       return NextResponse.json(
         {
           error: 'Transfer failed',
@@ -184,8 +191,14 @@ export async function POST(req) {
     payment.transferRetryCount = (payment.transferRetryCount || 0) + 1;
     payment.lastTransferRetryAt = new Date();
     payment.lastRetryInitiatedBy = session.user?.id;
+    payment.transferRetryLockedAt = undefined;
+    payment.transferRetryReason = safeReason;
 
     await payment.save();
+    await recordAdminAudit({ req, session,
+      action: 'payment.transfer_retry', targetType: 'payment', targetId: paymentId,
+      reason: safeReason, metadata: { transferId: transfer.id, amount: transfer.amount }
+    });
 
     logger.info('Payment updated after successful transfer retry', {
       paymentId,

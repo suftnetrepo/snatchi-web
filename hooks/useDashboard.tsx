@@ -26,6 +26,7 @@ const useDashboard = () => {
   };
 
   const handleRecent = async () => {
+    setState((prev) => ({ ...prev, loading: true, error: null }));
     const { data, success, errorMessage } = await zat(DASHBOARD.recent, null, VERBS.GET);
 
     if (success) {
@@ -62,6 +63,7 @@ const useDashboard = () => {
   }
 
   const handleAggregate = async () => {
+    setState((prev) => ({ ...prev, loading: true, error: null }));
     const { data, success, errorMessage } = await zat(DASHBOARD.aggregate, null, VERBS.GET);
 
     if (success) {
@@ -75,6 +77,7 @@ const useDashboard = () => {
   };
 
   const handlePaginate = async (currentPage = 1) => {
+    setState((prev) => ({ ...prev, loading: true, error: null }));
     const { data, success, errorMessage } = await zat(DASHBOARD.paginate, null, VERBS.GET, {
       limit: 10,
       page: currentPage
@@ -92,6 +95,7 @@ const useDashboard = () => {
   };
 
   const handleChartAggregate = async () => {
+    setState((prev) => ({ ...prev, loading: true, error: null }));
     const { data, success, errorMessage } = await zat(DASHBOARD.chart, null, VERBS.GET);
 
     if (success) {

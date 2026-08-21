@@ -13,7 +13,7 @@ const Pricing: FC<PricingProps> = ({ show = true }) => {
             <div className="row">
               <div className="col-lg-10 mx-auto">
                 <h3 className="display-4 mb-15 mb-md-6 px-lg-10">
-                  Every plan provides cost-effective solutions, quality features, and reliable support.
+                  The same core workflows on every plan, with capacity that grows with your organisation.
                 </h3>
               </div>
             </div>

@@ -5,10 +5,10 @@ export const mongoConnect = async () => {
     return;
   }
 
-  const connectionUrl = process.env.NEXT_PUBLIC_MONGODB_URL || "mongodb+srv://sr72:Kcmkcm12345!@cluster0.ihqj3.mongodb.net/snatchi_dev?retryWrites=true&w=majority";
+  const connectionUrl = process.env.MONGODB_URL || process.env.NEXT_PUBLIC_MONGODB_URL;
 
   if (!connectionUrl) {
-    console.error('Error: MONGO_URI is not defined in environment variables.');
+    console.error('MONGODB_URL is not configured');
     return;
   }
 
@@ -22,9 +22,12 @@ export const mongoConnect = async () => {
     mongoose.set('strictQuery', false); 
     console.log('Database connected successfully');
   } catch (err) {
-    console.error(`Error connecting to the database: ${err.message}`);   
+    console.error(`Error connecting to the database: ${err.message}`);
   }
 };
+
+// Backwards-compatible name used by older route modules.
+export const connectDb = mongoConnect;
 
 
 
@@ -49,4 +52,3 @@ export const mongoConnect = async () => {
 //     cached.conn = await cached.promise;
 //     return cached.conn;
 // }
-
