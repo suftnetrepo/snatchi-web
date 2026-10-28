@@ -5,8 +5,22 @@ import { VERBS } from '../config';
 import { DOCUMENT } from '../utils/apiUrl';
 import { fileValidator } from '../app/protected/integrator/rules';
 
-const useDocument = (id) => {
-  const [state, setState] = useState({
+interface DocumentRecord {
+  _id: string;
+  [key: string]: unknown;
+}
+
+interface DocumentState {
+  data: DocumentRecord[];
+  loading: boolean;
+  fields: typeof fileValidator.fields;
+  error: string | null;
+  success: boolean;
+  rules: typeof fileValidator.rules;
+}
+
+const useDocument = (id?: string) => {
+  const [state, setState] = useState<DocumentState>({
     data: [],
     loading: false,
     fields: fileValidator.fields,
@@ -50,7 +64,7 @@ const useDocument = (id) => {
 
       return true;
     } else {
-      handleError(errorMessage);
+      handleError(errorMessage || 'Failed to upload the document.');
     }
   };
 
@@ -64,7 +78,7 @@ const useDocument = (id) => {
       });
       return true;
     } else {
-      handleError(errorMessage);
+      handleError(errorMessage || 'Failed to fetch documents.');
     }
   };
 

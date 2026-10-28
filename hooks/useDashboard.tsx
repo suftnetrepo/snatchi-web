@@ -35,7 +35,7 @@ const useDashboard = () => {
       });
       return { success, user: data };
     } else {
-      handleError(errorMessage);
+      handleError(errorMessage || 'Failed to fetch recent dashboard data.');
     }
   };
 
@@ -72,7 +72,7 @@ const useDashboard = () => {
       });
       return { success, user: data };
     } else {
-      handleError(errorMessage);
+      handleError(errorMessage || 'Failed to fetch dashboard aggregate.');
     }
   };
 
@@ -90,7 +90,7 @@ const useDashboard = () => {
       });
       return { success, user: data };
     } else {
-      handleError(errorMessage);
+      handleError(errorMessage || 'Failed to fetch dashboard data.');
     }
   };
 
@@ -104,7 +104,7 @@ const useDashboard = () => {
       });
       return { success, user: data };
     } else {
-      handleError(errorMessage);
+      handleError(errorMessage || 'Failed to fetch chart data.');
     }
   };
 

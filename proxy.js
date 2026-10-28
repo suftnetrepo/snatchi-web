@@ -14,7 +14,7 @@ const denyAdminAccess = (req) => {
   return NextResponse.redirect(new URL('/login?error=admin_access_required', req.url));
 };
 
-export async function middleware(req) {
+export async function proxy(req) {
   try {
     const { pathname } = req.nextUrl;
 

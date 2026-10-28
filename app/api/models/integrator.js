@@ -165,6 +165,20 @@ const IntegratorSchema = new mongoose.Schema(
       type: Date,
       required: false
     },
+    onboarding: {
+      welcomeModalDismissed: {
+        type: Boolean,
+        default: false
+      },
+      setupChecklistDismissed: {
+        type: Boolean,
+        default: false
+      },
+      onboardingCompleted: {
+        type: Boolean,
+        default: false
+      }
+    },
     fcm_token: {
       type: String,
       trim: true,

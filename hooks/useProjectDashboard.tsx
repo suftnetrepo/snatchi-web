@@ -34,7 +34,7 @@ const useProjectDashboard = () => {
       });
       return { success, user: data };
     } else {
-      handleError(errorMessage);
+      handleError(errorMessage || 'Failed to fetch recent projects.');
     }
   };
 
@@ -71,7 +71,7 @@ const useProjectDashboard = () => {
       });
       return { success, user: data };
     } else {
-      handleError(errorMessage);
+      handleError(errorMessage || 'Failed to fetch project aggregate.');
     }
   };
 
@@ -85,7 +85,7 @@ const useProjectDashboard = () => {
       });
       return { success, user: data };
     } else {
-      handleError(errorMessage);
+      handleError(errorMessage || 'Failed to fetch project chart data.');
     }
   };
 

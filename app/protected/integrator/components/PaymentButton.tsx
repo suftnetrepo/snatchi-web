@@ -30,7 +30,9 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({
   const [success, setSuccess] = useState(false);
 
   // Check if self-payment (same integrator)
-  const isSelfPayment = engineerIntegratorId && payingIntegratorId && engineerIntegratorId === payingIntegratorId;
+  const isSelfPayment = Boolean(
+    engineerIntegratorId && payingIntegratorId && engineerIntegratorId === payingIntegratorId
+  );
 
   if (isSelfPayment) {
     return null; // Don't show button for self-payment

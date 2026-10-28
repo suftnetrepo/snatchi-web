@@ -50,6 +50,5 @@ logs/
 .env.production
 .gitignore
 stderr.log
-yarn.lock
 app/api/data/snatchichat-firebase-adminsdk-*.json
 app/api/data/snatchichat-firebase-adminsdk-*.json

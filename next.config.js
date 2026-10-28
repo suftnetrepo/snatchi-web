@@ -1,19 +1,24 @@
+const isLowMemoryBuild = process.env.SENTRY_SKIP_UPLOAD === '1';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['mongoose', 'mongodb', 'mjml', 'bunyan'],
+  turbopack: {
+    resolveAlias: {
+      prettier: './stubs/empty-module.js',
+      'cli-highlight': './stubs/empty-module.js'
+    }
+  },
   experimental: {
-    // Reduce peak webpack heap usage on memory-constrained CI/build workers.
-    webpackMemoryOptimizations: true
+    webpackBuildWorker: true,
+    webpackMemoryOptimizations: true,
+    serverSourceMaps: !isLowMemoryBuild
   },
-  serverExternalPackages: ['mjml', 'uglify-js', 'bunyan'],
-  eslint: {
-    ignoreDuringBuilds: true
-  },
-  typescript: {
-    ignoreBuildErrors: true
-  },
+  productionBrowserSourceMaps: false,
+  enablePrerenderSourceMaps: !isLowMemoryBuild,
   reactStrictMode: false,
   images: {
-    domains: ['snatchi.org'],
+    remotePatterns: [{ protocol: 'https', hostname: 'snatchi.org' }],
     formats: ['image/avif', 'image/webp']
   },
 
@@ -37,21 +42,38 @@ const nextConfig = {
 
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      config.resolve.fallback.fs = false;
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        'source-map-support': false,
+        'dtrace-provider': false
+      };
     }
 
-    // Ignore fastest-validator critical dependency warnings
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      prettier: false,
+      'cli-highlight': false
+    };
+
+    config.externals = config.externals || [];
+    if (isServer) {
+      config.externals.push('source-map-support', 'dtrace-provider');
+    }
+
+    // Ignore fastest-validator critical dependency warnings.
     config.module.exprContextCritical = false;
 
     return config;
   }
 };
 
-// Conditionally add Sentry if installed
-try {
-  const { withSentryConfig } = require('@sentry/nextjs');
-  const isMemoryConstrainedBuild =
-    process.env.RENDER === 'true' || process.env.SENTRY_DISABLE_SOURCEMAPS === 'true';
+// Skip source-map processing on memory-constrained builds. Runtime Sentry
+// instrumentation remains active.
+if (isLowMemoryBuild) {
+  module.exports = nextConfig;
+} else try {
+  const { withSentryConfig } = require('@sentry/nextjs/config');
 
   module.exports = withSentryConfig(nextConfig, {
     org: 'suftnetcom',
@@ -61,10 +83,15 @@ try {
     // constrained Render builders past their heap limit.
     widenClientFileUpload: false,
     sourcemaps: {
-      disable: isMemoryConstrainedBuild
+      disable: process.env.SENTRY_SKIP_UPLOAD === '1'
     },
-    disableLogger: true,
-    automaticVercelMonitors: true
+    webpack: {
+      unstable_sentryWebpackPluginOptions: {
+        disable: process.env.SENTRY_SKIP_UPLOAD === '1'
+      },
+      treeshake: { removeDebugLogging: true },
+      automaticVercelMonitors: true
+    }
   });
 } catch (error) {
   console.warn('⚠️ Sentry is not installed. Skipping Sentry configuration.');

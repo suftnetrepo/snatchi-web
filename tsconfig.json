@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
@@ -12,14 +16,33 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./app/*", "./src/*", "./*"]
+      "@/*": [
+        "./app/*",
+        "./src/*",
+        "./*"
+      ],
+      "components/*": [
+        "./src/components/*"
+      ],
+      "data/*": [
+        "./src/data/*"
+      ],
+      "icons/*": [
+        "./src/icons/*"
+      ],
+      "types/*": [
+        "./src/types/*"
+      ],
+      "utils/*": [
+        "./src/utils/*"
+      ]
     },
     "plugins": [
       {
@@ -34,7 +57,14 @@
     "**/*.js",
     "**/*.jsx",
     ".next/types/**/*.ts",
-    "middleware.js"
+    "proxy.js",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "e2e",
+    "tests",
+    "_",
+    "release"
+  ]
 }

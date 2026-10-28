@@ -1,9 +1,11 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
+/** @typedef {import('next-auth').NextAuthOptions} NextAuthOptions */
 import User from './app/api/models/user.js';
 import { mongoConnect } from './utils/connectDb.js';
 
+/** @type {NextAuthOptions} */
 export const authOptions = {
   providers: [
     CredentialsProvider({

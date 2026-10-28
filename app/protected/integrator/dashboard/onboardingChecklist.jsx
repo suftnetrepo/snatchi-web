@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
@@ -15,8 +15,16 @@ import {
   FaUserPlus
 } from 'react-icons/fa';
 import styles from './onboardingChecklist.module.scss';
+import {
+  HelpFab,
+  SetupGuideDrawer,
+  TOUR_STEPS,
+  TOUR_STORAGE_KEY,
+  TourTooltip,
+  WelcomeOverlay
+} from './onboardingSkeleton';
 
-const steps = [
+export const steps = [
   {
     key: 'profile',
     title: 'Complete your organisation profile',
@@ -68,6 +76,14 @@ const OnboardingChecklist = ({ dashboardReady = true, onResolved }) => {
   const [loadError, setLoadError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [collapsed, setCollapsed] = useState(false);
+  const [guideVisible, setGuideVisible] = useState(false);
+  const [welcomeVisible, setWelcomeVisible] = useState(false);
+  const [tourVisible, setTourVisible] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const savingRef = useRef(false);
+  const checklistRef = useRef(null);
 
   useEffect(() => {
     if (sessionStatus === 'loading') return;
@@ -85,7 +101,10 @@ const OnboardingChecklist = ({ dashboardReady = true, onResolved }) => {
         const response = await fetch('/api/integrator/onboarding', { credentials: 'include', cache: 'no-store' });
         if (!response.ok) throw new Error(`Onboarding checks returned ${response.status}`);
         const payload = await response.json();
-        if (active) setSetup(payload.data);
+        if (active) {
+          setSetup(payload.data);
+          setWelcomeVisible(!payload.data.complete && !payload.data.dismissed);
+        }
       } catch (error) {
         console.error('Unable to load onboarding checks:', error);
         if (active) setLoadError(true);
@@ -101,6 +120,72 @@ const OnboardingChecklist = ({ dashboardReady = true, onResolved }) => {
       active = false;
     };
   }, [sessionStatus, reloadKey, onResolved]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!window.localStorage.getItem(TOUR_STORAGE_KEY)) setTourVisible(true);
+  }, []);
+
+  const persistState = useCallback(async (partial) => {
+    if (savingRef.current) return false;
+    savingRef.current = true;
+    setSaving(true);
+    setSaveError('');
+    try {
+      const response = await fetch('/api/integrator/onboarding', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(partial)
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Unable to update onboarding state.');
+      setSetup((current) => ({
+        ...current,
+        dismissed: payload.data.welcomeModalDismissed,
+        setupChecklistDismissed: payload.data.setupChecklistDismissed,
+        complete: payload.data.onboardingCompleted || current?.complete
+      }));
+      return true;
+    } catch (error) {
+      setSaveError(error.message || 'Unable to update onboarding state.');
+      return false;
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  }, []);
+
+  const handleDismissWelcome = useCallback(async () => {
+    if (await persistState({ welcomeModalDismissed: true })) setWelcomeVisible(false);
+  }, [persistState]);
+
+  const handleGetStarted = useCallback(async () => {
+    const saved = await persistState({ welcomeModalDismissed: true, setupChecklistDismissed: false });
+    if (saved) {
+      setWelcomeVisible(false);
+      checklistRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [persistState]);
+
+  const handleDismissChecklist = useCallback(() => {
+    persistState({ welcomeModalDismissed: true, setupChecklistDismissed: true });
+  }, [persistState]);
+
+  const dismissTour = useCallback(() => {
+    setTourVisible(false);
+    if (typeof window !== 'undefined') window.localStorage.setItem(TOUR_STORAGE_KEY, '1');
+  }, []);
+
+  const nextTourStep = useCallback(() => {
+    if (tourStep + 1 >= TOUR_STEPS.length) dismissTour();
+    else setTourStep((current) => current + 1);
+  }, [dismissTour, tourStep]);
+
+  const openTour = useCallback(() => {
+    setTourStep(0);
+    setTourVisible(true);
+  }, []);
 
   const nextStep = useMemo(() => steps.find((step) => !step.optional && !setup?.checks?.[step.key]), [setup]);
 
@@ -121,10 +206,27 @@ const OnboardingChecklist = ({ dashboardReady = true, onResolved }) => {
       </section>
     );
   }
-  if (!setup || setup.complete) return null;
+  if (!setup) return null;
+
+  const activeTourStep = { ...TOUR_STEPS[tourStep], index: tourStep };
+  const skeleton = (
+    <>
+      <SetupGuideDrawer show={guideVisible} steps={steps} checks={setup.checks} onClose={() => setGuideVisible(false)} onNavigate={(href) => router.push(href)} />
+      <WelcomeOverlay show={welcomeVisible} busy={saving} onGetStarted={handleGetStarted} onDismiss={handleDismissWelcome} />
+      {tourVisible && <TourTooltip step={activeTourStep} onNext={nextTourStep} onDismiss={dismissTour} />}
+      <HelpFab onClick={openTour} />
+    </>
+  );
+
+  if (setup.complete || setup.setupChecklistDismissed) {
+    return <>{saveError && <div className="alert alert-danger" role="alert">{saveError}</div>}{skeleton}</>;
+  }
 
   return (
-    <section className={styles.onboarding} aria-labelledby="onboarding-title">
+    <>
+    {skeleton}
+    {saveError && <div className="alert alert-danger" role="alert">{saveError}</div>}
+    <section ref={checklistRef} className={styles.onboarding} aria-labelledby="onboarding-title">
       <div className={styles.header}>
         <div className={styles.heading}>
           <span className={styles.eyebrow}>Getting started</span>
@@ -132,6 +234,8 @@ const OnboardingChecklist = ({ dashboardReady = true, onResolved }) => {
           <p>{nextStep ? `Next: ${nextStep.title}` : 'Your essential setup is complete.'}</p>
         </div>
         <div className={styles.headerActions}>
+          <button type="button" className={styles.laterButton} onClick={() => setGuideVisible(true)}>View setup guide</button>
+          <button type="button" className={styles.laterButton} disabled={saving} onClick={handleDismissChecklist}>Do this later</button>
           <div className={styles.progressText}>
             <strong>{setup.percent}%</strong>
             <span>
@@ -183,6 +287,7 @@ const OnboardingChecklist = ({ dashboardReady = true, onResolved }) => {
         </div>
       )}
     </section>
+    </>
   );
 };
 
