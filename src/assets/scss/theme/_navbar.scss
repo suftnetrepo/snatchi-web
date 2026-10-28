@@ -13,10 +13,12 @@ header {
 
   .navbar-logo {
     display: block;
-    width: 7rem;
+    // The logo file has wide empty margins; crop the box to the artwork.
+    width: 10rem;
     height: auto;
-    max-height: 4.25rem;
+    aspect-ratio: 3 / 1;
     object-fit: cover;
+    object-position: center;
   }
 
   .navbar-collapse {
@@ -82,8 +84,7 @@ header {
 
 @media (max-width: 575.98px) {
   .navbar .navbar-logo {
-    width: 5.5rem;
-    max-height: 3.75rem;
+    width: 8rem;
   }
 }
 //----------------------------------------------------------//
