@@ -1,4 +1,5 @@
-const isLowMemoryBuild = process.env.SENTRY_SKIP_UPLOAD === '1';
+// Render sets RENDER=true; its builders are memory-constrained, so build lean there.
+const isLowMemoryBuild = process.env.SENTRY_SKIP_UPLOAD === '1' || process.env.RENDER === 'true';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -10,7 +11,7 @@ const nextConfig = {
     }
   },
   experimental: {
-    webpackBuildWorker: true,
+    webpackBuildWorker: !isLowMemoryBuild,
     webpackMemoryOptimizations: true,
     serverSourceMaps: !isLowMemoryBuild
   },
