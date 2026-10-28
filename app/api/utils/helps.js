@@ -4,7 +4,8 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 import { logger } from './logger';
 import { serialize } from 'cookie';
-import { getRefreshToken } from '../../../utils/generateToken';
+import { getAccessToken } from '../../../utils/generateToken';
+import { getAccessTokenSecret, getRefreshTokenSecret } from '../../../utils/tokenSecrets';
 const { NextResponse } = require('next/server');
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
@@ -54,7 +55,7 @@ const verifyToken = (handler, options = {}) => {
       }
 
       // Verify authToken
-      const decoded = verifyJwtToken(authToken, process.env.NEXT_PUBLIC_ACCESS_TOKEN_SECRET);
+      const decoded = verifyJwtToken(authToken, getAccessTokenSecret());
       req.user = decoded;
       return handler(req, res);
     } catch (err) {
@@ -74,10 +75,10 @@ const verifyToken = (handler, options = {}) => {
           }
 
           // Verify refreshToken
-          const user = await verifyJwtTokenAsync(refreshToken, process.env.NEXT_PUBLIC_REFRESH_TOKEN_SECRET);
+          const user = await verifyJwtTokenAsync(refreshToken, getRefreshTokenSecret());
 
           // Generate new access token
-          const newAccessToken = getRefreshToken({
+          const newAccessToken = getAccessToken({
             id: user.id,
             email: user.email,
             role: user.role,

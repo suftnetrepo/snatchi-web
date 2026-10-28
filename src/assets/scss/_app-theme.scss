@@ -45,6 +45,32 @@ main,
   background-color: var(--snatchi-surface);
 }
 
+// At desktop widths the navigation offcanvas becomes part of the navbar.
+// Keep its mobile surface below lg, but let the parent header show through
+// once it is rendered inline.
+@media (min-width: 992px) {
+  .navbar-expand-lg .offcanvas-nav,
+  .navbar-expand-lg .offcanvas-nav .offcanvas-body {
+    border-color: transparent;
+    background-color: transparent;
+  }
+}
+
+.public-header-sign-in,
+.public-header-sign-in:focus {
+  color: #fff;
+  border-color: #747ed1 !important;
+  background-color: #747ed1 !important;
+  box-shadow: none;
+}
+
+.public-header-sign-in:hover,
+.public-header-sign-in:active {
+  color: #fff;
+  border-color: #626dbf !important;
+  background-color: #626dbf !important;
+}
+
 .modal-title,
 .offcanvas-title,
 .card-title,

@@ -1,4 +1,5 @@
 import * as jose from 'jose';
+import { getAccessTokenSecret, getRefreshTokenSecret } from '../utils/tokenSecrets';
 
 export interface TokenPayload {
   id: string;
@@ -12,12 +13,8 @@ export interface Tokens {
   refreshToken: string;
 }
 
-const ACCESS_TOKEN_SECRET = new TextEncoder().encode(
-  process.env.NEXT_PUBLIC_ACCESS_TOKEN_SECRET || 'KDJHF7823RHIU3289FJ9321456777I2G8FG239'
-);
-const REFRESH_TOKEN_SECRET = new TextEncoder().encode(
-  process.env.NEXT_PUBLIC_REFRESH_TOKEN_SECRET || '946acb540311776067cadad0976d65c086673babcd8e8298b323ae85823f34b3'
-);
+const encodedAccessTokenSecret = () => new TextEncoder().encode(getAccessTokenSecret());
+const encodedRefreshTokenSecret = () => new TextEncoder().encode(getRefreshTokenSecret());
 
 export class AuthService {
   static async generateTokens(payload: any) {
@@ -25,20 +22,20 @@ export class AuthService {
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('7d')
-      .sign(ACCESS_TOKEN_SECRET);
+      .sign(encodedAccessTokenSecret());
 
     const refreshToken = await new jose.SignJWT(payload)
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('7d')
-      .sign(REFRESH_TOKEN_SECRET);
+      .sign(encodedRefreshTokenSecret());
 
     return { accessToken, refreshToken };
   }
 
   static async verifyAccessToken(token: string) {
     try {
-      const { payload } = await jose.jwtVerify(token, ACCESS_TOKEN_SECRET);
+      const { payload } = await jose.jwtVerify(token, encodedAccessTokenSecret());
       return payload;
     } catch (err) {
       console.error(err);
@@ -48,7 +45,7 @@ export class AuthService {
 
   static async verifyRefreshToken(token: string) {
     try {
-      const { payload } = await jose.jwtVerify(token, ACCESS_TOKEN_SECRET);
+      const { payload } = await jose.jwtVerify(token, encodedRefreshTokenSecret());
       return payload;
     } catch {
       return null;

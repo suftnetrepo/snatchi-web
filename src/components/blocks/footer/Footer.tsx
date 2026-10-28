@@ -12,7 +12,7 @@ const Footer8: FC = () => {
         <div className="row gy-6 gy-lg-0">
           <div className="col-md-4 col-lg-3">
             <div className="widget">
-              <img className="mb-4" src="/img/logo.png" srcSet="/img/logo.png 2x" alt="Snatchi" />
+              <img className="mb-4 navbar-logo" src="/img/logo.png" srcSet="/img/logo.png 2x" width="180" height="120" alt="Snatchi" />
 
               <p className="mb-4">
                 © {new Date().getFullYear()} {siteIdentity.ownerName}. <br className="d-none d-lg-block" />

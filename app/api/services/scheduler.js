@@ -24,6 +24,27 @@ const toObjectId = (value) => new mongoose.Types.ObjectId(value);
 
 const serviceError = (message, statusCode) => Object.assign(new Error(message), { statusCode });
 
+const applyScheduleReadScope = (query, actor) => {
+  if (!actor) return query;
+  if (actor.role === 'admin') return query;
+  if (actor.role === 'engineer') {
+    if (!actor.userId) throw serviceError('Unauthorized', 403);
+    return { ...query, engineer: toObjectId(actor.userId) };
+  }
+  if (['integrator', 'manager'].includes(actor.role) && actor.integratorId) {
+    const integratorId = toObjectId(actor.integratorId);
+    return {
+      ...query,
+      $or: [
+        { integrator: integratorId },
+        { payingIntegrator: integratorId },
+        { receivingIntegratorId: integratorId }
+      ]
+    };
+  }
+  throw serviceError('Unauthorized', 403);
+};
+
 const dateKey = (value) => {
   if (!value) return '';
   const match = String(value).match(/^(\d{4}-\d{2}-\d{2})/);
@@ -172,7 +193,7 @@ const buildPaymentFailedUpdate = () => ({
   status: SCHEDULER_STATUS.PAYMENT_FAILED
 });
 
-async function getByUser(user_id) {
+async function getByUser(user_id, actor = null) {
   try {
     const query = {};
 
@@ -189,7 +210,7 @@ async function getByUser(user_id) {
 
     query.startDate = { $gte: now };
 
-    const result = await Scheduler.find(query).populate('engineer', 'first_name last_name email');
+    const result = await Scheduler.find(applyScheduleReadScope(query, actor)).populate('engineer', 'first_name last_name email');
     return { data: result };
   } catch (error) {
     logger.error(error);
@@ -703,7 +724,7 @@ const normalizeSingleScheduleStatus = (status) => {
  * @param {object}          [params.actor]     – normalised session actor
  */
 async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, actor = null }) {
-  const query = createEngineerScheduleQuery({ engineerId, date, status });
+  const query = applyScheduleReadScope(createEngineerScheduleQuery({ engineerId, date, status }), actor);
 
   try {
     const result = await Scheduler.find(query).select(
@@ -729,8 +750,8 @@ async function getEngineerSchedulesByDateAndStatus({ engineerId, date, status, a
  * @param {object}          [params.actor]     – optional, normalised session actor for security checks
  * @returns {Promise<object>} { total, byStatus: { Pending, Accepted, Approved, ... } }
  */
-async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses }) {
-  const query = createEngineerScheduleQuery({ engineerId, date, status: undefined });
+async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses, actor = null }) {
+  const query = applyScheduleReadScope(createEngineerScheduleQuery({ engineerId, date, status: undefined }), actor);
 
   // ── Parse and expand status filters ──────────────────────────────────────
   let statusFilter = null;
@@ -792,14 +813,14 @@ async function getEngineerScheduleStatusAggregate({ engineerId, date, statuses }
   }
 }
 
-async function getEngineerSchedulesByStatus({ engineerId, status }) {
+async function getEngineerSchedulesByStatus({ engineerId, status, actor = null }) {
   const normalizedStatus = normalizeSingleScheduleStatus(status);
 
   try {
-    const schedules = await Scheduler.find({
+    const schedules = await Scheduler.find(applyScheduleReadScope({
       engineer: toObjectId(engineerId),
       status: { $in: expandStatusAlias(normalizedStatus) }
-    }).sort({ startDate: 1, startTime: 1 });
+    }, actor)).sort({ startDate: 1, startTime: 1 });
 
     return { data: schedules };
   } catch (error) {
@@ -808,7 +829,7 @@ async function getEngineerSchedulesByStatus({ engineerId, status }) {
   }
 }
 
-async function getSchedulesByEngineerAndStatus({ engineerId, status }) {
+async function getSchedulesByEngineerAndStatus({ engineerId, status, actor = null }) {
   if (!mongoose.isValidObjectId(engineerId)) {
     throw Object.assign(new Error('Invalid engineerId'), { statusCode: 400 });
   }
@@ -816,10 +837,10 @@ async function getSchedulesByEngineerAndStatus({ engineerId, status }) {
   const normalizedStatus = normalizeSingleScheduleStatus(status);
 
   try {
-    const schedules = await Scheduler.find({
+    const schedules = await Scheduler.find(applyScheduleReadScope({
       engineer: toObjectId(engineerId),
       status: { $in: expandStatusAlias(normalizedStatus) }
-    }).sort({ startDate: 1, startTime: 1 });
+    }, actor)).sort({ startDate: 1, startTime: 1 });
 
     return { data: schedules };
   } catch (error) {

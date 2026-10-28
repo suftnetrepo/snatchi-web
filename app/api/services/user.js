@@ -155,7 +155,7 @@ async function createUser(id, body) {
     const safeBody = Object.fromEntries(allowedFields.filter((field) => Object.hasOwn(body, field)).map((field) => [field, body[field]]));
     const newUser = await User.create({
       integrator: id,
-      password: await generatePassword('12345!'),
+      password: await generatePassword(process.env.TEMPORARY_USER_PASSWORD),
       ...safeBody
     });
 

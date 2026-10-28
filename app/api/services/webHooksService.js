@@ -77,7 +77,7 @@ const invoicePaymentSuccess = async (event) => {
         contactEmail: process.env.CONTACT_EMAIL,
         team: process.env.TEAM,
         duration: priceInfo.duration,
-        password: '12345!'
+        password: process.env.TEMPORARY_USER_PASSWORD
       }));
       await sendBrevoEmail({
         sender: { email: process.env.USER_NAME, name: 'Snatchi' },
@@ -357,7 +357,7 @@ const createSubscription = async (event) => {
         contactEmail: process.env.CONTACT_EMAIL,
         team: process.env.TEAM,
         duration: duration,
-        password: '12345!',
+        password: process.env.TEMPORARY_USER_PASSWORD,
         resetPasswordUrl: `${process.env.NEXTAUTH_URL}/resetPassword`
       })
     );

@@ -10,18 +10,13 @@ import { validate } from '../../../validator/validator';
 import { useSubscriber } from '../../../hooks/useSubscriber';
 import { useRouter, useParams } from 'next/navigation';
 import ErrorDialogue from '@/components/elements/errorDialogue';
-import { useUserChat } from '../../../hooks/useUserChat';
-import { signIn, getCsrfToken } from 'next-auth/react';
 import styles from './checkout.module.scss';
 
-const CHAT_USER_PASSWORD = '12345!';
 const CheckOut = () => {
   const router = useRouter();
   const params = useParams();
   const stripe = useStripe();
   const elements = useElements();
-  const [csrfToken, setCsrfToken] = useState('');
-  const { handleSignUp } = useUserChat();
   const [enrichedFields, setEnrichedFields] = useState(null);
   const userCreatedRef = useRef(null);
   const [clientSecret, setClientSecret] = useState(null);
@@ -32,10 +27,6 @@ const CheckOut = () => {
   const { priceId } = params;
   const { handleNewSubscriber, handleErrorReset, loading, handleError, error, handleSuccess, pricing } =
     useSubscriber(priceId);
-
-  useEffect(() => {
-    getCsrfToken().then(setCsrfToken);
-  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -87,10 +78,6 @@ const CheckOut = () => {
 
     if (paymentIntent?.status === 'succeeded') {
       
-      handleSignUp(fields.email, CHAT_USER_PASSWORD).catch((error) => {
-        console.error('Error signing up user:', error);
-      });
-
       router.replace(`/checkout/success?token=${encodeURIComponent(userPayload?.checkoutToken || '')}`);
       return true;
     }

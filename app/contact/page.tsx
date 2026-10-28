@@ -7,9 +7,7 @@ import { Footer } from '@/components/blocks/footer';
 import PageProgress from '@/components/common/PageProgress';
 import ContactForm from '@/components/common/ContactForm';
 import ContactTiles from '@/components/elements/tiles/Contact-Tiles';
-import Topbar from '@/components/elements/Topbar';
-import Navbar from '@/components/blocks/navbar/Navbar';
-import Link from 'next/link';
+import PublicHeader from '@/components/blocks/navbar/PublicHeader';
 import { siteIdentity } from '@/data/site';
 
 const ContactTwo: NextPage = () => {
@@ -17,19 +15,7 @@ const ContactTwo: NextPage = () => {
     <Fragment>
       <PageProgress />
 
-      <Topbar />
-      <header className="wrapper bg-light">
-        <Navbar
-          info
-          navOtherClass="navbar-other ms-lg-4"
-          navClassName="navbar navbar-expand-lg classic transparent navbar-light"
-          button={
-            <Link href="/login" className="btn btn-sm text-white bg__purple rounded-pill">
-              Sign In
-            </Link>
-          }
-        />
-      </header>
+      <PublicHeader />
       <main className="content-wrapper">
         <section className="wrapper bg-white">
           <div className="container py-14 py-md-16">

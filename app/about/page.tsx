@@ -13,9 +13,7 @@ import NextLink from '@/components/reuseable/links/NextLink';
 import NavBarLink from '@/components/reuseable/links/NavbarLink';
 import AboutUs from '@/components/blocks/about';
 import PageProgress from '@/components/common/PageProgress';
-import Topbar from '@/components/elements/Topbar';
-import Navbar from '@/components/blocks/navbar/Navbar';
-import Link from 'next/link';
+import PublicHeader from '@/components/blocks/navbar/PublicHeader';
 import AccordionList from '@/components/common/AccordionList';
 
 const About: NextPage = () => {
@@ -23,19 +21,7 @@ const About: NextPage = () => {
     <Fragment>
       <PageProgress />
 
-      <Topbar />
-      <header className="wrapper bg-light">
-        <Navbar
-          info
-          navOtherClass="navbar-other ms-lg-4"
-          navClassName="navbar navbar-expand-lg classic transparent navbar-light"
-          button={
-            <Link href="/login" className="btn btn-sm text-white bg__purple rounded-pill">
-              Sign In
-            </Link>
-          }
-        />
-      </header>
+      <PublicHeader />
 
       <main className="content-wrapper">
         <AboutUs />

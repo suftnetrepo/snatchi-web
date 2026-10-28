@@ -15,7 +15,13 @@ const Hero2: FC = () => {
         />
 
         <figure className="rounded">
-          <img src="/img/photos/about8.jpg" srcSet="/img/photos/about8@2x.jpg 2x" alt="hero" />
+          <img
+            src="/img/hero/london-handyman-booking.webp"
+            alt="Handyman completing a booking at a London property"
+            width="1200"
+            height="1005"
+            fetchPriority="high"
+          />
         </figure>
       </div>
 

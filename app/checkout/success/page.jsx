@@ -10,27 +10,19 @@ import {
     faCogs,
     faUser
 } from '@fortawesome/free-solid-svg-icons';
-import { signIn, getCsrfToken } from 'next-auth/react';
 import { useSubscriber } from '../../../hooks/useSubscriber';
-
-const PASSWORD = '12345!';
 
 function CheckoutSuccessContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { handleVerifySubscriptionStatus } = useSubscriber();
-    const [csrfToken, setCsrfToken] = useState('');
     const checkoutToken = searchParams.get('token');
 
     const [status, setStatus] = useState('processing');
     // processing | active | failed
 
     useEffect(() => {
-        getCsrfToken().then(setCsrfToken);
-    }, []);
-
-    useEffect(() => {
-        if (!checkoutToken || !csrfToken) return;
+        if (!checkoutToken) return;
 
         let retryCount = 0;
         let isNavigating = false;
@@ -43,20 +35,6 @@ function CheckoutSuccessContent() {
                     isNavigating = true;
                     setStatus('active');
 
-                    const loginResult = await signIn('credentials', {
-                        redirect: false,
-                        email: data.email,
-                        password: PASSWORD,
-                        csrfToken
-                    });
-
-                    if (loginResult?.error) {
-                        isNavigating = false;
-                        setStatus('failed');
-                        return;
-                    }
-
-                    window.location.assign('/protected/integrator/dashboard');
                     return;
                 }
 
@@ -80,7 +58,7 @@ function CheckoutSuccessContent() {
         }, 2000);
         return () => clearInterval(interval);
 
-    }, [checkoutToken, csrfToken, handleVerifySubscriptionStatus]);
+    }, [checkoutToken, handleVerifySubscriptionStatus]);
 
     return (
         <div
@@ -134,7 +112,7 @@ function CheckoutSuccessContent() {
                                         'We are confirming your payment and activating your account.'}
 
                                     {status === 'active' &&
-                                        'Your account is ready. Redirecting to dashboard...'}
+                                        'Your account is ready. Use the temporary password sent to your email to sign in.'}
 
                                     {status === 'failed' &&
                                         'Something went wrong. Please contact support.'}
@@ -157,6 +135,17 @@ function CheckoutSuccessContent() {
                                     >
                                         <FontAwesomeIcon icon={faHome} className="me-2" />
                                         Go to Homepage
+                                    </Button>
+                                )}
+
+                                {status === 'active' && (
+                                    <Button
+                                        variant="primary"
+                                        size="lg"
+                                        className="w-100 rounded-pill"
+                                        onClick={() => router.push('/login')}
+                                    >
+                                        Sign in
                                     </Button>
                                 )}
 

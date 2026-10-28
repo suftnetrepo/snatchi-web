@@ -1,9 +1,7 @@
 import { NextPage } from 'next';
 import { Fragment } from 'react';
-import { Navbar } from '@/components/blocks/navbar';
 import PageProgress from '@/components/common/PageProgress';
-import Link from 'next/link';
-import Topbar from '@/components/elements/Topbar';
+import PublicHeader from '@/components/blocks/navbar/PublicHeader';
 import { Footer } from '@/components/blocks/footer';
 import Features from '@/components/blocks/service';
 
@@ -12,19 +10,7 @@ const Feature: NextPage = () => {
     <Fragment>
       <PageProgress />
 
-      <Topbar />
-      <header className="wrapper bg-light">
-        <Navbar
-          info
-          navOtherClass="navbar-other ms-lg-4"
-          navClassName="navbar navbar-expand-lg classic transparent navbar-light"
-          button={
-            <Link href="/login" className="btn btn-sm text-white bg__purple rounded-pill">
-              Sign In
-            </Link>
-          }
-        />
-      </header>
+      <PublicHeader />
 
       <main className="content-wrapper">
         <section className="wrapper bg-soft-primary">

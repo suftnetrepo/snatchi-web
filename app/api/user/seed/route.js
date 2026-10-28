@@ -16,7 +16,7 @@ export const POST = async (req) => {
     if (!['integrator', 'manager'].includes(sessionUser.role)) return errorResponse('Forbidden', 403);
 
     const seedRun = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    const password = await generatePassword('12345!');
+    const password = await generatePassword(process.env.TEMPORARY_USER_PASSWORD);
     const names = [
       ['Oliver', 'Bennett', 'London'],
       ['Amelia', 'Clarke', 'Manchester'],

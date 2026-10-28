@@ -17,7 +17,7 @@ import { logger } from '../utils/logger';
 
 // Matches the established web and mobile chat login until Firebase custom
 // tokens replace the temporary shared credential.
-const DEFAULT_PASSWORD = '12345!';
+const DEFAULT_PASSWORD = process.env.TEMPORARY_USER_PASSWORD;
 const DEFAULT_DISPLAY_NAME_SUFFIX = '(Auto-provisioned)';
 
 /**

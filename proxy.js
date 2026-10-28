@@ -45,6 +45,9 @@ export async function proxy(req) {
       const bearerToken = authHeader.split(' ')[1];
       try {
         const decoded = await AuthService.verifyAccessToken(bearerToken);
+        if (!decoded) {
+          throw new Error('Invalid bearer token');
+        }
         if (isAdminRoute(pathname) && decoded?.role !== 'admin') return denyAdminAccess(req);
         return NextResponse.next();
       } catch (e) {

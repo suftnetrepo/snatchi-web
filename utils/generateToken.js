@@ -3,13 +3,14 @@ import { getToken } from 'next-auth/jwt';
 import { AuthService } from '../lib/AuthService';
 import { mongoConnect } from './connectDb';
 import Integrator from '../app/api/models/integrator';
+import { getAccessTokenSecret, getRefreshTokenSecret } from './tokenSecrets';
 
 export const getAccessToken = (payload) => {
-    return jwt.sign(payload, process.env.NEXT_PUBLIC_ACCESS_TOKEN_SECRET, {expiresIn: '30m'})
+    return jwt.sign(payload, getAccessTokenSecret(), {expiresIn: '30m'})
 }
 
 export const getRefreshToken = (payload) => {
-    return jwt.sign(payload, process.env.NEXT_PUBLIC_REFRESH_TOKEN_SECRET, {expiresIn: '7d'})
+    return jwt.sign(payload, getRefreshTokenSecret(), {expiresIn: '7d'})
 }
 
 export async function getUserSession(req, { allowInactiveSubscription = false } = {}) {

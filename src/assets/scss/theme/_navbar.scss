@@ -11,6 +11,14 @@ header {
     position: relative;
   }
 
+  .navbar-logo {
+    display: block;
+    width: 7rem;
+    height: auto;
+    max-height: 4.25rem;
+    object-fit: cover;
+  }
+
   .navbar-collapse {
     align-items: center;
   }
@@ -69,6 +77,13 @@ header {
     .navbar-nav > .nav-item + .nav-item {
       margin-left: 0.8rem;
     }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .navbar .navbar-logo {
+    width: 5.5rem;
+    max-height: 3.75rem;
   }
 }
 //----------------------------------------------------------//

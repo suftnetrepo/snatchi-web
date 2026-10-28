@@ -7,10 +7,8 @@ import { loginValidator } from '../../../../validator/loginValidator';
 import { validate } from '../../../../validator/validator';
 import { useSecure } from '../../../../hooks/useSecure';
 import LoadingButton from '../button';
-import { useUserChat } from '../../../../hooks/useUserChat';
 
 const LoginForm = () => {
-  const { handleChatSignIn, handleSignUp } = useUserChat();
   const [validationError, setValidationError] = useState({});
   const [fields, setFields] = useState({ email: '', password: '' });
   const [visiblePassword, setVisiblePassword] = useState(false);
@@ -42,10 +40,6 @@ const LoginForm = () => {
       handleError(result.error);
       return;
     }
-
-    handleChatSignIn(fields.email, '12345!').catch((chatError) => {
-      console.error('Chat sign-in failed:', chatError);
-    });
 
     const urlParams = new URLSearchParams(window.location.search);
     const returnUrl = urlParams.get('returnUrl');

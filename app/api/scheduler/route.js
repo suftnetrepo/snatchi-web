@@ -130,7 +130,7 @@ export const GET = async (req) => {
       const status = statusArray.length > 0 ? statusArray : statusScalar || undefined;
 
       try {
-        const results = await getEngineerSchedulesByDateAndStatus({ engineerId, date, status });
+        const results = await getEngineerSchedulesByDateAndStatus({ engineerId, date, status, actor: scheduleActor(user) });
         return successResponse(results.data);
       } catch (err) {
         return errorResponse(err.message, err.statusCode || 500, err);
@@ -148,7 +148,7 @@ export const GET = async (req) => {
       const statuses = statusArray.length > 0 ? statusArray : statusScalar || undefined;
 
       try {
-        const data = await getEngineerScheduleStatusAggregate({ engineerId, date, statuses });
+        const data = await getEngineerScheduleStatusAggregate({ engineerId, date, statuses, actor: scheduleActor(user) });
         return successResponse(data);
       } catch (err) {
         return errorResponse(err.message, err.statusCode || 500, err);
@@ -161,7 +161,7 @@ export const GET = async (req) => {
       const status = url.searchParams.get('status');
 
       try {
-        const results = await getEngineerSchedulesByStatus({ engineerId, status });
+        const results = await getEngineerSchedulesByStatus({ engineerId, status, actor: scheduleActor(user) });
         return successResponse(results.data);
       } catch (err) {
         return errorResponse(err.message, err.statusCode || 500, err);
@@ -174,7 +174,7 @@ export const GET = async (req) => {
       const status = url.searchParams.get('status');
 
       try {
-        const results = await getSchedulesByEngineerAndStatus({ engineerId, status });
+        const results = await getSchedulesByEngineerAndStatus({ engineerId, status, actor: scheduleActor(user) });
         return successResponse(results.data);
       } catch (err) {
         return errorResponse(err.message, err.statusCode || 500, err);
@@ -203,7 +203,7 @@ export const GET = async (req) => {
     if (action === 'getByEngineer') {
       if (!canManageSchedules(user)) return forbiddenResponse();
       const id = url.searchParams.get('id');
-      const results = await getByUser(id);
+      const results = await getByUser(id, scheduleActor(user));
       return successResponse(results.data);
     }
 
