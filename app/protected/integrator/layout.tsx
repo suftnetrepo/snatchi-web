@@ -10,25 +10,35 @@ import Footer from '../../../src/components/layouts/Footer/Footer';
 import { config } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import ContextualHelp from './help/ContextualHelp';
+import { usePathname } from 'next/navigation';
+import SubscriptionEntitlementGuard, { BILLING_RECOVERY_PATH } from '../../../src/components/billing/SubscriptionEntitlementGuard';
 
 config.autoAddCss = false;
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  if (pathname === BILLING_RECOVERY_PATH) {
+    return <SubscriptionEntitlementGuard>{children}</SubscriptionEntitlementGuard>;
+  }
+
   return (
-    <SidebarProvider>
-      <SidebarOverlay />
-      <Sidebar>
-        <IntegratorSidebarNav />
-      </Sidebar>
-      <div className="wrapper d-flex flex-column min-vh-100">
-        <Header />
-        <div className="body flex-grow-1 px-sm-2 mb-4">
-          <div className="ms-0 me-0">{children}</div>
+    <SubscriptionEntitlementGuard>
+      <SidebarProvider>
+        <SidebarOverlay />
+        <Sidebar>
+          <IntegratorSidebarNav />
+        </Sidebar>
+        <div className="wrapper d-flex flex-column min-vh-100">
+          <Header />
+          <div className="body flex-grow-1 px-sm-2 mb-4">
+            <div className="ms-0 me-0">{children}</div>
+          </div>
+          <Suspense fallback={null}><ContextualHelp /></Suspense>
+          <Footer />
         </div>
-        <Suspense fallback={null}><ContextualHelp /></Suspense>
-        <Footer />
-      </div>
-      <SidebarOverlay />
-    </SidebarProvider>
+        <SidebarOverlay />
+      </SidebarProvider>
+    </SubscriptionEntitlementGuard>
   );
 }
