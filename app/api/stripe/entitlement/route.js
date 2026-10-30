@@ -9,13 +9,13 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req) {
   try {
-    await mongoConnect();
     const user = await getUserSession(req, { allowInactiveSubscription: true });
 
     if (!user?.integrator || user.role === 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    await mongoConnect();
     const organisation = await Integrator.findById(user.integrator)
       .select('name plan status startDate endDate trial_start trial_end stripeCustomerId adminSuspension')
       .lean();

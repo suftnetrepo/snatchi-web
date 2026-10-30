@@ -83,14 +83,16 @@ export default function BillingRecoveryPage() {
 
       setEntitlement(result.data);
       if (result.data?.hasAccess && redirectWhenActive) {
-        router.replace('/protected/integrator/dashboard');
+        // A full reload clears the recovery layout's previous entitlement state.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+        window.location.href = '/protected/integrator/dashboard';
       }
     } catch (requestError) {
       setError(requestError.message || 'Unable to verify your subscription.');
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     loadEntitlement();
