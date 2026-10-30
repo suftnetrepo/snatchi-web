@@ -12,8 +12,9 @@ export async function POST(req: Request) {
     const { email, code, fcm, device } = await req.json();
 
     const matchUser = await User.findOne({
-      email: new RegExp(`^${email}$`, 'i'),
-      otp: code
+      email: String(email || '').trim().toLowerCase(),
+      otp: String(code || ''),
+      otpExpiresAt: { $gt: new Date() }
     }).select('_id first_name last_name email chat_status address mobile role fcm secure_url public_id integrator attachments');
 
     if (!matchUser) {
@@ -27,6 +28,8 @@ export async function POST(req: Request) {
     }
 
     matchUser.otp = '';
+    matchUser.otpExpiresAt = null;
+    matchUser.otpRequestedAt = null;
     matchUser.fcm = fcm;
     await matchUser.save();
     await registerOrUpdateDeviceToken({ userId: matchUser._id, token: fcm, device });

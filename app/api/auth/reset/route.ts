@@ -11,7 +11,9 @@ export async function POST(req: Request) {
     const { password, email, code } = await req.json();
    
     const matchUser = await User.findOne({
-      $and: [{ email: new RegExp(email, 'i') }, { otp: code }]
+      email: String(email || '').trim().toLowerCase(),
+      otp: String(code || ''),
+      otpExpiresAt: { $gt: new Date() }
     });
 
     if (!matchUser) {
@@ -25,6 +27,9 @@ export async function POST(req: Request) {
     }
   
     matchUser.password = await generatePassword(password);
+    matchUser.otp = '';
+    matchUser.otpExpiresAt = null;
+    matchUser.otpRequestedAt = null;
     await matchUser.save();
    
     return NextResponse.json({ data: true }, { status: 200 });

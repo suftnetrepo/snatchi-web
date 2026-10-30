@@ -10,7 +10,9 @@ export async function POST(req: Request) {
     const { email, code } = await req.json();
        
     const matchUser = await User.findOne({
-      $and: [{ email: new RegExp(email, 'i') }, { otp: code }]
+      email: String(email || '').trim().toLowerCase(),
+      otp: String(code || ''),
+      otpExpiresAt: { $gt: new Date() }
     });
 
     if (!matchUser) {

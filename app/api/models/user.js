@@ -41,6 +41,8 @@ const userSchema = new Schema(
       type: String,
       default: ''
     },
+    otpExpiresAt: { type: Date, default: null },
+    otpRequestedAt: { type: Date, default: null },
     role: {
       type: String,
       required: true,

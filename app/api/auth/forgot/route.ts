@@ -5,6 +5,7 @@ import { sendBrevoEmail } from '../../../../lib/mail';
 import { emailTemplates } from '../../../email';
 import { compileEmailTemplate } from '../../templates/compile-email-template';
 import { NextResponse } from 'next/server';
+import { randomInt } from 'crypto';
 
 mongoConnect();
 
@@ -19,17 +20,16 @@ export async function POST(req: Request) {
     const emailAddress = body.email.toLowerCase();
 
     const user = await User.findOne({ email: emailAddress });
-    if (!user) {
-      return NextResponse.json(
-        {
-          error: 'User not found. Please sign up for a plan to create a new account.'
-        },
-        { status: 401 }
-      );
+    if (!user) return NextResponse.json({ data: true }, { status: 200 });
+
+    if (user.otpRequestedAt && Date.now() - new Date(user.otpRequestedAt).getTime() < 60_000) {
+      return NextResponse.json({ data: true }, { status: 200 });
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000);
+    const code = randomInt(100000, 1000000).toString();
     user.otp = code;
+    user.otpRequestedAt = new Date();
+    user.otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
     await user.save();
 
     const template = await compileEmailTemplate(
@@ -45,7 +45,6 @@ export async function POST(req: Request) {
       sender:{email:process.env.USER_NAME, name: 'Snatchi'},
       to: [{email :emailAddress}],
       subject: 'Instructions for changing your Snatchi account password',
-      textContent: template,
       htmlContent :template
     };
    

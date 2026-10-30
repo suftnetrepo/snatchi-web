@@ -10,7 +10,7 @@ export async function GET() {
   const checks = {
     database: { status: mongoose.connection.readyState === 1 ? 'healthy' : 'unavailable' },
     stripe: { status: configured(process.env.STRIPE_SECRET_KEY) ? 'configured' : 'missing' },
-    email: { status: configured(process.env.BREVA_API_KEY) && configured(process.env.USER_NAME) ? 'configured' : 'missing' },
+    email: { status: configured(process.env.BREVO_API_KEY) && configured(process.env.BREVO_FROM_EMAIL || process.env.USER_NAME) ? 'configured' : 'missing' },
     firebase: { status: configured(process.env.FIREBASE_PROJECT_ID) || configured(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) ? 'configured' : 'missing' },
     cloudinary: { status: configured(process.env.NEXT_PUBLIC_CLOUD_NAME) && configured(process.env.NEXT_PUBLIC_CLOUD_API_KEY) && configured(process.env.NEXT_PUBLIC_CLOUD_SECRETE) ? 'configured' : 'missing' }
   };
