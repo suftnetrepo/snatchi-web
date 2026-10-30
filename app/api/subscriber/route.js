@@ -6,6 +6,7 @@ import Integrator from '../models/integrator';
 import User from '../models/user';
 import { getPlanByPriceId } from '../constants/plans';
 import jwt from 'jsonwebtoken';
+import { verifyRecaptchaToken } from '../../../lib/recaptcha';
 const { NextResponse } = require('next/server');
 
 mongoConnect();
@@ -13,6 +14,17 @@ mongoConnect();
 export async function POST(req) {
   try {
     const body = await req.json();
+
+    const forwardedFor = req.headers.get('x-forwarded-for');
+    const remoteIp = forwardedFor?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || undefined;
+    const captchaIsValid = await verifyRecaptchaToken(body.captchaToken, { remoteIp, action: 'checkout' });
+    if (!captchaIsValid) {
+      return NextResponse.json(
+        { error: 'We could not verify your request. Please refresh the page and try again.' },
+        { status: 400 }
+      );
+    }
+
     if (!getPlanByPriceId(body.priceId)) {
       return NextResponse.json({ error: 'Invalid plan selected' }, { status: 400 });
     }

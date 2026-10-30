@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
+import Script from 'next/script';
 import Spinner from 'react-bootstrap/Spinner';
 import Button from 'react-bootstrap/Button';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
@@ -12,7 +13,9 @@ import { useRouter, useParams } from 'next/navigation';
 import ErrorDialogue from '@/components/elements/errorDialogue';
 import styles from './checkout.module.scss';
 
-const CheckOut = () => {
+const CAPTCHA_ACTION = 'checkout';
+
+const CheckOut = ({ captchaSiteKey }) => {
   const router = useRouter();
   const params = useParams();
   const stripe = useStripe();
@@ -27,6 +30,19 @@ const CheckOut = () => {
   const { priceId } = params;
   const { handleNewSubscriber, handleErrorReset, loading, handleError, error, handleSuccess, pricing } =
     useSubscriber(priceId);
+
+  // reCAPTCHA v3 tokens expire after two minutes, so fetch one per submission.
+  const getCaptchaToken = () =>
+    new Promise((resolve, reject) => {
+      if (!captchaSiteKey || typeof window.grecaptcha?.ready !== 'function') {
+        reject(new Error('Security check is still loading. Please try again in a moment.'));
+        return;
+      }
+
+      window.grecaptcha.ready(() => {
+        window.grecaptcha.execute(captchaSiteKey, { action: CAPTCHA_ACTION }).then(resolve, reject);
+      });
+    });
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -103,7 +119,15 @@ const CheckOut = () => {
       return;
     }
 
-    const pendingAccount = await ensureSubscriberRecord({ ...fields, priceId });
+    let captchaToken;
+    try {
+      captchaToken = await getCaptchaToken();
+    } catch (error) {
+      handleError(error instanceof Error ? error.message : 'Security check failed. Please try again.');
+      return;
+    }
+
+    const pendingAccount = await ensureSubscriberRecord({ ...fields, priceId, captchaToken });
     if (!pendingAccount) return;
 
     handleNewSubscriber({
@@ -135,6 +159,12 @@ const CheckOut = () => {
 
   return (
     <section className={styles.page}>
+      {captchaSiteKey && (
+        <Script
+          src={`https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(captchaSiteKey)}`}
+          strategy="afterInteractive"
+        />
+      )}
       <div className="container py-14 py-md-16">
         <div className={styles.checkoutCard}>
           <div className="row g-0">
@@ -311,7 +341,7 @@ const CheckOut = () => {
                       className={styles.payButton}
                       variant="primary"
                       type="button"
-                      disabled={!fields.terms || loading || isProcessing || !stripe}
+                      disabled={!fields.terms || !captchaSiteKey || loading || isProcessing || !stripe}
                       onClick={() => handleSubmit()}
                     >
                       {(loading || isProcessing) && (
