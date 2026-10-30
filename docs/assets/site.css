@@ -2,8 +2,8 @@
 *{box-sizing:border-box}html{scroll-behavior:smooth}
 body{margin:0;color:var(--ink);background:var(--paper);font:16px/1.65 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 a{color:var(--indigo)}
-.top{background:var(--deep);color:var(--ink);padding:14px 24px;display:flex;gap:10px 22px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center}
-.top a{color:var(--ink);text-decoration:none;font-weight:700;font-size:14px}.top a:hover{color:var(--lav)}.top .brand{font-size:16px;letter-spacing:.04em;width:100%}
+.top{background:var(--deep);color:var(--ink);padding:8px 24px;display:flex;gap:4px 20px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center}
+.top a{color:var(--ink);text-decoration:none;font-weight:700;font-size:13px}.top a:hover{color:var(--lav)}.top .brand{font-size:14px;letter-spacing:.04em}
 .layout{width:min(1180px,100%);margin:auto;display:grid;grid-template-columns:240px minmax(0,1fr);gap:40px;padding:36px 24px 80px}
 .toc{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px}
 .toc b{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
@@ -19,7 +19,7 @@ th{background:#fbebdb}tr:nth-child(even) td{background:#fffaf4}
 td p,th p{margin:0}
 .dl{margin:0 0 1.5em;padding:12px 16px;border-left:4px solid var(--indigo);background:#fff0e0;border-radius:8px;font-size:14px;color:var(--muted)}
 footer{text-align:center;color:var(--muted);font-size:13px;padding:0 24px 40px}
-.hero{background:radial-gradient(circle at 86% 12%,rgba(255,255,255,.55),transparent 28%),var(--deep);color:var(--ink);padding:64px 24px 56px;text-align:center}
+.hero{background:radial-gradient(circle at 86% 12%,rgba(255,255,255,.55),transparent 28%),var(--deep);color:var(--ink);padding:40px 24px 36px;text-align:center}
 .hero .in{width:min(1000px,100%);margin:auto}.hero .eyebrow{color:var(--lav);font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
 .hero h1{margin:10px 0 14px;font-size:clamp(2.2rem,6vw,3.8rem);line-height:1;letter-spacing:-.05em}.hero p{max-width:640px;color:#6b4a30;margin:0 auto}
 .cards{width:min(1000px,100%);margin:40px auto 60px;padding:0 24px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
